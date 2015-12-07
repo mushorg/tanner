@@ -1,53 +1,38 @@
 #!/usr/bin/python3
 
-import time
-
-from urllib.parse import parse_qsl
+import json
 
 import asyncio
-import aioredis
-import aiohttp_session
-import aiohttp_session.redis_storage
-
-from aiohttp.web import Application, Response
-from aiohttp_session import get_session, session_middleware
-from aiohttp.multidict import MultiDict
+import aiohttp
+import aiohttp.server
 
 
-@asyncio.coroutine
-def event(request):
-    session = yield from get_session(request)
-    session['last_visit'] = time.time()
-    data = yield from request.text()
-    print(request.text)
-    print('fff', repr(data))
-    b = yield from request.payload.read()
-    print('bbb', b)
-    # req_params = MultiDict(parse_qsl(request.query_string))
-    #post_params = MultiDict(parse_qsl(data))
-    return Response(body=str.encode('dd'))
+class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
+
+    @asyncio.coroutine
+    def handle_request(self, message, payload):
+        response = aiohttp.Response(
+            self.writer, 200, http_version=message.version
+        )
+        data = yield from payload.read()
+        # print(repr(data))
+        print(json.loads(data.decode('utf-8'))['path'])
+        m = b'<h1>It Works!</h1>'
+        response.add_header('Content-Type', 'text/html')
+        response.add_header('Content-Length', str(len(m)))
+        response.send_headers()
+        response.write(m)
+        yield from response.write_eof()
 
 
-@asyncio.coroutine
-def init(inner_loop):
-    redis = yield from aioredis.create_pool(('localhost', 6379))
-    session_storage = aiohttp_session.redis_storage.RedisStorage(
-        redis,
-        cookie_name="TANNER_SESSION"
-    )
-    app = Application(middlewares=[session_middleware(session_storage), ])
-
-    app.router.add_route('POST', '/{version}/event', event)
-    app.router.add_route('POST', '/event', event)
-
-    srv = yield from inner_loop.create_server(
-        app.make_handler(), 'localhost', 8090)
-    return srv
-
-
-loop = asyncio.get_event_loop()
-loop.run_until_complete(init(loop))
-try:
-    loop.run_forever()
-except KeyboardInterrupt:
-    pass
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    f = loop.create_server(
+        lambda: HttpRequestHandler(debug=True, keep_alive=75),
+        '0.0.0.0', '8090')
+    srv = loop.run_until_complete(f)
+    print('serving on', srv.sockets[0].getsockname())
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
