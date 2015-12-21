@@ -1,7 +1,7 @@
 TANNER
 ======
 
-<b>He who flays the hide
+<b>He who flays the hide</b>
 
 
 Basic Concept
