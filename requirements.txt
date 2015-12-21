@@ -1,3 +1,1 @@
 aiohttp
-aioredis
-aiohttp_session

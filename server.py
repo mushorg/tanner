@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import json
+import re
 
 import asyncio
 import aiohttp
@@ -8,6 +9,10 @@ import aiohttp.server
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
+    patterns = {
+        re.compile(r'/index.html'): 'index',
+        re.compile(r'.*(=.*(http(s){0,1}|ftp(s){0,1}):).*', re.IGNORECASE): 'rfi',
+    }
 
     @asyncio.coroutine
     def handle_request(self, message, payload):
@@ -16,9 +21,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         )
         data = yield from payload.read()
         # print(repr(data))
-        print(json.loads(data.decode('utf-8'))['path'])
-        m = b'<h1>It Works!</h1>'
-        response.add_header('Content-Type', 'text/html')
+        path = json.loads(data.decode('utf-8'))['path']
+        print(path)
+        name = None
+        for pattern, name in self.patterns.items():
+            if pattern.match(path):
+                print(name)
+            else:
+                print('no match')
+        m = json.dumps(dict(version=1, response=dict(detection=name))).encode('utf-8')
+        response.add_header('Content-Type', 'application/json')
         response.add_header('Content-Length', str(len(m)))
         response.send_headers()
         response.write(m)
