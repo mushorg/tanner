@@ -35,20 +35,24 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             m = json.dumps(dict(version=1, response=dict(dorks=random.sample(self.dorks, 50)))).encode('utf-8')
         if message.path == '/event':
             data = yield from payload.read()
-            # print(repr(data))
-            path = json.loads(data.decode('utf-8'))['path']
-            print(path)
-            detection = dict(name='unknown', order=0)
-            for pattern, patter_details in self.patterns.items():
-                if pattern.match(path):
-                    if detection['order'] < patter_details['order']:
-                        detection = patter_details
-            if 'payload' in detection:
-                if detection['payload'].startswith('data/'):
-                    with open(detection['payload'], 'rb') as fh:
-                        detection['payload'] = fh.read().decode('utf-8')
-            m = json.dumps(dict(version=1, response=dict(detection=detection))).encode('utf-8')
-            print(m)
+            try:
+                path = json.loads(data.decode('utf-8'))['path']
+            except ValueError:
+                print('error parsing: {}'.format(data))
+                m = json.dumps(dict(version=1, response=dict(message='error'))).encode('utf-8')
+            else:
+                print(path)
+                detection = dict(name='unknown', order=0)
+                for pattern, patter_details in self.patterns.items():
+                    if pattern.match(path):
+                        if detection['order'] < patter_details['order']:
+                            detection = patter_details
+                if 'payload' in detection:
+                    if detection['payload'].startswith('data/'):
+                        with open(detection['payload'], 'rb') as fh:
+                            detection['payload'] = fh.read().decode('utf-8')
+                m = json.dumps(dict(version=1, response=dict(detection=detection))).encode('utf-8')
+                print(m)
         response.add_header('Content-Type', 'application/json')
         response.add_header('Content-Length', str(len(m)))
         response.send_headers()
