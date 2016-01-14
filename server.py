@@ -32,14 +32,21 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             self.writer, 200, http_version=message.version
         )
         if message.path == '/dorks':
-            m = json.dumps(dict(version=1, response=dict(dorks=random.sample(self.dorks, 50)))).encode('utf-8')
-        if message.path == '/event':
+            response.add_header('Content-Type', 'application/json')
+            m = json.dumps(
+                dict(version=1, response=dict(dorks=random.sample(self.dorks, 50))),
+                sort_keys=True, indent=2
+            ).encode('utf-8')
+        elif message.path == '/event':
+            response.add_header('Content-Type', 'application/json')
             data = yield from payload.read()
             try:
-                path = json.loads(data.decode('utf-8'))['path']
-            except ValueError:
+                data = json.loads(data.decode('utf-8'))
+                path = data['path']
+                sensor_uuid = data['uuid'] if 'uuid' in data else None
+            except (TypeError, ValueError, KeyError) as e:
                 print('error parsing: {}'.format(data))
-                m = json.dumps(dict(version=1, response=dict(message='error'))).encode('utf-8')
+                m = json.dumps(dict(version=1, response=dict(message=type(e).__name__))).encode('utf-8')
             else:
                 print(path)
                 detection = dict(name='unknown', order=0)
@@ -53,7 +60,9 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                             detection['payload'] = fh.read().decode('utf-8')
                 m = json.dumps(dict(version=1, response=dict(detection=detection))).encode('utf-8')
                 print(m)
-        response.add_header('Content-Type', 'application/json')
+        else:
+            response.add_header('Content-Type', 'text/plain')
+            m = b''
         response.add_header('Content-Length', str(len(m)))
         response.send_headers()
         response.write(m)
