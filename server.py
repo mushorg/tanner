@@ -26,19 +26,24 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     with open('dorks.pickle', 'rb') as fh:
         dorks = pickle.load(fh)
 
+    def _make_response(self, msg):
+        m = json.dumps(dict(
+            version=1,
+            response=dict(message=msg)
+        )).encode('utf-8')
+        return m
+
     @asyncio.coroutine
     def handle_request(self, message, payload):
         response = aiohttp.Response(
             self.writer, 200, http_version=message.version
         )
         if message.path == '/dorks':
-            response.add_header('Content-Type', 'application/json')
             m = json.dumps(
                 dict(version=1, response=dict(dorks=random.sample(self.dorks, 50))),
                 sort_keys=True, indent=2
             ).encode('utf-8')
         elif message.path == '/event':
-            response.add_header('Content-Type', 'application/json')
             data = yield from payload.read()
             try:
                 data = json.loads(data.decode('utf-8'))
@@ -46,7 +51,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 sensor_uuid = data['uuid'] if 'uuid' in data else None
             except (TypeError, ValueError, KeyError) as e:
                 print('error parsing: {}'.format(data))
-                m = json.dumps(dict(version=1, response=dict(message=type(e).__name__))).encode('utf-8')
+                m = self._make_response(msg=type(e).__name__)
             else:
                 print(path)
                 detection = dict(name='unknown', order=0)
@@ -58,11 +63,12 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     if detection['payload'].startswith('data/'):
                         with open(detection['payload'], 'rb') as fh:
                             detection['payload'] = fh.read().decode('utf-8')
-                m = json.dumps(dict(version=1, response=dict(detection=detection))).encode('utf-8')
+                m = self._make_response(msg=dict(detection=detection))
                 print(m)
         else:
-            response.add_header('Content-Type', 'text/plain')
-            m = b''
+            m = self._make_response(msg='')
+
+        response.add_header('Content-Type', 'application/json')
         response.add_header('Content-Length', str(len(m)))
         response.send_headers()
         response.write(m)
