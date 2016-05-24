@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+import json
 
 from unittest import mock
 
@@ -34,7 +35,7 @@ class TestServer(unittest.TestCase):
                     asyncio.get_event_loop().run_until_complete(srv.handle_request(message, None))
 
                     content = b''.join([c[1][0] for c in list(m.mock_calls)]).decode('utf-8')
-                    content = eval(content)
+                    content = json.loads(content)
                     assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
 
                     self.assertDictEqual(content, assert_content)
