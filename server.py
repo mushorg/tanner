@@ -9,6 +9,8 @@ import asyncio
 import aiohttp
 import aiohttp.server
 
+import rfi_emulator
+
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     # Reference patterns
@@ -65,6 +67,11 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                             detection['payload'] = fh.read().decode('utf-8')
                 m = self._make_response(msg=dict(detection=detection))
                 print(m)
+
+                if (detection["name"]=='rfi'):
+                    rfi_emulator = rfi_emulator.RfiEmulator(path)
+                    rfi_emulator.hadle_rfi()
+
         else:
             m = self._make_response(msg='')
 
@@ -81,6 +88,7 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', '8090')
     srv = loop.run_until_complete(f)
+
     print('serving on', srv.sockets[0].getsockname())
     try:
         loop.run_forever()
