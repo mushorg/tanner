@@ -9,7 +9,7 @@ import asyncio
 import aiohttp
 import aiohttp.server
 
-import rfi_emulator
+from rfi_emulator import RfiEmulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -27,6 +27,10 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     with open('dorks.pickle', 'rb') as fh:
         dorks = pickle.load(fh)
+
+    def __init__(self,*args, **kwargs):
+        super(HttpRequestHandler,self).__init__()
+        self.rfi_emulator = RfiEmulator()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -68,9 +72,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 m = self._make_response(msg=dict(detection=detection))
                 print(m)
 
-                if (detection["name"]=='rfi'):
-                    rfi_emulator = rfi_emulator.RfiEmulator(path)
-                    rfi_emulator.hadle_rfi()
+                if detection["name"]=='rfi':
+                    yield from self.rfi_emulator.hadle_rfi(path)
 
         else:
             m = self._make_response(msg='')
