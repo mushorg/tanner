@@ -73,7 +73,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 print(m)
 
                 if detection["name"]=='rfi':
-                    yield from self.rfi_emulator.hadle_rfi(path)
+                    yield from self.rfi_emulator.handle_rfi(path)
 
         else:
             m = self._make_response(msg='')

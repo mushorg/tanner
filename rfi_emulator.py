@@ -1,40 +1,46 @@
-import json
 import aiohttp
 import re
-import hashlib
 import asyncio
 
 
-class RfiEmulator():
+class RfiEmulator:
 
     @asyncio.coroutine
-    def download_file(self, session,path):
+    def download_file(self, path):
+        loop = asyncio.get_event_loop()
+        session = aiohttp.ClientSession(loop=loop)
+        data = None
         url_pattern = re.compile('.*=(.*(http(s){0,1}|ftp(s){0,1}):.*)')
         url = url_pattern.match(path).group(1)
 
         if not (url.startswith("http") or url.startswith("ftp")):
             yield None
 
-        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-
-        resp = yield from session.get(
-            url)
+        resp = yield from session.get(url)
 
         try:
             data = yield from resp.text()
-            with open(filename, 'w') as f:
-                f.write(data)
 
         finally:
             session.close()
             yield from resp.release()
-
-    def execute_rfi(self):
-        # here phpox should start to execute file ?
-        pass
+            return data
 
     @asyncio.coroutine
-    def hadle_rfi(self, path):
+    def get_rfi_result(self, script):
         loop = asyncio.get_event_loop()
         session = aiohttp.ClientSession(loop=loop)
-        asyncio.ensure_future(self.download_file(session,path))
+        bs = script.encode('utf-8')
+        resp = yield from session.post('', data=bs)
+
+        try:
+            resp_txt = yield from resp.text()
+            print(resp_txt)
+        finally:
+            session.close()
+            yield from resp.release()
+
+    @asyncio.coroutine
+    def handle_rfi(self, path):
+        data = yield from self.download_file(path)
+        yield from self.get_rfi_result(script=data)
