@@ -1,6 +1,7 @@
 import asyncio
 import unittest
 import json
+import server
 
 from unittest import mock
 
@@ -10,15 +11,20 @@ class TestServer(unittest.TestCase):
     def setUp(self):
         with mock.patch('builtins.open', mock.mock_open(), create=True):
             with mock.patch('pickle.load', mock.Mock(), create=True):
-                import server
                 self.MockedRequestHandler = server.HttpRequestHandler
 
-        self.srv = self.MockedRequestHandler(debug=False, keep_alive=75)
-        self.srv.writer = mock.Mock()
+        self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
+        self.handler.writer = mock.Mock()
 
         self.m = mock.Mock()
         self.m_eof = mock.Mock()
         self.m_eof.return_value = (lambda: (yield None))()
+
+    def test_make_response(self):
+        msg = 'test'
+        content = json.loads(self.handler._make_response(msg).decode('utf-8'))
+        assert_content = dict(version=1, response=dict(message=msg))
+        self.assertDictEqual(content, assert_content)
 
     def test_handle_request_for_dorks(self):
         rand = mock.Mock()
@@ -32,7 +38,7 @@ class TestServer(unittest.TestCase):
                     message.path = '/dorks'
                     message.version = (1, 1)
 
-                    asyncio.get_event_loop().run_until_complete(self.srv.handle_request(message, None))
+                    asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, None))
 
                     content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                     content = json.loads(content)
@@ -40,7 +46,7 @@ class TestServer(unittest.TestCase):
 
                 self.assertDictEqual(content, assert_content)
 
-    def test_hadle_request_rfi(self):
+    def test_handle_request_rfi(self):
         rand = mock.Mock()
         rand.return_value = [x for x in range(10)]
 
@@ -58,7 +64,7 @@ class TestServer(unittest.TestCase):
                 payload = mock.Mock()
                 payload.read = foobar
 
-                asyncio.get_event_loop().run_until_complete(self.srv.handle_request(message, payload))
+                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, payload))
 
                 content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                 content = json.loads(content)
@@ -88,7 +94,7 @@ class TestServer(unittest.TestCase):
                 payload = mock.Mock()
                 payload.read = foobar
 
-                asyncio.get_event_loop().run_until_complete(self.srv.handle_request(message, payload))
+                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, payload))
 
                 content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                 content = json.loads(content)
