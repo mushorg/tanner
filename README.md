@@ -1,4 +1,4 @@
-TANNER
+TANNER [![Build Status](https://travis-ci.org/mushorg/tanner.svg?branch=master)](https://travis-ci.org/mushorg/tanner)
 ======
 
 <b>He who flays the hide</b>
