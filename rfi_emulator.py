@@ -4,7 +4,6 @@ import asyncio
 
 
 class RfiEmulator:
-
     @asyncio.coroutine
     def download_file(self, path):
         loop = asyncio.get_event_loop()
@@ -16,31 +15,42 @@ class RfiEmulator:
         if not (url.startswith("http") or url.startswith("ftp")):
             yield None
 
-        resp = yield from session.get(url)
-
         try:
+            resp = yield from session.get(url)
             data = yield from resp.text()
 
+        except aiohttp.errors.ClientOSError as e:
+            print('bad eternal link %s: %s' % (url, e))
+        else:
+            yield from resp.release()
         finally:
             session.close()
-            yield from resp.release()
             return data
 
     @asyncio.coroutine
     def get_rfi_result(self, script):
         loop = asyncio.get_event_loop()
         session = aiohttp.ClientSession(loop=loop)
+        rfi_result = None
+
         bs = script.encode('utf-8')
-        resp = yield from session.post('', data=bs)
 
         try:
-            resp_txt = yield from resp.text()
-            print(resp_txt)
+            resp = yield from session.post('', data=bs)
+            rfi_result = yield from resp.text()
+
+        except ValueError as e:
+            print('bad phpox server link : %s' % e)
+        else:
+            yield from resp.release()
         finally:
             session.close()
-            yield from resp.release()
+            return rfi_result
+
+
 
     @asyncio.coroutine
     def handle_rfi(self, path):
         data = yield from self.download_file(path)
-        yield from self.get_rfi_result(script=data)
+        result = yield from self.get_rfi_result(script=data)
+        return result
