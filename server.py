@@ -9,6 +9,8 @@ import asyncio
 import aiohttp
 import aiohttp.server
 
+from rfi_emulator import RfiEmulator
+
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     # Reference patterns
@@ -25,6 +27,10 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     with open('dorks.pickle', 'rb') as fh:
         dorks = pickle.load(fh)
+
+    def __init__(self,*args, **kwargs):
+        super(HttpRequestHandler,self).__init__()
+        self.rfi_emulator = RfiEmulator()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -65,6 +71,10 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                             detection['payload'] = fh.read().decode('utf-8')
                 m = self._make_response(msg=dict(detection=detection))
                 print(m)
+
+                if detection["name"]=='rfi':
+                    yield from self.rfi_emulator.handle_rfi(path)
+
         else:
             m = self._make_response(msg='')
 
@@ -81,6 +91,7 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', '8090')
     srv = loop.run_until_complete(f)
+
     print('serving on', srv.sockets[0].getsockname())
     try:
         loop.run_forever()
