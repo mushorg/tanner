@@ -5,6 +5,7 @@ import aiohttp
 
 
 class TestRfiEmulator(unittest.TestCase):
+
     def setUp(self):
         self.handler = rfi_emulator.RfiEmulator()
 

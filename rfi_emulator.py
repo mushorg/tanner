@@ -4,6 +4,7 @@ import asyncio
 
 
 class RfiEmulator:
+
     @asyncio.coroutine
     def download_file(self, path):
         loop = asyncio.get_event_loop()
@@ -46,8 +47,6 @@ class RfiEmulator:
         finally:
             session.close()
             return rfi_result
-
-
 
     @asyncio.coroutine
     def handle_rfi(self, path):
