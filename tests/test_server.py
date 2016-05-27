@@ -72,7 +72,7 @@ class TestServer(unittest.TestCase):
 
                 assert_content = dict(
                     version=1,
-                    response=dict(message=dict(detection=dict(name='rfi', order=2)))
+                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload = None)))
                 )
 
                 self.assertDictEqual(content, assert_content)
