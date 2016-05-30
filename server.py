@@ -28,8 +28,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     with open('dorks.pickle', 'rb') as fh:
         dorks = pickle.load(fh)
 
-    def __init__(self,*args, **kwargs):
-        super(HttpRequestHandler,self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator()
 
     def _make_response(self, msg):
@@ -69,11 +69,13 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     if detection['payload'].startswith('data/'):
                         with open(detection['payload'], 'rb') as fh:
                             detection['payload'] = fh.read().decode('utf-8')
+
+                if detection['name'] == 'rfi':
+                    rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
+                    detection['payload'] = rfi_emulation_result
+
                 m = self._make_response(msg=dict(detection=detection))
                 print(m)
-
-                if detection["name"]=='rfi':
-                    yield from self.rfi_emulator.handle_rfi(path)
 
         else:
             m = self._make_response(msg='')
