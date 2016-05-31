@@ -17,7 +17,7 @@ class Session:
         self.timestamp = time.time()
         self.count += 1
 
-    def expiried(self):
+    def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME
         if (time.time() - exp_time > 0):
             return True
