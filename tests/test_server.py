@@ -16,6 +16,7 @@ class TestServer(unittest.TestCase):
         self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
         self.handler.writer = mock.Mock()
 
+        self.handler.session_manager.add_or_update_session = mock.Mock(return_value=(lambda: (yield None))())
         self.m = mock.Mock()
         self.m_eof = mock.Mock()
         self.m_eof.return_value = (lambda: (yield None))()
@@ -72,7 +73,7 @@ class TestServer(unittest.TestCase):
 
                 assert_content = dict(
                     version=1,
-                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload = None)))
+                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload=None)))
                 )
 
                 self.assertDictEqual(content, assert_content)

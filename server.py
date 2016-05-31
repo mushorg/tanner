@@ -10,6 +10,7 @@ import aiohttp
 import aiohttp.server
 
 from rfi_emulator import RfiEmulator
+from session_manager import SessionManager
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -27,6 +28,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     with open('dorks.pickle', 'rb') as fh:
         dorks = pickle.load(fh)
+
+    session_manager = SessionManager()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
@@ -59,6 +62,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 print('error parsing: {}'.format(data))
                 m = self._make_response(msg=type(e).__name__)
             else:
+                yield from HttpRequestHandler.session_manager.add_or_update_session(data)
                 print(path)
                 detection = dict(name='unknown', order=0)
                 for pattern, patter_details in self.patterns.items():
