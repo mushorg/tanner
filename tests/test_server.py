@@ -7,7 +7,7 @@ from unittest import mock
 
 
 class TestServer(unittest.TestCase):
-    
+
     def setUp(self):
         with mock.patch('builtins.open', mock.mock_open(), create=True):
             with mock.patch('pickle.load', mock.Mock(), create=True):
