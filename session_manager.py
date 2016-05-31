@@ -2,7 +2,8 @@ import asyncio
 from session import Session
 
 
-class SessionManager():
+class SessionManager:
+
     def __init__(self):
         self.sessions = []
 
@@ -10,6 +11,10 @@ class SessionManager():
     def add_or_update_session(self, data):
         #prepare the list of sessions
         self.delete_old_sessions()
+
+        if 'peer' not in data:
+            peer = dict(ip=None, port = None)
+            data['peer'] = peer
 
         new_session = Session(data)
         session = self.get_session(new_session)
