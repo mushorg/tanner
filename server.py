@@ -4,6 +4,7 @@ import pickle
 import json
 import re
 import random
+import time
 
 import asyncio
 import aiohttp
@@ -62,7 +63,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 print('error parsing: {}'.format(data))
                 m = self._make_response(msg=type(e).__name__)
             else:
-                yield from HttpRequestHandler.session_manager.add_or_update_session(data)
+                session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
+                session.paths.append({'path': path, 'timestamp': time.time()})
                 print(path)
                 detection = dict(name='unknown', order=0)
                 for pattern, patter_details in self.patterns.items():
