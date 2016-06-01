@@ -13,11 +13,12 @@ class Session:
         self.uuid = data['uuid']
         self.timestamp = time.time()
         self.count = 1
-        self.paths = []
+        self.paths = [{'path': data['path'], 'timestamp': time.time()}]
 
-    def update_session(self):
+    def update_session(self, path):
         self.timestamp = time.time()
         self.count += 1
+        self.paths.append({'path': path, 'timestamp': time.time()})
 
     def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME

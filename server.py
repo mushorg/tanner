@@ -64,7 +64,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 m = self._make_response(msg=type(e).__name__)
             else:
                 session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
-                session.paths.append({'path': path, 'timestamp': time.time()})
                 print(path)
                 detection = dict(name='unknown', order=0)
                 for pattern, patter_details in self.patterns.items():

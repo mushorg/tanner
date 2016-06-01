@@ -22,7 +22,7 @@ class SessionManager:
             self.sessions.append(new_session)
             return new_session
         else:
-            session.update_session()
+            session.update_session(data['path'])
             return session
 
     def get_session(self, data):
