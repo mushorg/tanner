@@ -63,7 +63,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 print('error parsing: {}'.format(data))
                 m = self._make_response(msg=type(e).__name__)
             else:
-                session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
+                yield from HttpRequestHandler.session_manager.add_or_update_session(data)
                 print(path)
                 detection = dict(name='unknown', order=0)
                 for pattern, patter_details in self.patterns.items():
