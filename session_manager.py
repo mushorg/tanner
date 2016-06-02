@@ -39,5 +39,5 @@ class SessionManager:
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
-            self.r.set(sess.get_key(), sess.to_json())
             self.sessions.remove(sess)
+            self.r.set(sess.get_key(), sess.to_json())
