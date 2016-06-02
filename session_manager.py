@@ -1,10 +1,13 @@
 import asyncio
+import redis
+
 from session import Session
 
 
 class SessionManager:
     def __init__(self):
         self.sessions = []
+        self.r = redis.StrictRedis(host='localhost', port=6379)
 
     @asyncio.coroutine
     def add_or_update_session(self, data):
@@ -17,8 +20,10 @@ class SessionManager:
         if session is None:
             new_session = Session(data)
             self.sessions.append(new_session)
+            return new_session
         else:
-            session.update_session()
+            session.update_session(data['path'])
+            return session
 
     def get_session(self, data):
         session = None
@@ -35,3 +40,4 @@ class SessionManager:
             if not sess.is_expired():
                 continue
             self.sessions.remove(sess)
+            self.r.set(sess.get_key(), sess.to_json())

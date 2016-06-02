@@ -1,8 +1,9 @@
 import time
+import json
+import hashlib
 
 
 class Session:
-
     KEEP_ALIVE_TIME = 75
 
     def __init__(self, data):
@@ -12,12 +13,28 @@ class Session:
         self.uuid = data['uuid']
         self.timestamp = time.time()
         self.count = 1
+        self.paths = [{'path': data['path'], 'timestamp': time.time()}]
 
-    def update_session(self):
+    def update_session(self, path):
         self.timestamp = time.time()
         self.count += 1
+        self.paths.append({'path': path, 'timestamp': time.time()})
 
     def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME
         if (time.time() - exp_time > 0):
             return True
+
+    def to_json(self):
+        s = dict(peer=dict(ip=self.ip, port=self.port),
+                 user_agent=self.user_agent,
+                 uuid=self.uuid,
+                 timestamp=self.timestamp,
+                 count=self.count,
+                 paths=self.paths
+                 )
+        return json.dumps(s)
+
+    def get_key(self):
+        bstr = (self.ip + self.user_agent).encode('utf-8')
+        return hashlib.md5(bstr).digest()
