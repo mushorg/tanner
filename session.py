@@ -7,13 +7,17 @@ class Session:
     KEEP_ALIVE_TIME = 75
 
     def __init__(self, data):
-        self.ip = data['peer']['ip']
-        self.port = data['peer']['port']
-        self.user_agent = data['headers']['USER-AGENT']
-        self.uuid = data['uuid']
+        try:
+            self.ip = data['peer']['ip']
+            self.port = data['peer']['port']
+            self.user_agent = data['headers']['user-agent']
+            self.uuid = data['uuid']
+            self.paths = [{'path': data['path'], 'timestamp': time.time()}]
+        except KeyError as e:
+            raise
+
         self.timestamp = time.time()
         self.count = 1
-        self.paths = [{'path': data['path'], 'timestamp': time.time()}]
 
     def update_session(self, path):
         self.timestamp = time.time()
@@ -22,7 +26,7 @@ class Session:
 
     def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME
-        if (time.time() - exp_time > 0):
+        if time.time() - exp_time > 0:
             return True
 
     def to_json(self):
@@ -36,5 +40,10 @@ class Session:
         return json.dumps(s)
 
     def get_key(self):
-        bstr = (self.ip + self.user_agent).encode('utf-8')
-        return hashlib.md5(bstr).digest()
+        bstr = b''
+        try:
+            bstr = (str(self.ip) + str(self.user_agent)).encode('utf-8')
+        except ValueError as e:
+            print('can\'t create byte string for hash', e)
+        finally:
+            return hashlib.md5(bstr).digest()
