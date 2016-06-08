@@ -1,6 +1,7 @@
 import time
 import json
 import hashlib
+import uuid
 
 
 class Session:
@@ -11,7 +12,8 @@ class Session:
             self.ip = data['peer']['ip']
             self.port = data['peer']['port']
             self.user_agent = data['headers']['user-agent']
-            self.uuid = data['uuid']
+            self.sensor = data['uuid']
+            self.uuid = uuid.uuid4()
             self.paths = [{'path': data['path'], 'timestamp': time.time()}]
         except KeyError as e:
             raise
@@ -32,7 +34,7 @@ class Session:
     def to_json(self):
         s = dict(peer=dict(ip=self.ip, port=self.port),
                  user_agent=self.user_agent,
-                 uuid=self.uuid,
+                 sensor=self.sensor,
                  timestamp=self.timestamp,
                  count=self.count,
                  paths=self.paths
@@ -40,10 +42,4 @@ class Session:
         return json.dumps(s)
 
     def get_key(self):
-        bstr = b''
-        try:
-            bstr = (str(self.ip) + str(self.user_agent)).encode('utf-8')
-        except ValueError as e:
-            print('can\'t create byte string for hash', e)
-        finally:
-            return hashlib.md5(bstr).digest()
+        return self.uuid
