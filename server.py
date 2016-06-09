@@ -4,7 +4,7 @@ import pickle
 import json
 import re
 import random
-import time
+import urllib.parse
 
 import asyncio
 import aiohttp
@@ -12,6 +12,7 @@ import aiohttp.server
 
 from rfi_emulator import RfiEmulator
 from session_manager import SessionManager
+from xss_emulator import XSSemulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -24,7 +25,9 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         ),
         re.compile('.*(\/\.\.)*(home|proc|usr|etc)\/.*'): dict(
             name='lfi', order=2, payload='data/passwd'
-        )
+        ),
+        re.compile('.*<(.|\n)*?>'): dict(name='xss', order=2)
+
     }
 
     with open('dorks.pickle', 'rb') as fh:
@@ -35,6 +38,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator()
+        self.xss_emulator = XSSemulator()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -42,6 +46,48 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             response=dict(message=msg)
         )).encode('utf-8')
         return m
+
+    @asyncio.coroutine
+    def handle_event(self, data):
+        try:
+            data = json.loads(data.decode('utf-8'))
+            path = data['path']
+            sensor_uuid = data['uuid'] if 'uuid' in data else None
+        except (TypeError, ValueError, KeyError) as e:
+            print('error parsing: {}'.format(data))
+            m = self._make_response(msg=type(e).__name__)
+        else:
+            session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
+            print(path)
+            detection = dict(name='unknown', order=0)
+            # dummy for wp-content
+            if re.match(r'/wp-content/.*', path):
+                m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
+                return m
+
+            if data['method'] == 'POST':
+                xss = self.xss_emulator.extract_xss_data(data)
+                if xss:
+                    detection = self.xss_emulator.create_xss_response(session, xss)
+            else:
+                path = urllib.parse.unquote(path)
+                for pattern, patter_details in self.patterns.items():
+                    if pattern.match(path):
+                        if detection['order'] < patter_details['order']:
+                            detection = patter_details
+                if 'payload' in detection:
+                    if detection['payload'].startswith('data/'):
+                        with open(detection['payload'], 'rb') as fh:
+                            detection['payload'] = fh.read().decode('utf-8')
+                if detection['name'] == 'rfi':
+                    rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
+                    detection['payload'] = rfi_emulation_result
+                if detection['name'] == 'xss':
+                    detection = self.xss_emulator.create_xss_response(session, path)
+            m = self._make_response(msg=dict(detection=detection))
+            print(m)
+
+            return m
 
     @asyncio.coroutine
     def handle_request(self, message, payload):
@@ -55,33 +101,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             ).encode('utf-8')
         elif message.path == '/event':
             data = yield from payload.read()
-            try:
-                data = json.loads(data.decode('utf-8'))
-                path = data['path']
-                sensor_uuid = data['uuid'] if 'uuid' in data else None
-            except (TypeError, ValueError, KeyError) as e:
-                print('error parsing: {}'.format(data))
-                m = self._make_response(msg=type(e).__name__)
-            else:
-                yield from HttpRequestHandler.session_manager.add_or_update_session(data)
-                print(path)
-                detection = dict(name='unknown', order=0)
-                for pattern, patter_details in self.patterns.items():
-                    if pattern.match(path):
-                        if detection['order'] < patter_details['order']:
-                            detection = patter_details
-                if 'payload' in detection:
-                    if detection['payload'].startswith('data/'):
-                        with open(detection['payload'], 'rb') as fh:
-                            detection['payload'] = fh.read().decode('utf-8')
-
-                if detection['name'] == 'rfi':
-                    rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
-                    detection['payload'] = rfi_emulation_result
-
-                m = self._make_response(msg=dict(detection=detection))
-                print(m)
-
+            m = yield from self.handle_event(data)
         else:
             m = self._make_response(msg='')
 
@@ -96,7 +116,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     f = loop.create_server(
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
-        '0.0.0.0', '8090')
+        '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
 
     print('serving on', srv.sockets[0].getsockname())
