@@ -4,7 +4,7 @@ import pickle
 import json
 import re
 import random
-import time
+import urllib.parse
 
 import asyncio
 import aiohttp
@@ -12,6 +12,7 @@ import aiohttp.server
 
 from rfi_emulator import RfiEmulator
 from session_manager import SessionManager
+from xss_emulator import XSSemulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -25,7 +26,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         re.compile('.*(\/\.\.)*(home|proc|usr|etc)\/.*'): dict(
             name='lfi', order=2, payload='data/passwd'
         ),
-        re.compile('<(.|\n)*?>'): dict(name='xss', order=2)
+        re.compile('.*<(.|\n)*?>'): dict(name='xss', order=2)
 
     }
 
@@ -37,6 +38,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator()
+        self.xss_emulator = XSSemulator()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -50,7 +52,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         try:
             data = json.loads(data.decode('utf-8'))
             path = data['path']
-
             # dummy for wp-content
             if re.match(r'/wp-content/.*', path):
                 m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
@@ -63,15 +64,12 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             print(path)
             detection = dict(name='unknown', order=0)
-            if 'post_data' in data:
-                print(data['post_data'])
-                for field, val in data['post_data'].items():
-                    if re.match(r'<(.|\n)*?>', val):
-                        detection['name'] = 'xss'
-                        detection['order'] = 2
-                        injectable_page = '/index.html'
-                        detection['payload'] = dict(name='xss', script=val, page=injectable_page)
+            if data['method'] == 'POST':
+                xss = self.xss_emulator.extract_xss_data(data)
+                if xss:
+                    detection = self.xss_emulator.create_xss_response(session, xss)
             else:
+                path = urllib.parse.unquote(path)
                 for pattern, patter_details in self.patterns.items():
                     if pattern.match(path):
                         if detection['order'] < patter_details['order']:
@@ -80,13 +78,11 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     if detection['payload'].startswith('data/'):
                         with open(detection['payload'], 'rb') as fh:
                             detection['payload'] = fh.read().decode('utf-8')
-
-            if detection['name'] == 'rfi':
-                rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
-                detection['payload'] = rfi_emulation_result
-            if detection['name'] == 'xss':
-                pass
-
+                if detection['name'] == 'rfi':
+                    rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
+                    detection['payload'] = rfi_emulation_result
+                if detection['name'] == 'xss':
+                    detection = self.xss_emulator.create_xss_response(session, path)
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 

