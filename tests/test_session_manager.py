@@ -121,3 +121,4 @@ class TestSessions(unittest.TestCase):
         sess = session.Session(data)
         key = sess.get_key()
         self.assertIsNotNone(key)
+
