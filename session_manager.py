@@ -57,4 +57,7 @@ class SessionManager:
             if not sess.is_expired():
                 continue
             self.sessions.remove(sess)
-            self.r.set(sess.get_key(), sess.to_json())
+            try:
+                self.r.set(sess.get_key(), sess.to_json())
+            except redis.ConnectionError as e:
+                self.sessions.append(sess)

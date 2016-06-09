@@ -4,7 +4,6 @@ import asyncio
 
 
 class RfiEmulator:
-
     @asyncio.coroutine
     def download_file(self, path):
         loop = asyncio.get_event_loop()
@@ -37,7 +36,7 @@ class RfiEmulator:
         bs = script.encode('utf-8')
 
         try:
-            resp = yield from session.post('', data=bs)
+            resp = yield from session.post('http://127.0.0.1:8088/', data=bs)
             rfi_result = yield from resp.text()
 
         except ValueError as e:
