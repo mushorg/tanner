@@ -35,6 +35,7 @@ class Session:
         s = dict(peer=dict(ip=self.ip, port=self.port),
                  user_agent=self.user_agent,
                  sensor=self.sensor,
+                 uuid=self.uuid.hex,
                  timestamp=self.timestamp,
                  count=self.count,
                  paths=self.paths
