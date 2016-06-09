@@ -13,11 +13,11 @@ class Session:
             self.port = data['peer']['port']
             self.user_agent = data['headers']['user-agent']
             self.sensor = data['uuid']
-            self.uuid = uuid.uuid4()
             self.paths = [{'path': data['path'], 'timestamp': time.time()}]
         except KeyError as e:
             raise
 
+        self.uuid = uuid.uuid4()
         self.timestamp = time.time()
         self.count = 1
 
