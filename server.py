@@ -52,10 +52,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         try:
             data = json.loads(data.decode('utf-8'))
             path = data['path']
-            # dummy for wp-content
-            if re.match(r'/wp-content/.*', path):
-                m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
-                return m
             sensor_uuid = data['uuid'] if 'uuid' in data else None
         except (TypeError, ValueError, KeyError) as e:
             print('error parsing: {}'.format(data))
@@ -64,6 +60,11 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             print(path)
             detection = dict(name='unknown', order=0)
+            # dummy for wp-content
+            if re.match(r'/wp-content/.*', path):
+                m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
+                return m
+
             if data['method'] == 'POST':
                 xss = self.xss_emulator.extract_xss_data(data)
                 if xss:
