@@ -5,6 +5,7 @@ import json
 import re
 import random
 import urllib.parse
+import os
 
 import asyncio
 import aiohttp
@@ -13,6 +14,7 @@ import aiohttp.server
 from rfi_emulator import RfiEmulator
 from session_manager import SessionManager
 from xss_emulator import XssEmulator
+from lfi_emulator import LfiEmulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -24,7 +26,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             name='sqli', order=2
         ),
         re.compile('.*(\/\.\.)*(home|proc|usr|etc)\/.*'): dict(
-            name='lfi', order=2, payload='data/passwd'
+            name='lfi', order=2
         ),
         re.compile('.*<(.|\n)*?>'): dict(name='xss', order=2)
 
@@ -39,6 +41,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator()
         self.xss_emulator = XssEmulator()
+        self.lfi_emulator = LfiEmulator(os.getcwd())
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -75,16 +78,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     if pattern.match(path):
                         if detection['order'] < patter_details['order']:
                             detection = patter_details
-                if 'payload' in detection:
-                    if detection['payload'].startswith('data/'):
-                        with open(detection['payload'], 'rb') as fh:
-                            detection['payload'] = fh.read().decode('utf-8')
+
                 if detection['name'] == 'rfi':
                     rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
                     detection['payload'] = rfi_emulation_result
                 if detection['name'] == 'xss':
                     xss_result = self.xss_emulator.handle(session, path)
-                    detection['payload'] = xss_result
+                if detection['name'] == 'lfi':
+                    lfi_result = self.lfi_emulator.handle(path)
+                    detection['payload'] = lfi_result
+
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 
