@@ -7,7 +7,8 @@ import json
 
 
 class RfiEmulator:
-    script_dir = '/opt/tanner/rfi_scripts/'
+    def __init__(self, root_dir):
+        self.script_dir = root_dir + '/data/scripts'
 
     @asyncio.coroutine
     def download_file(self, path):

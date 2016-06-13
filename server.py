@@ -5,6 +5,7 @@ import json
 import re
 import random
 import urllib.parse
+import os
 
 import asyncio
 import aiohttp
@@ -37,7 +38,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.rfi_emulator = RfiEmulator()
+        self.rfi_emulator = RfiEmulator(os.getcwd())
         self.xss_emulator = XssEmulator()
 
     def _make_response(self, msg):

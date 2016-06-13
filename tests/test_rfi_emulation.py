@@ -2,12 +2,12 @@ import unittest
 import rfi_emulator
 import asyncio
 import aiohttp
+import os
 
 
 class TestRfiEmulator(unittest.TestCase):
-
     def setUp(self):
-        self.handler = rfi_emulator.RfiEmulator()
+        self.handler = rfi_emulator.RfiEmulator(os.path.split(os.path.abspath(os.getcwd()))[0])
 
     def test_http_download(self):
         path = 'file=http://example.com'
