@@ -7,7 +7,7 @@ import os
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
-        self.handler = rfi_emulator.RfiEmulator(os.path.split(os.path.abspath(os.getcwd()))[0])
+        self.handler = rfi_emulator.RfiEmulator('/tmp/')
 
     def test_http_download(self):
         path = 'file=http://example.com'
@@ -30,7 +30,7 @@ class TestRfiEmulator(unittest.TestCase):
         with self.assertRaises(aiohttp.errors.ClientOSError):
             yield from self.handler.download_file(path)
 
-    def test_get_result_faild(self):
+    def test_get_result_fail(self):
         data = "test data"
         with self.assertRaises(aiohttp.errors.ClientOSError):
             yield from self.handler.get_rfi_result(data)
