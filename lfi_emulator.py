@@ -12,17 +12,21 @@ class LfiEmulator:
             for f in files:
                 self.whitelist.append(os.path.join(root, f))
 
-    def lfi_result(self, file):
+    def lfi_result(self, file_path):
         result = None
         for f in self.whitelist:
-            if re.match('.*' + file, f):
+            if file_path in f:
                 with open(f) as lfile:
                     result = lfile.read()
         return result
 
+    def get_file_path(self, path):
+        patt = re.compile('.*=((\.\.|\/).*)')
+        file_path = re.match(patt, path).group(1)
+        file_path = os.path.normpath(os.path.join('/', file_path))
+        return file_path
+
     def handle(self, path):
         self.available_files()
-        patt = re.compile('.*=((\.\.|\/).*)')
-        file = re.match(patt, path).group(1)
-        file = os.path.normpath(os.path.join('/', file))
-        return self.lfi_result(file)
+        file_path = self.get_file_path(path)
+        return self.lfi_result(file_path)
