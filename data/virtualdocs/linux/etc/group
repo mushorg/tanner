@@ -2,7 +2,7 @@ root:x:0:
 daemon:x:1:
 bin:x:2:
 sys:x:3:
-adm:x:4:syslog,jpotato
+adm:x:4:syslog
 tty:x:5:
 disk:x:6:
 lp:x:7:
@@ -15,12 +15,12 @@ kmem:x:15:
 dialout:x:20:
 fax:x:21:
 voice:x:22:
-cdrom:x:24:jpotato
+cdrom:x:24:
 floppy:x:25:
 tape:x:26:
-sudo:x:27:jpotato
+sudo:x:27:
 audio:x:29:pulse
-dip:x:30:jpotato
+dip:x:30:
 www-data:x:33:
 backup:x:34:
 operator:x:37:
@@ -32,7 +32,7 @@ shadow:x:42:
 utmp:x:43:
 video:x:44:
 sasl:x:45:
-plugdev:x:46:jpotato
+plugdev:x:46:
 staff:x:50:
 games:x:60:
 users:x:100:
@@ -49,7 +49,7 @@ netdev:x:109:
 messagebus:x:110:
 uuidd:x:111:
 ssl-cert:x:112:
-lpadmin:x:113:japotato
+lpadmin:x:113:
 lightdm:x:114:
 nopasswdlogin:x:115:
 whoopsie:x:116:
@@ -64,6 +64,5 @@ pulse:x:124:
 pulse-access:x:125:
 rtkit:x:126:
 saned:x:127:
-jpotato:x:1000:
-sambashare:x:128:jpotato
+sambashare:x:128:
 uml-net:x:129:

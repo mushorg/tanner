@@ -1,16 +1,15 @@
-USER=jpotato
-LOGNAME=jpotato
-HOME=/home/jpotato
+USER=root
+LOGNAME=root
+HOME=/root
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-MAIL=/var/mail/jpotato SHELL=/bin/bash
+MAIL=/var/mail/root SHELL=/bin/bash
 LANG=en_US.UTF-8
-LC_NUMERIC=ru_RU.UTF-8
-LC_TIME=ru_RU.UTF-8
-LC_MONETARY=ru_RU.UTF-8
-LC_PAPER=ru_RU.UTF-8
-LC_NAME=ru_RU.UTF-8
-LC_ADDRESS=ru_RU.UTF-8
-LC_TELEPHONE=ru_RU.UTF-8
-LC_MEASUREMENT=ru_RU.UTF-8
-LC_IDENTIFICATION=ru_RU.UTF-8
-jpotato@jpotato-ubuntu16:/proc/self
+LC_NUMERIC=en_US.UTF-8
+LC_TIME=en_US.UTF-8
+LC_MONETARY=en_US.UTF-8
+LC_PAPER=en_US.UTF-8
+LC_NAME=en_US.UTF-8
+LC_ADDRESS=en_US.UTF-8
+LC_TELEPHONE=en_US.UTF-8
+LC_MEASUREMENT=en_US.UTF-8
+LC_IDENTIFICATION=en_US.UTF-8
