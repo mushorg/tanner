@@ -39,7 +39,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.rfi_emulator = RfiEmulator()
+        self.rfi_emulator = RfiEmulator('/opt/tanner/')
         self.xss_emulator = XssEmulator()
         self.lfi_emulator = LfiEmulator(os.getcwd())
 
