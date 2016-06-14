@@ -3,12 +3,11 @@ import re
 import asyncio
 import hashlib
 import os
-import json
 
 
 class RfiEmulator:
     def __init__(self, root_dir):
-        self.script_dir = root_dir + '/data/scripts'
+        self.script_dir = root_dir + 'file/'
 
     @asyncio.coroutine
     def download_file(self, path):
@@ -39,25 +38,24 @@ class RfiEmulator:
                 return filename
 
     @asyncio.coroutine
-    def get_rfi_result(self, file):
+    def get_rfi_result(self, file_path):
         loop = asyncio.get_event_loop()
         rfi_result = None
 
-        if not os.path.exists(self.script_dir + file):
+        if not os.path.exists(self.script_dir + file_path):
             return None
 
-        with open(self.script_dir + file) as rfile:
+        with open(self.script_dir + file_path) as rfile:
             script = rfile.read()
 
         with aiohttp.ClientSession(loop=loop) as session:
             resp = yield from session.post('http://127.0.0.1:8088/', data=script)
             try:
-                rfi_result = yield from resp.text()
+                rfi_result = yield from resp.json()
             except Exception as e:
                 print('Error with response %s' % e)
             else:
                 yield from resp.release()
-                rfi_result = json.loads(rfi_result)
             finally:
                 return rfi_result
 
