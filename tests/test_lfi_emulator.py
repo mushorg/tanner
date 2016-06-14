@@ -5,7 +5,7 @@ import os
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
-        data_path = os.path.split(os.path.abspath(os.getcwd()))[0]
+        data_path = os.path.abspath(os.getcwd())
         self.handler = lfi_emulator.LfiEmulator(data_path)
 
     def test_handle_abspath_lfi(self):
