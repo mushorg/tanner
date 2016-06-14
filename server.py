@@ -12,7 +12,7 @@ import aiohttp.server
 
 from rfi_emulator import RfiEmulator
 from session_manager import SessionManager
-from xss_emulator import XSSemulator
+from xss_emulator import XssEmulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -38,7 +38,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator()
-        self.xss_emulator = XSSemulator()
+        self.xss_emulator = XssEmulator()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -66,9 +66,9 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                 return m
 
             if data['method'] == 'POST':
-                xss = self.xss_emulator.extract_xss_data(data)
-                if xss:
-                    detection = self.xss_emulator.create_xss_response(session, xss)
+                xss_result = self.xss_emulator.handle(session, None, data)
+                if xss_result:
+                    detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
             else:
                 path = urllib.parse.unquote(path)
                 for pattern, patter_details in self.patterns.items():
@@ -83,7 +83,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
                     detection['payload'] = rfi_emulation_result
                 if detection['name'] == 'xss':
-                    detection = self.xss_emulator.create_xss_response(session, path)
+                    xss_result = self.xss_emulator.handle(session, path)
+                    detection['payload'] = xss_result
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 
