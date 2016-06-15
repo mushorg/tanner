@@ -40,6 +40,8 @@ class SessionManager:
             data['path'] = None
         if 'uuid' not in data:
             data['uuid'] = None
+        if 'status' not in data:
+            data['status'] = 200 if 'error' not in data else 500
         return data
 
     def get_session(self, data):

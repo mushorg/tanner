@@ -14,6 +14,7 @@ class Session:
             self.user_agent = data['headers']['user-agent']
             self.sensor = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time()}]
+            self.response_status = data['status']
         except KeyError as e:
             raise
 
@@ -40,7 +41,8 @@ class Session:
                  timestamp=self.timestamp,
                  count=self.count,
                  paths=self.paths,
-                 attack_type=self.attack_type
+                 attack_type=self.attack_type,
+                 response_status=self.response_status
                  )
         return json.dumps(s)
 
