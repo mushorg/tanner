@@ -13,8 +13,7 @@ class Session:
             self.port = data['peer']['port']
             self.user_agent = data['headers']['user-agent']
             self.sensor = data['uuid']
-            self.paths = [{'path': data['path'], 'timestamp': time.time()}]
-            self.response_status = data['status']
+            self.paths = [{'path': data['path'], 'timestamp': time.time(), 'response_status': data['status']}]
         except KeyError as e:
             raise
 
@@ -39,8 +38,7 @@ class Session:
                  uuid=self.uuid.hex,
                  timestamp=self.timestamp,
                  count=self.count,
-                 paths=self.paths,
-                 response_status=self.response_status
+                 paths=self.paths
                  )
         return json.dumps(s)
 
