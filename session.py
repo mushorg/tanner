@@ -20,6 +20,7 @@ class Session:
         self.uuid = uuid.uuid4()
         self.timestamp = time.time()
         self.count = 1
+        self.attack_type = None
 
     def update_session(self, path):
         self.timestamp = time.time()
@@ -38,9 +39,13 @@ class Session:
                  uuid=self.uuid.hex,
                  timestamp=self.timestamp,
                  count=self.count,
-                 paths=self.paths
+                 paths=self.paths,
+                 attack_type=self.attack_type
                  )
         return json.dumps(s)
+
+    def set_attack_type(self, attack_type):
+        self.attack_type = attack_type
 
     def get_key(self):
         return self.uuid

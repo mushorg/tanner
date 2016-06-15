@@ -88,6 +88,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     lfi_result = self.lfi_emulator.handle(path)
                     detection['payload'] = lfi_result
 
+            session.set_attack_type(session, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 
