@@ -25,7 +25,7 @@ class SessionManager:
             self.sessions.append(new_session)
             return new_session
         else:
-            session.update_session(valid_data['path'])
+            session.update_session(valid_data)
             return session
 
     def validate_data(self, data):
