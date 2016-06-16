@@ -88,7 +88,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     lfi_result = self.lfi_emulator.handle(path)
                     detection['payload'] = lfi_result
 
-            session.set_attack_type(session, detection['name'])
+            session.set_attack_type(detection['name'])
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 
@@ -123,7 +123,6 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
-
     print('serving on', srv.sockets[0].getsockname())
     try:
         loop.run_forever()
