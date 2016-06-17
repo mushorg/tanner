@@ -21,7 +21,7 @@ class SessionAnalyzer:
         except (redis.ConnectionError, TypeError) as e:
             pass
         stats = self.create_stats(session)
-        print(stats)
+        return stats
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
@@ -87,7 +87,7 @@ class SessionAnalyzer:
                       'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0 like Mac OS X) AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 Mobile/11A465 Safari/9537.53 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)'
                       'Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; IEMobile/11.0; NOKIA; Lumia 530) like Gecko (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)']
         if stats['user_agent'] in bots_owner:
-            hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(stats['perr_ip'])
+            hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(stats['peer_ip'])
             if 'search.msn.com' or 'googlebot.com' in hostname:
                 possible_owners['crawler'] += 1
             else:
@@ -103,6 +103,7 @@ class SessionAnalyzer:
             possible_owners['attacker'] += 1
         if stats['attack_types'].intersection(attacks):
             possible_owners['attacker'] += 1
+
         maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
         owners = [k for k, v in possible_owners.items() if v == maxval]
         return {'possible_owners': owners}
