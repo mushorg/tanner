@@ -25,7 +25,7 @@ class Session:
     def update_session(self, data):
         self.timestamp = time.time()
         self.count += 1
-        self.paths.append({'path': data['path'], 'timestamp': time.time(),'response_status': data['status']})
+        self.paths.append({'path': data['path'], 'timestamp': time.time(), 'response_status': data['status']})
 
     def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME
@@ -37,15 +37,17 @@ class Session:
                  user_agent=self.user_agent,
                  sensor=self.sensor,
                  uuid=self.uuid.hex,
-                 start_time = self.start_timestamp,
+                 start_time=self.start_timestamp,
                  end_time=self.timestamp,
                  count=self.count,
                  paths=self.paths
                  )
         return json.dumps(s)
 
-    def set_attack_type(self, attack_type):
-        self.paths[-1].update({'attack_type': attack_type})
+    def set_attack_type(self, path, attack_type):
+        for p in self.paths:
+            if p == path:
+                p.update({'attack_type': attack_type})
 
     def get_key(self):
         return self.uuid
