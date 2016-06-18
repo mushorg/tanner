@@ -5,6 +5,7 @@ import json
 import asyncio
 import socket
 import operator
+from dorks_manager import DorksManager
 
 
 class SessionAnalyzer:
@@ -54,8 +55,6 @@ class SessionAnalyzer:
         tbr = []
         attack_types = set()
         current_path = paths[0]
-        with open('dorks.pickle', 'rb') as fh:
-            dorks = pickle.load(fh)
 
         for i, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
@@ -67,7 +66,7 @@ class SessionAnalyzer:
         for path in paths:
             if path['response_status'] is not 200:
                 errors += 1
-            if path['path'] in dorks:
+            if path['path'] in DorksManager.dorks:
                 hidden_links += 1
             if 'attack_type' in path:
                 attack_types.add(path['attack_type'])
