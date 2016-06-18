@@ -22,7 +22,6 @@ class SessionAnalyzer:
         except (redis.ConnectionError, TypeError) as e:
             pass
         stats = self.create_stats(session)
-        return stats
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
