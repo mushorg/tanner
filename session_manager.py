@@ -2,12 +2,15 @@ import asyncio
 import redis
 
 from session import Session
+from session_analyzer import SessionAnalyzer
 
 
 class SessionManager:
     def __init__(self):
         self.sessions = []
         self.r = redis.StrictRedis(host='localhost', port=6379)
+        self.analyzer = SessionAnalyzer().analyze()
+        next(self.analyzer)
 
     @asyncio.coroutine
     def add_or_update_session(self, raw_data):
@@ -25,7 +28,7 @@ class SessionManager:
             self.sessions.append(new_session)
             return new_session
         else:
-            session.update_session(valid_data['path'])
+            session.update_session(valid_data)
             return session
 
     def validate_data(self, data):
@@ -40,6 +43,8 @@ class SessionManager:
             data['path'] = None
         if 'uuid' not in data:
             data['uuid'] = None
+        if 'status' not in data:
+            data['status'] = 200 if 'error' not in data else 500
         return data
 
     def get_session(self, data):
@@ -61,3 +66,5 @@ class SessionManager:
                 self.r.set(sess.get_key(), sess.to_json())
             except redis.ConnectionError as e:
                 self.sessions.append(sess)
+            else:
+                self.analyzer.send(sess.get_key())

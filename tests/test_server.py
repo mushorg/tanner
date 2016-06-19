@@ -15,7 +15,14 @@ class TestServer(unittest.TestCase):
         self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
         self.handler.writer = mock.Mock()
 
-        self.handler.session_manager.add_or_update_session = mock.Mock(return_value=(lambda: (yield None))())
+        @asyncio.coroutine
+        def foobar(data):
+            sess = mock.Mock()
+            sess.set_attack_type = mock.Mock()
+            return sess
+
+        self.handler.session_manager.add_or_update_session = foobar
+
         self.m = mock.Mock()
         self.m_eof = mock.Mock()
         self.m_eof.return_value = (lambda: (yield None))()

@@ -1,7 +1,6 @@
 import unittest
 import session_manager
 import session
-import hashlib
 from unittest import mock
 
 
@@ -9,6 +8,8 @@ class TestSessions(unittest.TestCase):
     def setUp(self):
         with mock.patch('redis.StrictRedis', mock.Mock(), create=True):
             self.handler = session_manager.SessionManager()
+            self.handler.analyzer = mock.Mock()
+            self.handler.analyzer.send = mock.Mock()
 
     def test_validate_missing_peer(self):
         data = {
@@ -25,7 +26,8 @@ class TestSessions(unittest.TestCase):
                 'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         data = self.handler.validate_data(data)
         self.assertDictEqual(data, assertion_data)
@@ -48,7 +50,8 @@ class TestSessions(unittest.TestCase):
             },
             'headers': {'user-agent': None},
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         data = self.handler.validate_data(data)
         self.assertDictEqual(data, assertion_data)
@@ -69,7 +72,8 @@ class TestSessions(unittest.TestCase):
             },
             'headers': {'user-agent': None},
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         assertion_session = session.Session(assertion_data)
         self.assertEquals(session, assertion_session)
@@ -82,7 +86,8 @@ class TestSessions(unittest.TestCase):
             },
             'headers': {'user-agent': None},
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         sess = session.Session(data)
         self.handler.sessions.append(sess)
@@ -97,7 +102,8 @@ class TestSessions(unittest.TestCase):
             },
             'headers': {'user-agent': None},
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         sess = session.Session(data)
         sess.is_expired = mock.MagicMock(name='expired')
@@ -116,9 +122,9 @@ class TestSessions(unittest.TestCase):
             },
             'headers': {'user-agent': None},
             'path': '/foo',
-            'uuid': None
+            'uuid': None,
+            'status': 200
         }
         sess = session.Session(data)
         key = sess.get_key()
         self.assertIsNotNone(key)
-

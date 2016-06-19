@@ -15,6 +15,7 @@ from rfi_emulator import RfiEmulator
 from session_manager import SessionManager
 from xss_emulator import XssEmulator
 from lfi_emulator import LfiEmulator
+from dorks_manager import DorksManager
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -31,9 +32,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         re.compile('.*<(.|\n)*?>'): dict(name='xss', order=2)
 
     }
-
-    with open('dorks.pickle', 'rb') as fh:
-        dorks = pickle.load(fh)
 
     session_manager = SessionManager()
 
@@ -88,6 +86,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     lfi_result = self.lfi_emulator.handle(path)
                     detection['payload'] = lfi_result
 
+            session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
             print(m)
 
@@ -100,7 +99,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         )
         if message.path == '/dorks':
             m = json.dumps(
-                dict(version=1, response=dict(dorks=random.sample(self.dorks, 50))),
+                dict(version=1, response=dict(dorks=random.sample(DorksManager.dorks, 50))),
                 sort_keys=True, indent=2
             ).encode('utf-8')
         elif message.path == '/event':
@@ -122,7 +121,6 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
-
     print('serving on', srv.sockets[0].getsockname())
     try:
         loop.run_forever()
