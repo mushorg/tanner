@@ -12,14 +12,16 @@ class SessionAnalyzer:
 
     @asyncio.coroutine
     def analyze(self):
-        session = None
-        session_key = yield
-        try:
-            session = self.r.get(session_key)
-            session = json.loads(session.decode('utf-8'))
-        except (redis.ConnectionError, TypeError) as e:
-            pass
-        stats = self.create_stats(session)
+        while True:
+            session = None
+            session_key = yield
+            try:
+                session = self.r.get(session_key)
+                session = json.loads(session.decode('utf-8'))
+            except (redis.ConnectionError, TypeError) as e:
+                pass
+            print('analyze')
+            self.create_stats(session)
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']

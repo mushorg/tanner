@@ -64,7 +64,9 @@ class SessionManager:
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
+                self.analyzer.send(sess.get_key())
             except redis.ConnectionError as e:
                 self.sessions.append(sess)
-            else:
-                self.analyzer.send(sess.get_key())
+            except StopIteration:
+                pass
+
