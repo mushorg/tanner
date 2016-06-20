@@ -35,12 +35,12 @@ class TestServer(unittest.TestCase):
         self.assertDictEqual(content, assert_content)
 
     def test_handle_request_for_dorks(self):
-        rand = mock.Mock()
-        rand.return_value = [x for x in range(10)]
+        dorks = mock.Mock()
+        dorks.return_value = [x for x in range(10)]
 
         with mock.patch('aiohttp.Response.write', self.m, create=True):
             with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):
-                with mock.patch('random.sample', rand, create=True):
+                with mock.patch('dorks_manager.DorksManager.choose_dorks', dorks, create=True):
                     message = mock.Mock()
                     message.headers = []
                     message.path = '/dorks'
