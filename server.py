@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import pickle
 import json
 import re
 import random
@@ -40,6 +39,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         self.rfi_emulator = rfi_emulator.RfiEmulator('/opt/tanner/')
         self.xss_emulator = xss_emulator.XssEmulator()
         self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
+        self.dorks = DorksManager()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -60,6 +60,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             print(path)
+            self.dorks.extract_path(path)
+
             detection = dict(name='unknown', order=0)
             # dummy for wp-content
             if re.match(r'/wp-content/.*', path):
@@ -99,7 +101,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         )
         if message.path == '/dorks':
             m = json.dumps(
-                dict(version=1, response=dict(dorks=random.sample(dorks_manager.DorksManager.dorks, 50))),
+                dict(version=1, response=dict(dorks=self.dorks.choose_dorks())),
                 sort_keys=True, indent=2
             ).encode('utf-8')
         elif message.path == '/event':
