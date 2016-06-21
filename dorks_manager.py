@@ -31,14 +31,13 @@ class DorksManager:
 
     def choose_dorks(self):
         chosen_dorks = []
-        subsample_count = random.randint(25, 50)
-        chosen_dorks.extend(random.sample(self.dorks, subsample_count))
+        max_dorks = 50
+        chosen_dorks.extend(random.sample(self.dorks, random.randint(0.5 * max_dorks, max_dorks)))
         try:
-            subsample_count = random.randint(25, 50)
-            if subsample_count > len(self.user_dorks):
-                subsample_count = random.randint(0, len(self.user_dorks))
-            chosen_dorks.extend(random.sample(self.user_dorks, subsample_count))
+            if max_dorks > len(self.user_dorks):
+                max_dorks = len(self.user_dorks)
+            chosen_dorks.extend(random.sample(self.user_dorks, random.randint(0.5 * max_dorks, max_dorks)))
         except TypeError:
             pass
-
-        return chosen_dorks
+        finally:
+            return chosen_dorks
