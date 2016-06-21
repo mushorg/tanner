@@ -39,7 +39,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = RfiEmulator('/opt/tanner/')
         self.xss_emulator = XssEmulator()
-        self.lfi_emulator = LfiEmulator(os.getcwd())
+        self.lfi_emulator = LfiEmulator('/opt/tanner/')
 
     def _make_response(self, msg):
         m = json.dumps(dict(
