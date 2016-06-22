@@ -18,10 +18,10 @@ class SessionAnalyzer:
             try:
                 session = self.r.get(session_key)
                 session = json.loads(session.decode('utf-8'))
-            except (redis.ConnectionError, TypeError) as e:
-                pass
-            print('analyze')
-            self.create_stats(session)
+            except (redis.ConnectionError, TypeError, ValueError) as e:
+                print("Can't get session for analyze", e)
+            else:
+                self.create_stats(session)
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']

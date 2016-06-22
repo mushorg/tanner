@@ -25,13 +25,23 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer()
 
-    def tests_load_session(self):
+    def tests_load_session_fail(self):
         stats = None
         analyzer = self.handler.analyze()
-        redis_mock = mock.Mock(return_value=session)
+        next(analyzer)
+        redis_mock = mock.Mock()
+        redis_mock.side_effect = redis.ConnectionError
         with mock.patch('redis.StrictRedis.get', redis_mock):
-            stats = yield from analyzer
-        self.assertIsNotNone(stats)
+            analyzer.send('test')
+        self.assertRaises(redis.ConnectionError)
+
+        def test_create_analyze_fail(self):
+            stats = None
+            analyzer = self.handler.analyze()
+            redis_mock = mock.Mock(return_value=session)
+            with mock.patch('redis.StrictRedis.get', redis_mock):
+                stats = yield from analyzer
+            self.assertIsNotNone(stats)
 
     def test_create_stats(self):
         redis_mock = mock.Mock(return_value=set())
