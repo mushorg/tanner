@@ -5,8 +5,7 @@ import os
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
-        data_path = os.path.abspath(os.getcwd())
-        self.handler = lfi_emulator.LfiEmulator(data_path)
+        self.handler = lfi_emulator.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
         path = '/?foo=/etc/passwd'

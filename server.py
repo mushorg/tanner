@@ -11,11 +11,11 @@ import asyncio
 import aiohttp
 import aiohttp.server
 
-from rfi_emulator import RfiEmulator
-from session_manager import SessionManager
-from xss_emulator import XssEmulator
-from lfi_emulator import LfiEmulator
-from dorks_manager import DorksManager
+import rfi_emulator
+import session_manager
+import xss_emulator
+import dorks_manager
+import lfi_emulator
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -33,13 +33,13 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
     }
 
-    session_manager = SessionManager()
+    session_manager = session_manager.SessionManager()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.rfi_emulator = RfiEmulator('/opt/tanner/')
-        self.xss_emulator = XssEmulator()
-        self.lfi_emulator = LfiEmulator('/opt/tanner/')
+        self.rfi_emulator = rfi_emulator.RfiEmulator('/opt/tanner/')
+        self.xss_emulator = xss_emulator.XssEmulator()
+        self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -99,7 +99,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         )
         if message.path == '/dorks':
             m = json.dumps(
-                dict(version=1, response=dict(dorks=random.sample(DorksManager.dorks, 50))),
+                dict(version=1, response=dict(dorks=random.sample(dorks_manager.DorksManager.dorks, 50))),
                 sort_keys=True, indent=2
             ).encode('utf-8')
         elif message.path == '/event':

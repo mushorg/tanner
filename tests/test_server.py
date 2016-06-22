@@ -2,7 +2,7 @@ import asyncio
 import unittest
 import json
 import server
-
+import lfi_emulator
 from unittest import mock
 
 
@@ -12,8 +12,9 @@ class TestServer(unittest.TestCase):
             with mock.patch('pickle.load', mock.Mock(), create=True):
                 self.MockedRequestHandler = server.HttpRequestHandler
 
-        self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
-        self.handler.writer = mock.Mock()
+        with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
+            self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
+            self.handler.writer = mock.Mock()
 
         @asyncio.coroutine
         def foobar(data):
