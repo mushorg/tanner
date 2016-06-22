@@ -33,13 +33,13 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     }
 
     session_manager = session_manager.SessionManager()
-    dorks = DorksManager()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.rfi_emulator = rfi_emulator.RfiEmulator('/opt/tanner/')
         self.xss_emulator = xss_emulator.XssEmulator()
         self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
+        self.dorks = dorks_manager.DorksManager()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
