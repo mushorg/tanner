@@ -57,7 +57,23 @@ When LFI attack is detected, LFI emulator:
 * If the ``filename`` was found, return the content of the file
 
 
+XSS emulator
+~~~~~~~~~~~~
+Emulate XSS_ vulnerability. This attack type is detected with pattern:
+
+::
+
+.*<(.|\n)*?>
+
+
+Emulator returns the script body and the page, into which this script must be injected.
+
+* Script body can be extracted from data in ``POST`` requests and from query in ``GET`` requests .
+* To avoid replacing characters in data, we use ``urllib.parse.unquote`` function before analyzing path and post data with ``re``.
+* Page is selected from the current session paths (see :doc:`sessions`). It's the last page with mime type ``text/html``.
+* Script is injected into page on SNARE side.
 
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
 .. _LFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Local_File_Inclusion
+.. _XSS: https://en.wikipedia.org/wiki/Cross-site_scripting
