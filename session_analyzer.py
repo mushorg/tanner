@@ -3,6 +3,7 @@ import json
 import asyncio
 import socket
 import operator
+import time
 from dorks_manager import DorksManager
 
 
@@ -13,6 +14,7 @@ class SessionAnalyzer:
     @asyncio.coroutine
     def analyze(self):
         while True:
+            time.sleep(1)
             session = None
             session_key = yield
             try:
@@ -47,7 +49,6 @@ class SessionAnalyzer:
 
         owner = self.choose_possible_owner(stats)
         stats.update(owner)
-
         return stats
 
     def analyze_paths(self, paths):
