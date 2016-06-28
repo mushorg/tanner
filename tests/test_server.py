@@ -8,13 +8,16 @@ from unittest import mock
 
 class TestServer(unittest.TestCase):
     def setUp(self):
-        with mock.patch('builtins.open', mock.mock_open(), create=True):
-            with mock.patch('pickle.load', mock.Mock(), create=True):
-                self.MockedRequestHandler = server.HttpRequestHandler
+        dorks = mock.Mock()
+        attrs = {'choose_dorks.return_value': [x for x in range(10)], 'extract_path.return_value': mock.Mock()}
+        dorks.configure_mock(**attrs)
+        self.MockedRequestHandler = server.HttpRequestHandler
+        with mock.patch('dorks_manager.DorksManager', mock.Mock()):
+            with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
+                 self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
 
-        with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
-            self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
-            self.handler.writer = mock.Mock()
+        self.handler.dorks = dorks
+        self.handler.writer = mock.Mock()
 
         @asyncio.coroutine
         def foobar(data):
@@ -23,6 +26,7 @@ class TestServer(unittest.TestCase):
             return sess
 
         self.handler.session_manager.add_or_update_session = foobar
+        # self.handler.dorks = dorks
 
         self.m = mock.Mock()
         self.m_eof = mock.Mock()
@@ -35,24 +39,19 @@ class TestServer(unittest.TestCase):
         self.assertDictEqual(content, assert_content)
 
     def test_handle_request_for_dorks(self):
-        rand = mock.Mock()
-        rand.return_value = [x for x in range(10)]
-
         with mock.patch('aiohttp.Response.write', self.m, create=True):
             with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):
-                with mock.patch('random.sample', rand, create=True):
-                    message = mock.Mock()
-                    message.headers = []
-                    message.path = '/dorks'
-                    message.version = (1, 1)
+                message = mock.Mock()
+                message.headers = []
+                message.path = '/dorks'
+                message.version = (1, 1)
 
-                    asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, None))
+                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, None))
+                content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
+                content = json.loads(content)
 
-                    content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
-                    content = json.loads(content)
-                assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
-
-                self.assertDictEqual(content, assert_content)
+            assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
+            self.assertDictEqual(content, assert_content)
 
     def test_handle_request_rfi(self):
         rand = mock.Mock()
