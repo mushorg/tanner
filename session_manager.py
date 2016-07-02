@@ -9,13 +9,12 @@ class SessionManager:
     def __init__(self):
         self.sessions = []
         self.r = redis.StrictRedis(host='localhost', port=6379)
-        self.analyzer = SessionAnalyzer().analyze()
-        next(self.analyzer)
+        self.analyzer = SessionAnalyzer()
 
     @asyncio.coroutine
     def add_or_update_session(self, raw_data):
         # prepare the list of sessions
-        self.delete_old_sessions()
+        yield from self.delete_old_sessions()
         # handle raw data
         valid_data = self.validate_data(raw_data)
         session = self.get_session(valid_data)
@@ -57,6 +56,7 @@ class SessionManager:
                 break
         return session
 
+    @asyncio.coroutine
     def delete_old_sessions(self):
         for sess in self.sessions:
             if not sess.is_expired():
@@ -64,9 +64,6 @@ class SessionManager:
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
-                self.analyzer.send(sess.get_key())
+                yield from self.analyzer.analyze(sess.get_key())
             except redis.ConnectionError as e:
                 self.sessions.append(sess)
-            except StopIteration:
-                pass
-

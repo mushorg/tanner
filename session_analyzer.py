@@ -3,7 +3,6 @@ import json
 import asyncio
 import socket
 import operator
-import time
 from dorks_manager import DorksManager
 
 
@@ -12,18 +11,16 @@ class SessionAnalyzer:
         self.r = redis.StrictRedis(host='localhost', port=6379)
 
     @asyncio.coroutine
-    def analyze(self):
-        while True:
-            time.sleep(1)
-            session = None
-            session_key = yield
-            try:
-                session = self.r.get(session_key)
-                session = json.loads(session.decode('utf-8'))
-            except (redis.ConnectionError, TypeError, ValueError) as e:
-                print("Can't get session for analyze", e)
-            else:
-                self.create_stats(session)
+    def analyze(self, session_key):
+        session = None
+        yield from asyncio.sleep(1)
+        try:
+            session = self.r.get(session_key)
+            session = json.loads(session.decode('utf-8'))
+        except (redis.ConnectionError, TypeError, ValueError) as e:
+            print("Can't get session for analyze", e)
+        else:
+            self.create_stats(session)
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
