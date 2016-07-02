@@ -111,7 +111,7 @@ class TestSessions(unittest.TestCase):
         self.handler.sessions.append(sess)
         experied = mock.Mock()
         experied.return_value = True
-        self.handler.delete_old_sessions()
+        yield from self.handler.delete_old_sessions()
         self.assertListEqual(self.handler.sessions, [])
 
     def test_get_key(self):
