@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 import json
 import redis
@@ -26,22 +27,21 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.handler = SessionAnalyzer()
 
     def tests_load_session_fail(self):
-        stats = None
-        analyzer = self.handler.analyze()
-        next(analyzer)
+        res = None
+        loop = asyncio.get_event_loop()
         redis_mock = mock.Mock()
         redis_mock.side_effect = redis.ConnectionError
         with mock.patch('redis.StrictRedis.get', redis_mock):
-            analyzer.send('test')
+            loop.run_until_complete(self.handler.analyze(None))
         self.assertRaises(redis.ConnectionError)
 
-        def test_create_analyze_fail(self):
-            stats = None
-            analyzer = self.handler.analyze()
-            redis_mock = mock.Mock(return_value=session)
-            with mock.patch('redis.StrictRedis.get', redis_mock):
-                stats = yield from analyzer
-            self.assertIsNotNone(stats)
+    def test_create_analyze_fail(self):
+        res = None
+        loop = asyncio.get_event_loop()
+        redis_mock = mock.Mock(return_value=session)
+        with mock.patch('redis.StrictRedis.get', redis_mock):
+            res = loop.run_until_complete(self.handler.analyze(None))
+        self.assertIsNotNone(res)
 
     def test_create_stats(self):
         redis_mock = mock.Mock(return_value=set())

@@ -20,7 +20,8 @@ class SessionAnalyzer:
         except (redis.ConnectionError, TypeError, ValueError) as e:
             print("Can't get session for analyze", e)
         else:
-            self.create_stats(session)
+            result = self.create_stats(session)
+            return result
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
