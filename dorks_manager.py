@@ -7,8 +7,8 @@ import uuid
 
 
 class DorksManager:
-    dorks_key = None
-    user_dorks_key = None
+    dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'dorks').hex
+    user_dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'user_dorks').hex
 
     if os.path.exists('user_dorks.pickle'):
         with open('user_dorks.pickle', 'rb') as ud:
@@ -16,11 +16,9 @@ class DorksManager:
 
     def __init__(self):
         self.r = redis.StrictRedis(host='localhost', port=6379)
-        if self.dorks_key is None:
-            self.dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'dorks').hex
+        if not self.r.exists(self.dorks_key):
             self.push_init_dorks('dorks.pickle', self.dorks_key)
-        if self.user_dorks_key is None:
-            self.user_dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'user_dorks').hex
+        if not self.r.exists(self.user_dorks_key):
             self.push_init_dorks('user_dorks.pickle', self.user_dorks_key)
 
     def push_init_dorks(self, file_name, redis_key):
@@ -57,4 +55,6 @@ class DorksManager:
         except TypeError:
             pass
         finally:
+            for i, val in enumerate(chosen_dorks):
+                chosen_dorks[i] = val.decode('utf-8')
             return chosen_dorks

@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 import json
 import redis
@@ -23,18 +24,26 @@ session = b'{"uuid": "c546114f97f548f982756495f963e280", "start_time": 146609181
 class TestSessionAnalyzer(unittest.TestCase):
     def setUp(self):
         self.session = json.loads(session.decode('utf-8'))
-        self.handler = SessionAnalyzer()
+        with mock.patch('redis.StrictRedis', mock.Mock()):
+            self.handler = SessionAnalyzer()
+        attrs = {'get.return_value': session, 'smembers.return_value': set()}
+        self.handler.r = mock.Mock(**attrs)
 
-    def tests_load_session(self):
-        stats = None
-        analyzer = self.handler.analyze()
-        redis_mock = mock.Mock(return_value=session)
+    def tests_load_session_fail(self):
+        res = None
+        loop = asyncio.get_event_loop()
+        redis_mock = mock.Mock()
+        redis_mock.side_effect = redis.ConnectionError
         with mock.patch('redis.StrictRedis.get', redis_mock):
-            stats = yield from analyzer
-        self.assertIsNotNone(stats)
+            loop.run_until_complete(self.handler.analyze(None))
+        self.assertRaises(redis.ConnectionError)
+
+    def test_create_analyze_fail(self):
+        res = None
+        loop = asyncio.get_event_loop()
+        res = loop.run_until_complete(self.handler.analyze(None))
+        self.assertIsNotNone(res)
 
     def test_create_stats(self):
-        redis_mock = mock.Mock(return_value=set())
-        with mock.patch('redis.StrictRedis.smembers', redis_mock):
-            stats = self.handler.create_stats(self.session)
+        stats = self.handler.create_stats(self.session)
         self.assertEqual(stats['possible_owners'], ['attacker'])

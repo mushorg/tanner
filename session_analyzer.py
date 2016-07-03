@@ -11,15 +11,17 @@ class SessionAnalyzer:
         self.r = redis.StrictRedis(host='localhost', port=6379)
 
     @asyncio.coroutine
-    def analyze(self):
+    def analyze(self, session_key):
         session = None
-        session_key = yield
+        yield from asyncio.sleep(1)
         try:
             session = self.r.get(session_key)
             session = json.loads(session.decode('utf-8'))
-        except (redis.ConnectionError, TypeError) as e:
-            pass
-        stats = self.create_stats(session)
+        except (redis.ConnectionError, TypeError, ValueError) as e:
+            print("Can't get session for analyze", e)
+        else:
+            result = self.create_stats(session)
+            return result
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
@@ -45,7 +47,6 @@ class SessionAnalyzer:
 
         owner = self.choose_possible_owner(stats)
         stats.update(owner)
-
         return stats
 
     def analyze_paths(self, paths):
