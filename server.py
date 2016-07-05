@@ -128,3 +128,5 @@ if __name__ == '__main__':
         loop.run_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        loop.close()
