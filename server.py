@@ -21,14 +21,14 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     # Reference patterns
     patterns = {
         re.compile('(/index.html|/)'): dict(name='index', order=1),
-        re.compile('.*(=.*(http(s){0,1}|ftp(s){0,1}):).*', re.IGNORECASE): dict(name='rfi', order=2),
+        re.compile('.*(=(http(s){0,1}|ftp(s){0,1}):).*', re.IGNORECASE): dict(name='rfi', order=2),
         re.compile('.*(select|drop|update|union|insert|alter|declare|cast)( |\().*', re.IGNORECASE): dict(
             name='sqli', order=2
         ),
         re.compile('.*(\/\.\.)*(home|proc|usr|etc)\/.*'): dict(
             name='lfi', order=2
         ),
-        re.compile('.*<(.|\n)*?>'): dict(name='xss', order=2)
+        re.compile('.*<(.|\n)*?>'): dict(name='xss', order=3)
 
     }
 
@@ -84,6 +84,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
                     detection['payload'] = rfi_emulation_result
                 if detection['name'] == 'xss':
                     xss_result = self.xss_emulator.handle(session, path)
+                    detection['payload'] = xss_result
                 if detection['name'] == 'lfi':
                     lfi_result = self.lfi_emulator.handle(path)
                     detection['payload'] = lfi_result

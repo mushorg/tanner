@@ -12,24 +12,27 @@ class XssEmulator:
                 val = urllib.parse.unquote(val)
                 xss = re.match(r'.*<(.*)>.*', val)
                 if xss:
-                    value += val if not value else '\n'+val
+                    value += val if not value else '\n' + val
         return value
 
     def get_xss_result(self, session, val):
         result = None
-        injectable_page = '/index.html'
+        injectable_page = None
         if session:
             injectable_page = self.set_xss_page(session)
+        if injectable_page is None:
+            injectable_page = '/index.html'
         if val:
             result = dict(name='xss', value=val,
                           page=injectable_page)
         return result
 
     def set_xss_page(self, session):
+        injectable_page = None
         for page in reversed(session.paths):
             if mimetypes.guess_type(page['path'])[0] == 'text/html':
                 injectable_page = page['path']
-                return injectable_page
+        return injectable_page
 
     def handle(self, session, value, raw_data=None):
         xss_result = None
