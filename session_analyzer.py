@@ -21,7 +21,10 @@ class SessionAnalyzer:
             print("Can't get session for analyze", e)
         else:
             result = self.create_stats(session)
-            return result
+            s_key = result['sensor_uuid']
+            print(s_key)
+            result = json.dumps(result)
+            self.r.lpush(s_key,result)
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
@@ -51,7 +54,7 @@ class SessionAnalyzer:
 
     def analyze_paths(self, paths):
         tbr = []
-        attack_types = set()
+        attack_types = []
         current_path = paths[0]
         dorks = self.r.smembers(DorksManager.dorks_key)
 
@@ -68,7 +71,7 @@ class SessionAnalyzer:
             if path['path'] in dorks:
                 hidden_links += 1
             if 'attack_type' in path:
-                attack_types.add(path['attack_type'])
+                attack_types.append(path['attack_type'])
         return tbr_average, errors, hidden_links, attack_types
 
     def choose_possible_owner(self, stats):
@@ -99,7 +102,7 @@ class SessionAnalyzer:
         if stats['hidden_links'] > 0:
             possible_owners['crawler'] += 1
             possible_owners['attacker'] += 1
-        if stats['attack_types'].intersection(attacks):
+        if set(stats['attack_types']).intersection(attacks):
             possible_owners['attacker'] += 1
 
         maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
