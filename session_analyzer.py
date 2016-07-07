@@ -22,7 +22,7 @@ class SessionAnalyzer:
             print("Can't get session for analyze", e)
         else:
             result = self.create_stats(session)
-            self.query.append(json.dumps(result))
+            self.query.append(result)
             yield from self.save_session()
 
     @asyncio.coroutine
@@ -32,7 +32,7 @@ class SessionAnalyzer:
             s_key = session['sensor_uuid']
             del_key = session['uuid']
             try:
-                self.r.lpush(s_key, session)
+                self.r.lpush(s_key, json.dumps(session))
                 self.r.delete(del_key)
             except redis.ConnectionError as e:
                 print('Error with redis. Session will be queried')
