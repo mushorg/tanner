@@ -15,21 +15,17 @@ import session_manager
 import xss_emulator
 import dorks_manager
 import lfi_emulator
+import patterns
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     # Reference patterns
     patterns = {
-        re.compile('(/index.html|/)'): dict(name='index', order=1),
-        re.compile('.*(=(http(s){0,1}|ftp(s){0,1}):).*', re.IGNORECASE): dict(name='rfi', order=2),
-        re.compile('.*(select|drop|update|union|insert|alter|declare|cast)( |\().*', re.IGNORECASE): dict(
-            name='sqli', order=2
-        ),
-        re.compile('.*(\/\.\.)*(home|proc|usr|etc)\/.*'): dict(
-            name='lfi', order=2
-        ),
-        re.compile('.*<(.|\n)*?>'): dict(name='xss', order=3)
-
+        patterns.INDEX: dict(name='index', order=1),
+        patterns.RFI_ATTACK: dict(name='rfi', order=2),
+        patterns.SQLI_ATTACK: dict(name='sqli', order=2),
+        patterns.LFI_ATTACK: dict(name='lfi', order=2),
+        patterns.XSS_ATTACK: dict(name='xss', order=3)
     }
 
     session_manager = session_manager.SessionManager()
@@ -64,7 +60,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
             detection = dict(name='unknown', order=0)
             # dummy for wp-content
-            if re.match(r'/wp-content/.*', path):
+            if re.match(patterns.WORD_PRESS_CONTENT, path):
                 m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
                 return m
 

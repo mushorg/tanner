@@ -1,16 +1,17 @@
-import asyncio
+import patterns
 import urllib.parse
 import re
 import mimetypes
 
 
 class XssEmulator:
-    def extract_xss_data(self, data):
+    @staticmethod
+    def extract_xss_data(data):
         value = ''
         if 'post_data' in data:
             for field, val in data['post_data'].items():
                 val = urllib.parse.unquote(val)
-                xss = re.match(r'.*<(.*)>.*', val)
+                xss = re.match(patterns.HTML_TAGS, val)
                 if xss:
                     value += val if not value else '\n' + val
         return value

@@ -3,7 +3,7 @@ import re
 import asyncio
 import hashlib
 import os
-
+import patterns
 
 class RfiEmulator:
     def __init__(self, root_dir):
@@ -12,8 +12,7 @@ class RfiEmulator:
     @asyncio.coroutine
     def download_file(self, path):
         file_name = None
-        url_pattern = re.compile('.*=(.*(http(s){0,1}|ftp(s){0,1}):.*)')
-        url = re.match(url_pattern, path)
+        url = re.match(patterns.REMOTE_FILE_URL, path)
 
         if url is None:
             return None
