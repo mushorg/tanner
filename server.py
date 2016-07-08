@@ -2,9 +2,7 @@
 
 import json
 import re
-import random
 import urllib.parse
-import os
 
 import asyncio
 import aiohttp
@@ -16,6 +14,7 @@ import xss_emulator
 import dorks_manager
 import lfi_emulator
 import patterns
+import api
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -36,6 +35,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         self.xss_emulator = xss_emulator.XssEmulator()
         self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
         self.dorks = dorks_manager.DorksManager()
+        self.api = api.Api()
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -49,7 +49,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         try:
             data = json.loads(data.decode('utf-8'))
             path = data['path']
-            sensor_uuid = data['uuid'] if 'uuid' in data else None
         except (TypeError, ValueError, KeyError) as e:
             print('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
@@ -57,7 +56,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             print(path)
             self.dorks.extract_path(path)
-
             detection = dict(name='unknown', order=0)
             # dummy for wp-content
             if re.match(patterns.WORD_PRESS_CONTENT, path):
@@ -104,6 +102,9 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         elif message.path == '/event':
             data = yield from payload.read()
             m = yield from self.handle_event(data)
+        elif message.path.startswith('/api'):
+            data = yield from self.api.handle_api_request(message.path)
+            m = self._make_response(data)
         else:
             m = self._make_response(msg='')
 
@@ -126,4 +127,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        srv.close()
         loop.close()
