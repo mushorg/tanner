@@ -18,7 +18,7 @@ class SessionManager:
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
-        self.r.sadd(uuid.uuid3(uuid.NAMESPACE_DNS, 'snare_uuids').hex, valid_data['uuid'])
+        self.r.sadd('snare_ids', valid_data['uuid'])
         session = self.get_session(valid_data)
         if session is None:
             try:

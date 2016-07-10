@@ -21,12 +21,12 @@ class Api:
         if request == '/api' and arg == 'stats':
             result = yield from self.return_stats()
         if request == '/api/stats':
-            result = yield from self.return_uuid_stats(uuid)
+            result = yield from self.return_uuid_stats(arg)
         return result
 
     @asyncio.coroutine
     def return_stats(self):
-        query_res = self.r.smembers(uuid.uuid3(uuid.NAMESPACE_DNS, 'snare_uuids').hex)
+        query_res = self.r.smembers('snare_ids')
         return list(query_res)
 
     @asyncio.coroutine
