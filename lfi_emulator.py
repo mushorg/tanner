@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import patterns
 
 
 class LfiEmulator:
@@ -23,8 +24,7 @@ class LfiEmulator:
         return result
 
     def get_file_path(self, path):
-        patt = re.compile('.*=((\.\.|\/).*)')
-        file_path = re.match(patt, path).group(1)
+        file_path = re.match(patterns.LFI_FILEPATH, path).group(1)
         file_path = os.path.normpath(os.path.join('/', file_path))
         return file_path
 

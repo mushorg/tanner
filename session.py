@@ -14,7 +14,7 @@ class Session:
             self.user_agent = data['headers']['user-agent']
             self.sensor = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time(), 'response_status': data['status']}]
-        except KeyError as e:
+        except KeyError:
             raise
 
         self.uuid = uuid.uuid4()

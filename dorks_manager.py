@@ -4,6 +4,7 @@ import random
 import os
 import redis
 import uuid
+import patterns
 
 
 class DorksManager:
@@ -32,7 +33,7 @@ class DorksManager:
             self.r.sadd(redis_key, *dorks)
 
     def extract_path(self, path):
-        extracted = re.match(r'(.*\?)=', path)
+        extracted = re.match(patterns.QUERY, path)
         if extracted:
             extracted = extracted.group(0)
             print("extracted %s" % extracted)

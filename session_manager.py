@@ -30,7 +30,8 @@ class SessionManager:
             session.update_session(valid_data)
             return session
 
-    def validate_data(self, data):
+    @staticmethod
+    def validate_data(data):
         if 'peer' not in data:
             peer = dict(ip=None, port=None)
             data['peer'] = peer
@@ -66,4 +67,5 @@ class SessionManager:
                 self.r.set(sess.get_key(), sess.to_json())
                 yield from self.analyzer.analyze(sess.get_key())
             except redis.ConnectionError as e:
+                print('Error connect to redis, session stay in memory', e)
                 self.sessions.append(sess)
