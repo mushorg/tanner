@@ -9,7 +9,7 @@ from dorks_manager import DorksManager
 class SessionAnalyzer:
     def __init__(self):
         self.r = redis.StrictRedis(host='localhost', port=6379)
-        self.queue = []
+        self.queue = asyncio.Queue()
 
     @asyncio.coroutine
     def analyze(self, session_key):
@@ -22,21 +22,21 @@ class SessionAnalyzer:
             print("Can't get session for analyze", e)
         else:
             result = self.create_stats(session)
-            self.queue.append(result)
+            yield from self.queue.put(result)
             yield from self.save_session()
 
     @asyncio.coroutine
     def save_session(self):
-        while self.queue:
-            session = self.queue.pop()
+        while not self.queue.empty():
+            session = yield from self.queue.get()
             s_key = session['sensor_uuid']
             del_key = session['uuid']
             try:
                 self.r.lpush(s_key, json.dumps(session))
                 self.r.delete(del_key)
             except redis.ConnectionError as e:
-                print('Error with redis. Session will be returned to the queue')
-                self.queue.append(session)
+                print('Error with redis. Session will be returned to the queue', e)
+                self.queue.put(session)
 
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
