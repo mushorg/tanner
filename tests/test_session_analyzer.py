@@ -26,7 +26,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.session = json.loads(session.decode('utf-8'))
         with mock.patch('redis.StrictRedis', mock.Mock()):
             self.handler = SessionAnalyzer()
-        attrs = {'get.return_value': session, 'smembers.return_value': set()}
+        attrs = {'get.return_value': session, 'smembers.return_value': set(),'lpush.return_value':''}
         self.handler.r = mock.Mock(**attrs)
 
     def tests_load_session_fail(self):
@@ -37,12 +37,6 @@ class TestSessionAnalyzer(unittest.TestCase):
         with mock.patch('redis.StrictRedis.get', redis_mock):
             loop.run_until_complete(self.handler.analyze(None))
         self.assertRaises(redis.ConnectionError)
-
-    def test_create_analyze_fail(self):
-        res = None
-        loop = asyncio.get_event_loop()
-        res = loop.run_until_complete(self.handler.analyze(None))
-        self.assertIsNotNone(res)
 
     def test_create_stats(self):
         stats = self.handler.create_stats(self.session)
