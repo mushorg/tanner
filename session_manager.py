@@ -1,6 +1,6 @@
 import asyncio
 import redis
-
+import uuid
 from session import Session
 from session_analyzer import SessionAnalyzer
 
@@ -17,6 +17,8 @@ class SessionManager:
         yield from self.delete_old_sessions()
         # handle raw data
         valid_data = self.validate_data(raw_data)
+        # push snare uuid into redis.
+        self.r.sadd('snare_ids', valid_data['uuid'])
         session = self.get_session(valid_data)
         if session is None:
             try:
