@@ -33,7 +33,10 @@ class BaseHandler:
         command = ['/usr/bin/python2', 'sqli_check.py', path]
         res = yield from _run_cmd(command)
         if res is not None:
-            res = int(res.decode('utf-8'))
+            try:
+                res = int(res.decode('utf-8'))
+            except ValueError:
+                res = 0
         return res
 
     @asyncio.coroutine
