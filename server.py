@@ -1,39 +1,21 @@
 #!/usr/bin/python3
 
 import json
-import re
-import urllib.parse
-
 import asyncio
 import aiohttp
 import aiohttp.server
-
-import rfi_emulator
-import session_manager
-import xss_emulator
 import dorks_manager
-import lfi_emulator
-import patterns
+import session_manager
 import api
+import base_handler
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
-    # Reference patterns
-    patterns = {
-        patterns.INDEX: dict(name='index', order=1),
-        patterns.RFI_ATTACK: dict(name='rfi', order=2),
-        patterns.SQLI_ATTACK: dict(name='sqli', order=2),
-        patterns.LFI_ATTACK: dict(name='lfi', order=2),
-        patterns.XSS_ATTACK: dict(name='xss', order=3)
-    }
-
     session_manager = session_manager.SessionManager()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.rfi_emulator = rfi_emulator.RfiEmulator('/opt/tanner/')
-        self.xss_emulator = xss_emulator.XssEmulator()
-        self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
+        self.base_handler = base_handler.BaseHandler()
         self.dorks = dorks_manager.DorksManager()
         self.api = api.Api()
 
@@ -56,37 +38,10 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             print(path)
             self.dorks.extract_path(path)
-            detection = dict(name='unknown', order=0)
-            # dummy for wp-content
-            if re.match(patterns.WORD_PRESS_CONTENT, path):
-                m = self._make_response(msg=dict(detection={'name': 'wp-content', 'order': 1}))
-                return m
-
-            if data['method'] == 'POST':
-                xss_result = self.xss_emulator.handle(session, None, data)
-                if xss_result:
-                    detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
-            else:
-                path = urllib.parse.unquote(path)
-                for pattern, patter_details in self.patterns.items():
-                    if pattern.match(path):
-                        if detection['order'] < patter_details['order']:
-                            detection = patter_details
-
-                if detection['name'] == 'rfi':
-                    rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
-                    detection['payload'] = rfi_emulation_result
-                if detection['name'] == 'xss':
-                    xss_result = self.xss_emulator.handle(session, path)
-                    detection['payload'] = xss_result
-                if detection['name'] == 'lfi':
-                    lfi_result = self.lfi_emulator.handle(path)
-                    detection['payload'] = lfi_result
-
+            detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
             print(m)
-
             return m
 
     @asyncio.coroutine
