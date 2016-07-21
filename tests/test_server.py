@@ -14,7 +14,7 @@ class TestServer(unittest.TestCase):
         self.MockedRequestHandler = server.HttpRequestHandler
         with mock.patch('dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
-                 self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
+                self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
 
         self.handler.dorks = dorks
         self.handler.writer = mock.Mock()
@@ -56,7 +56,7 @@ class TestServer(unittest.TestCase):
     def test_handle_request_rfi(self):
         rand = mock.Mock()
         rand.return_value = [x for x in range(10)]
-        self.handler.rfi_emulator.handle_rfi = mock.Mock(return_value=(lambda: (yield None))())
+        self.handler.base_handler.rfi_emulator.handle_rfi = mock.Mock(return_value=(lambda: (yield None))())
 
         with mock.patch('aiohttp.Response.write', self.m, create=True):
             with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):

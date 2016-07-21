@@ -22,6 +22,7 @@ class BaseHandler:
         self.xss_emulator = xss_emulator.XssEmulator()
         self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
 
+    @asyncio.coroutine
     def check_sqli(self, path):
         @asyncio.coroutine
         def _run_cmd(cmd):
@@ -31,6 +32,8 @@ class BaseHandler:
 
         command = ['/usr/bin/python2', 'sqli_check.py', path]
         res = yield from _run_cmd(command)
+        if res is not None:
+            res = int(res.decode('utf-8'))
         return res
 
     @asyncio.coroutine
@@ -45,7 +48,8 @@ class BaseHandler:
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
 
-        elif self.check_sqli(path):
+        sqli = yield from self.check_sqli(path)
+        if sqli:
             detection = {'name': 'sqli', 'order': 2}
         else:
             path = urllib.parse.unquote(path)
