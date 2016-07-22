@@ -2,6 +2,7 @@ import patterns
 import urllib.parse
 import re
 import mimetypes
+import asyncio
 
 
 class XssEmulator:
@@ -35,7 +36,8 @@ class XssEmulator:
                 injectable_page = page['path']
         return injectable_page
 
-    def handle(self, session, value, raw_data=None):
+    @asyncio.coroutine
+    def handle(self, value, session, raw_data=None):
         xss_result = None
         if not value:
             value = self.extract_xss_data(raw_data)

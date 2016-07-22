@@ -2,6 +2,7 @@ import os
 import re
 import json
 import patterns
+import asyncio
 
 
 class LfiEmulator:
@@ -28,11 +29,6 @@ class LfiEmulator:
         file_path = os.path.normpath(os.path.join('/', file_path))
         return file_path
 
-    def handle(self, path):
-        self.available_files()
-        file_path = self.get_file_path(path)
-        return self.lfi_result(file_path)
-
     def setup_vdocs(self):
         vdocs = None
         if not os.path.exists(self.vdoc_path + 'linux/'):
@@ -47,3 +43,9 @@ class LfiEmulator:
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 with open(filename, 'w') as vd:
                     vd.write(v)
+
+    @asyncio.coroutine
+    def handle(self, path, session=None):
+        self.available_files()
+        file_path = self.get_file_path(path)
+        return self.lfi_result(file_path)

@@ -5,6 +5,7 @@ import hashlib
 import os
 import patterns
 
+
 class RfiEmulator:
     def __init__(self, root_dir):
         self.script_dir = root_dir + 'file/'
@@ -59,7 +60,7 @@ class RfiEmulator:
             return rfi_result
 
     @asyncio.coroutine
-    def handle_rfi(self, path):
+    def handle(self, path, session=None):
         result = yield from self.get_rfi_result(path)
         if not result or 'stdout' not in result:
             return ''

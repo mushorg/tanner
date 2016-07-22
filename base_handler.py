@@ -18,9 +18,11 @@ class BaseHandler:
     }
 
     def __init__(self):
-        self.rfi_emulator = rfi_emulator.RfiEmulator('/opt/tanner/')
-        self.xss_emulator = xss_emulator.XssEmulator()
-        self.lfi_emulator = lfi_emulator.LfiEmulator('/opt/tanner/')
+        self.emulators = {
+            'rfi': rfi_emulator.RfiEmulator('/opt/tanner/'),
+            'lfi': lfi_emulator.LfiEmulator('/opt/tanner/'),
+            'xss': xss_emulator.XssEmulator()
+        }
 
     @asyncio.coroutine
     def check_sqli(self, path):
@@ -42,7 +44,7 @@ class BaseHandler:
     @asyncio.coroutine
     def detect_attack(self, data, session, path):
         if data['method'] == 'POST':
-            xss_result = self.xss_emulator.handle(session, None, data)
+            xss_result = yield from self.emulators['xss'].handle(None, session, data)
             if xss_result:
                 detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
 
@@ -64,15 +66,11 @@ class BaseHandler:
 
     @asyncio.coroutine
     def emulate(self, detection, session, path):
-        if detection['name'] == 'rfi':
-            rfi_emulation_result = yield from self.rfi_emulator.handle_rfi(path)
-            detection['payload'] = rfi_emulation_result
-        elif detection['name'] == 'xss':
-            xss_result = self.xss_emulator.handle(session, path)
-            detection['payload'] = xss_result
-        elif detection['name'] == 'lfi':
-            lfi_result = self.lfi_emulator.handle(path)
-            detection['payload'] = lfi_result
+        name = detection['name']
+        if name in self.emulators:
+            emulator = self.emulators[name]
+            emulation_result = yield from emulator.handle(path, session)
+            detection['payload'] = emulation_result
 
     @asyncio.coroutine
     def handle(self, data, session, path):
