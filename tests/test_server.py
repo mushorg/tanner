@@ -56,7 +56,7 @@ class TestServer(unittest.TestCase):
     def test_handle_request_rfi(self):
         rand = mock.Mock()
         rand.return_value = [x for x in range(10)]
-        self.handler.base_handler.rfi_emulator.handle_rfi = mock.Mock(return_value=(lambda: (yield None))())
+        self.handler.base_handler.emulators['rfi'].handle = mock.Mock(return_value=(lambda: (yield None))())
 
         with mock.patch('aiohttp.Response.write', self.m, create=True):
             with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):

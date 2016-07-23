@@ -12,7 +12,7 @@ class TestXSSEmulator(unittest.TestCase):
         data = {
             'post_data': {'comment': '<script>alert(\'xss\');</script>'}
         }
-        xss = self.handler.handle(None, None, data)
+        xss = yield from self.handler.handle(None, None, data)
         assert_result = dict(name='xss', value='<script>alert(\'xss\');</script>',
                              page='/index.html')
         self.assertDictEqual(xss, assert_result)
@@ -23,13 +23,13 @@ class TestXSSEmulator(unittest.TestCase):
                           'name': '<script>alert(\'name\');</script>',
                           'email': '<script>alert(\'email\');</script>'}
         }
-        xss = self.handler.handle(None, None, data)
+        xss = yield from self.handler.handle(None, None, data)
         assert_result = '<script>alert(\'name\');</script>'
         self.assertIn(assert_result, xss['value'])
 
     def test_get_xss(self):
         path = '/python.php/?foo=<script>alert(\'xss\');</script>'
-        xss = self.handler.handle(None, path, None)
+        xss = yield from self.handler.handle(None, path, None)
 
         assert_result = dict(name='xss', value=path,
                              page='/index.html')
@@ -45,5 +45,5 @@ class TestXSSEmulator(unittest.TestCase):
         data = {
             'post_data': {'comment': '<script>alert(\'xss\');</script>'}
         }
-        xss = self.handler.handle(sess, None, data)
+        xss = yield from self.handler.handle(sess, None, data)
         self.assertEqual(xss['page'], '/python.html')
