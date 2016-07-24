@@ -1,0 +1,18 @@
+{
+  "tables": [
+    {
+      "table": "users",
+      "schema": "CREATE TABLE users ( id int primary key, username text, email text, password text)",
+      "requests": [
+        "SELECT username FROM users WHERE id="
+      ]
+    },
+    {
+      "table": "comments",
+      "schema": "CREATE TABLE comments ( id int primary key, comment text",
+      "requests": [
+        "SELECT comment FROM comments WHERE id="
+      ]
+    }
+  ]
+}
