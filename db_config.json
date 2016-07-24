@@ -1,15 +1,18 @@
 {
+  "name": "test1",
   "tables": [
     {
-      "table": "users",
-      "schema": "CREATE TABLE users ( id int primary key, username text, email text, password text)",
+      "table_name": "users",
+      "schema": "CREATE TABLE users (id INTEGER PRIMARY KEY, username text, email text, password text);",
+      "data_tokens": "I,L,E,P",
       "requests": [
         "SELECT username FROM users WHERE id="
       ]
     },
     {
-      "table": "comments",
-      "schema": "CREATE TABLE comments ( id int primary key, comment text",
+      "table_name": "comments",
+      "schema": "CREATE TABLE comments (id INTEGER PRIMARY KEY, comment text);",
+      "data_tokens": "I,T",
       "requests": [
         "SELECT comment FROM comments WHERE id="
       ]
