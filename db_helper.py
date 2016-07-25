@@ -1,6 +1,8 @@
 import sqlite3
 import json
 import random
+import shutil
+import os
 
 
 class DBHelper:
@@ -62,9 +64,13 @@ class DBHelper:
 
         cursor.executemany("INSERT INTO " + table_name + " VALUES(" + inserted_string_patt + ")", inserted_data)
 
-    def setup_db_from_config(self):
+    def setup_db_from_config(self, working_dir, name=None):
         config = self.read_config()
-        db_name = config['name'] + '.db'
+        if name is not None:
+            db_name = working_dir + name
+        else:
+            db_name = working_dir + config['name'] + '.db'
+
         conn = sqlite3.connect(db_name)
         c = conn.cursor()
         for table in config['tables']:
@@ -75,6 +81,16 @@ class DBHelper:
 
         conn.close()
 
+    @staticmethod
+    def get_abs_path(path, working_dir):
+        if not os.path.isabs(path):
+            path = os.path.normpath(os.path.join(working_dir, path))
+        return path
 
-dh = DBHelper()
-dh.setup_db_from_config()
+    def copy_db(self, src, dst, working_dir):
+        src = self.get_abs_path(src, working_dir)
+        dst = self.get_abs_path(dst, working_dir)
+        if os.path.exists(dst):
+            print("Destination already exists")
+            return
+        shutil.copy(src, dst)
