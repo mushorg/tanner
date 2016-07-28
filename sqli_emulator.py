@@ -24,39 +24,45 @@ class SqliEmulator:
         queries = [
             {
                 'param': ['id'],
-                'query': 'SELECT * from users WHERE id='
+                'query': 'SELECT * from users WHERE id=%s'
             },
             {
                 'param': ['email'],
-                'query': 'SELECT * from users WHERE email='
+                'query': 'SELECT * from users WHERE email=%s'
             },
             {
                 'param': ['comment'],
-                'query': 'SELECT * from comments WHERE comment='
+                'query': 'SELECT * from comments WHERE comment=%s'
             },
             {
                 'param': ['login', 'username', 'log'],
-                'query': 'SELECT * from users WHERE username='
+                'query': 'SELECT * from users WHERE username=%s'
             },
 
         ]
 
+        parsed_query = urllib.parse.parse_qsl(query)
+
         for q in queries:
             for p in q['param']:
-                if p in query:
-                    s = urllib.parse.parse_qsl(query)[0][1]
-                    s = s.replace('\'', ' ')
-                    db_query = q['query'] + s + ';'
+                if p == parsed_query[0][0]:
+                    parsed_query = parsed_query[0][1]
+                    parsed_query = parsed_query.replace('\'', ' ')
+                    db_query = q['query']
 
-        return db_query
+        if db_query is None:
+            db_query = 'You have an error in your SQL syntax; check the manual\
+                        that corresponds to your MySQL server version for the\
+                        right syntax to use near {} at line 1'.format(parsed_query[0][0])
+        return db_query, parsed_query
 
-    def execute_query(self, query, db):
+    def execute_query(self, query, param, db):
         result = []
         conn = sqlite3.connect(self.working_dir + db)
         c = conn.cursor()
         print(query)
         try:
-            c.execute(query)
+            c.execute(query % param)
             for row in c:
                 result.append(list(row))
         except sqlite3.OperationalError as e:
@@ -67,8 +73,8 @@ class SqliEmulator:
     def get_sqli_result(self, path, dummy_db):
         path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
-        db_query = self.map_query(query)
-        result = self.execute_query(db_query, dummy_db)
+        db_query, val = self.map_query(query)
+        result = self.execute_query(db_query, val, dummy_db)
         return result
 
     @asyncio.coroutine
