@@ -45,12 +45,13 @@ class BaseHandler:
 
     @asyncio.coroutine
     def detect_attack(self, data, session, path):
+        detection = dict(name='unknown', order=0)
         if data['method'] == 'POST':
+            #TODO: check if sqli
             xss_result = yield from self.emulators['xss'].handle(None, session, data)
             if xss_result:
-                detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
+                detection = {'name': 'xss', 'order': 3, 'payload': xss_result}
 
-        detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
