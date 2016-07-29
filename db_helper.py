@@ -6,8 +6,11 @@ import os
 
 
 class DBHelper:
-    def read_config(self):
-        with open('db_config.json') as db_config:
+    @staticmethod
+    def read_config():
+        if not os.path.exists('/opt/tanner/data/db_config.json'):
+            shutil.move('/data/db_config.json', '/opt/tanner/data/db_config.json')
+        with open('/opt/tanner/data/db_config.json') as db_config:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as e:
@@ -15,8 +18,9 @@ class DBHelper:
             else:
                 return config
 
-    def insert_dummy_data(self, table_name, data_tokens, cursor):
-        '''
+    @staticmethod
+    def insert_dummy_data(table_name, data_tokens, cursor):
+        """
         Insert dummy data based on data tokens
         I - integer id
         L - login/username
@@ -24,18 +28,18 @@ class DBHelper:
         P - password
         T - piece of text
         :return:
-        '''
-        with open('data/dummy.txt') as dummy:
+        """
+
+        if not os.path.exists('/opt/tanner/data/dummy.txt'):
+            shutil.move('/data/dummy.txt', '/opt/tanner/data/dummy.txt')
+
+        with open('/opt/tanner/data/dummy.txt') as dummy:
             dummy_data = dummy.read()
         dummy_data = dummy_data.split('\n')
 
         token_list = data_tokens.split(',')
 
-        if 'E' in token_list:
-            with open('data/email_domains.txt') as dummy:
-                domains = dummy.read()
-                domains = domains.split('\n')
-        samples_count = random.randint(50, 100)
+        samples_count = random.randint(100, 1000)
         inserted_data = []
         for i in range(samples_count):
             values = []
@@ -46,7 +50,7 @@ class DBHelper:
                     data = random.choice(dummy_data)
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + random.choice(domains)
+                    data = random.choice(dummy_data) + "@" + random.choice(dummy_data)
                     values.append(data)
                 if token == 'P':
                     data = random.choice(dummy_data)
