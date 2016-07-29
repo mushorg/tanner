@@ -13,6 +13,7 @@ class Session:
             self.user_agent = data['headers']['user-agent']
             self.sensor = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time(), 'response_status': data['status']}]
+            self.associated_db = None
         except KeyError:
             raise
 
@@ -47,6 +48,9 @@ class Session:
         for p in self.paths:
             if p == path:
                 p.update({'attack_type': attack_type})
+
+    def associate_db(self, db_name):
+        self.associated_db = db_name
 
     def get_key(self):
         return self.uuid

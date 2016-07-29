@@ -1,8 +1,8 @@
 import asyncio
 import sqlite3
 import os
-import db_helper
 import urllib.parse
+import db_helper
 
 
 class SqliEmulator:
@@ -56,9 +56,10 @@ class SqliEmulator:
                         right syntax to use near {} at line 1'.format(parsed_query[0][0])
         return db_query, parsed_query
 
-    def execute_query(self, query, param, db):
+    @staticmethod
+    def execute_query(query, param, db):
         result = []
-        conn = sqlite3.connect(self.working_dir + db)
+        conn = sqlite3.connect(db)
         c = conn.cursor()
         print(query)
         try:
@@ -79,7 +80,8 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def handle(self, path, session):
-        dummy_db = session.uuid.hex + '.db'
-        self.helper.copy_db(self.db_name, dummy_db, self.working_dir)
-        result = yield from self.get_sqli_result(path, dummy_db)
+        attacker_db_name = session.uuid.hex + '.db'
+        attacker_db = self.helper.copy_db(self.db_name, attacker_db_name, self.working_dir)
+        session.associate_db(attacker_db)
+        result = yield from self.get_sqli_result(path, attacker_db)
         return result

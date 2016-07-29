@@ -98,3 +98,4 @@ class DBHelper:
             print("Destination already exists")
             return
         shutil.copy(src, dst)
+        return dst

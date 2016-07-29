@@ -1,6 +1,6 @@
 import asyncio
 import redis
-import uuid
+import os
 from session import Session
 from session_analyzer import SessionAnalyzer
 
@@ -64,6 +64,8 @@ class SessionManager:
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
+            #remove associated db
+            os.remove(sess.associated_db)
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
