@@ -19,52 +19,34 @@ class SqliEmulator:
         if not os.path.exists(db):
             self.helper.setup_db_from_config(self.working_dir, self.db_name)
 
-    def map_query(self, query):
+    @staticmethod
+    def map_query(query):
         db_query = None
-        queries = [
-            {
-                'param': ['id'],
-                'query': 'SELECT * from users WHERE id=%s'
-            },
-            {
-                'param': ['email'],
-                'query': 'SELECT * from users WHERE email=%s'
-            },
-            {
-                'param': ['comment'],
-                'query': 'SELECT * from comments WHERE comment=%s'
-            },
-            {
-                'param': ['login', 'username', 'log'],
-                'query': 'SELECT * from users WHERE username=%s'
-            },
-
-        ]
-
+        query_map = {
+            'users': ['id', 'login', 'email', 'username', 'password', 'login', 'pass'],
+            'comments': ['comment']
+        }
         parsed_query = urllib.parse.parse_qsl(query)
-
-        for q in queries:
-            for p in q['param']:
-                if p == parsed_query[0][0]:
-                    parsed_query = parsed_query[0][1]
-                    parsed_query = parsed_query.replace('\'', ' ')
-                    db_query = q['query']
+        param = parsed_query[0][0]
+        param_value = parsed_query[0][1].replace('\'', ' ')
+        tables = [k for k, v in query_map.items() if parsed_query[0][0] in v]
+        if tables:
+            db_query = 'SELECT * from ' + tables[0] + ' WHERE ' + param + '=' + param_value + ';'
 
         if db_query is None:
             db_query = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
-                        right syntax to use near {} at line 1'.format(parsed_query[0][0])
-        return db_query, parsed_query
+                        right syntax to use near {} at line 1'.format(param)
+        return db_query
 
     @staticmethod
-    def execute_query(query, param, db):
+    def execute_query(query, db):
         result = []
         conn = sqlite3.connect(db)
         c = conn.cursor()
         print(query)
         try:
-            c.execute(query % param)
-            for row in c:
+            for row in c.execute(query):
                 result.append(list(row))
         except sqlite3.OperationalError as e:
             result = str(e)
@@ -74,8 +56,8 @@ class SqliEmulator:
     def get_sqli_result(self, path, dummy_db):
         path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
-        db_query, val = self.map_query(query)
-        result = self.execute_query(db_query, val, dummy_db)
+        db_query = self.map_query(query)
+        result = self.execute_query(db_query, dummy_db)
         return result
 
     @asyncio.coroutine
