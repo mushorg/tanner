@@ -23,7 +23,7 @@ class BaseHandler:
             'rfi': rfi_emulator.RfiEmulator('/opt/tanner/'),
             'lfi': lfi_emulator.LfiEmulator('/opt/tanner/'),
             'xss': xss_emulator.XssEmulator(),
-            'sqli': sqli_emulator.SqliEmulator('test.db', '/opt/tanner/db/')
+            'sqli': sqli_emulator.SqliEmulator('words.db', '/opt/tanner/db/')
         }
 
     @asyncio.coroutine
@@ -47,7 +47,7 @@ class BaseHandler:
     def detect_attack(self, data, session, path):
         detection = dict(name='unknown', order=0)
         if data['method'] == 'POST':
-            #TODO: check if sqli
+            # TODO: check if sqli
             xss_result = yield from self.emulators['xss'].handle(None, session, data)
             if xss_result:
                 detection = {'name': 'xss', 'order': 3, 'payload': xss_result}

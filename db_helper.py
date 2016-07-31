@@ -3,14 +3,15 @@ import json
 import random
 import shutil
 import os
+import re
 
 
 class DBHelper:
     @staticmethod
     def read_config():
-        if not os.path.exists('/opt/tanner/data/db_config.json'):
-            shutil.move('/data/db_config.json', '/opt/tanner/data/db_config.json')
-        with open('/opt/tanner/data/db_config.json') as db_config:
+        if not os.path.exists('/opt/tanner/db/db_config.json'):
+            shutil.move('data/db_config.json', '/opt/tanner/db/db_config.json')
+        with open('/opt/tanner/db/db_config.json') as db_config:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as e:
@@ -30,13 +31,12 @@ class DBHelper:
         :return:
         """
 
-        if not os.path.exists('/opt/tanner/data/dummy.txt'):
-            shutil.move('/data/dummy.txt', '/opt/tanner/data/dummy.txt')
-
-        with open('/opt/tanner/data/dummy.txt') as dummy:
+        with open('/usr/share/dict/words') as dummy:
             dummy_data = dummy.read()
-        dummy_data = dummy_data.split('\n')
+            dummy_data = dummy_data.split('\n')
+            dummy_data = [x for x in dummy_data if (len(x) > 5 and re.match(re.compile('[0-9a-zA-Z]'), x))]
 
+        domains = ['.com', '.net', '.org']
         token_list = data_tokens.split(',')
 
         samples_count = random.randint(100, 1000)
@@ -50,7 +50,7 @@ class DBHelper:
                     data = random.choice(dummy_data)
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + random.choice(dummy_data)
+                    data = random.choice(dummy_data) + "@" + random.choice(dummy_data) + random.choice(domains)
                     values.append(data)
                 if token == 'P':
                     data = random.choice(dummy_data)
