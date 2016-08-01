@@ -50,7 +50,7 @@ class DBHelper:
                     data = random.choice(dummy_data)
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + random.choice(dummy_data) + random.choice(domains)
+                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) + random.choice(domains)
                     values.append(data)
                 if token == 'P':
                     data = random.choice(dummy_data)
