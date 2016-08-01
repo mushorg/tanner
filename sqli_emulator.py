@@ -57,7 +57,9 @@ class SqliEmulator:
         path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
         db_query = self.map_query(query)
-        result = self.execute_query(db_query, dummy_db)
+        execute_result = self.execute_query(db_query, dummy_db)
+        execute_result = ' '.join([str(x) for x in execute_result])
+        result = dict(value=execute_result, page='/index.html')
         return result
 
     @asyncio.coroutine
