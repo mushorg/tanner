@@ -6,6 +6,7 @@ from asyncio.subprocess import PIPE
 import rfi_emulator
 import xss_emulator
 import lfi_emulator
+import sqli_emulator
 
 
 class BaseHandler:
@@ -21,7 +22,8 @@ class BaseHandler:
         self.emulators = {
             'rfi': rfi_emulator.RfiEmulator('/opt/tanner/'),
             'lfi': lfi_emulator.LfiEmulator('/opt/tanner/'),
-            'xss': xss_emulator.XssEmulator()
+            'xss': xss_emulator.XssEmulator(),
+            'sqli': sqli_emulator.SqliEmulator('words.db', '/opt/tanner/db/')
         }
 
     @asyncio.coroutine
@@ -43,19 +45,24 @@ class BaseHandler:
 
     @asyncio.coroutine
     def detect_attack(self, data, session, path):
+        detection = dict(name='unknown', order=0)
         if data['method'] == 'POST':
+            # TODO: check if sqli
             xss_result = yield from self.emulators['xss'].handle(None, session, data)
             if xss_result:
-                detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
+                detection = {'name': 'xss', 'order': 3, 'payload': xss_result}
 
-        detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
 
-        sqli = yield from self.check_sqli(path)
-        if sqli:
-            detection = {'name': 'sqli', 'order': 2}
+        query = urllib.parse.urlparse(path).query
+        parsed_queries = urllib.parse.parse_qsl(query)
+        for q in parsed_queries:
+            sqli = yield from self.check_sqli(q[1])
+            if sqli:
+                detection = {'name': 'sqli', 'order': 2}
+
         else:
             path = urllib.parse.unquote(path)
             for pattern, patter_details in self.patterns.items():

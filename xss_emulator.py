@@ -25,7 +25,7 @@ class XssEmulator:
         if injectable_page is None:
             injectable_page = '/index.html'
         if val:
-            result = dict(name='xss', value=val,
+            result = dict(value=val,
                           page=injectable_page)
         return result
 
