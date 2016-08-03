@@ -4,10 +4,11 @@ import os
 from unittest import mock
 import sqli_emulator
 
-class SqliTest(unittest.TestCase):
 
+class SqliTest(unittest.TestCase):
     def setUp(self):
-        self.handler = sqli_emulator.SqliEmulator('test.db','/tmp/')
+        open('/tmp/test.db', 'a').close()
+        self.handler = sqli_emulator.SqliEmulator('test.db', '/tmp/')
 
     def test_db_copy(self):
         session = mock.Mock()
@@ -20,7 +21,7 @@ class SqliTest(unittest.TestCase):
         query = 'id=1\'UNION SELECT 1,2,3,4'
         assert_result = 'SELECT * from users WHERE id=1 UNION SELECT 1,2,3,4;'
         result = self.handler.map_query(query)
-        self.assertEqual(assert_result,result)
+        self.assertEqual(assert_result, result)
 
     def test_map_query_comments(self):
         query = 'comment=some_comment\'UNION SELECT 1,2'
