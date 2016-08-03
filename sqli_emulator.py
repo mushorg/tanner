@@ -6,24 +6,27 @@ import db_helper
 
 
 class SqliEmulator:
+
     def __init__(self, db_name, working_dir):
         self.db_name = db_name
         self.working_dir = working_dir
         self.helper = db_helper.DBHelper()
-        self.setup_db()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.setup_db())
 
+    @asyncio.coroutine
     def setup_db(self):
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
         db = os.path.join(self.working_dir, self.db_name)
         if not os.path.exists(db):
-            self.helper.setup_db_from_config(self.working_dir, self.db_name)
+            yield from self.helper.setup_db_from_config(self.working_dir, self.db_name)
 
     @staticmethod
     def map_query(query):
         db_query = None
         query_map = {
-            'users': ['id', 'login', 'email', 'username', 'password', 'login', 'pass'],
+            'users': ['id', 'login', 'email', 'username', 'password', 'pass','log'],
             'comments': ['comment']
         }
         parsed_query = urllib.parse.parse_qsl(query)
@@ -63,9 +66,14 @@ class SqliEmulator:
         return result
 
     @asyncio.coroutine
-    def handle(self, path, session):
+    def create_attacker_db(self, session):
         attacker_db_name = session.uuid.hex + '.db'
-        attacker_db = self.helper.copy_db(self.db_name, attacker_db_name, self.working_dir)
+        attacker_db = yield from self.helper.copy_db(self.db_name, attacker_db_name, self.working_dir)
         session.associate_db(attacker_db)
+        return attacker_db
+
+    @asyncio.coroutine
+    def handle(self, path, session):
+        attacker_db = yield from self.create_attacker_db(session)
         result = yield from self.get_sqli_result(path, attacker_db)
         return result

@@ -4,11 +4,13 @@ import random
 import shutil
 import os
 import re
+import asyncio
 
 
 class DBHelper:
-    @staticmethod
-    def read_config():
+
+    @asyncio.coroutine
+    def read_config(self):
         if not os.path.exists('/opt/tanner/db/db_config.json'):
             shutil.move('data/db_config.json', '/opt/tanner/db/db_config.json')
         with open('/opt/tanner/db/db_config.json') as db_config:
@@ -19,8 +21,8 @@ class DBHelper:
             else:
                 return config
 
-    @staticmethod
-    def insert_dummy_data(table_name, data_tokens, cursor):
+    @asyncio.coroutine
+    def insert_dummy_data(self,table_name, data_tokens, cursor):
         """
         Insert dummy data based on data tokens
         I - integer id
@@ -68,8 +70,9 @@ class DBHelper:
 
         cursor.executemany("INSERT INTO " + table_name + " VALUES(" + inserted_string_patt + ")", inserted_data)
 
+    @asyncio.coroutine
     def setup_db_from_config(self, working_dir, name=None):
-        config = self.read_config()
+        config = yield from self.read_config()
         if name is not None:
             db_name = working_dir + name
         else:
@@ -80,7 +83,7 @@ class DBHelper:
         for table in config['tables']:
             query = table['schema']
             c.execute(query)
-            self.insert_dummy_data(table['table_name'], table['data_tokens'], c)
+            yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], c)
             conn.commit()
 
         conn.close()
@@ -91,6 +94,7 @@ class DBHelper:
             path = os.path.normpath(os.path.join(working_dir, path))
         return path
 
+    @asyncio.coroutine
     def copy_db(self, src, dst, working_dir):
         src = self.get_abs_path(src, working_dir)
         dst = self.get_abs_path(dst, working_dir)
