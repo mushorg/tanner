@@ -68,7 +68,7 @@ class SessionManager:
             try:
                 os.remove(sess.associated_db)
             except TypeError as e:
-                print('Cannot remove db. The db is not exists', e)
+                print('Cannot remove db. The db doesn\'t exist', e)
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
