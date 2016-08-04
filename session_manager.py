@@ -65,7 +65,10 @@ class SessionManager:
             if not sess.is_expired():
                 continue
             #remove associated db
-            os.remove(sess.associated_db)
+            try:
+                os.remove(sess.associated_db)
+            except TypeError as e:
+                print('Cannot remove db. The db doesn\'t exist', e)
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
