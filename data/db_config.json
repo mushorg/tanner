@@ -4,18 +4,12 @@
     {
       "table_name": "users",
       "schema": "CREATE TABLE users (id INTEGER PRIMARY KEY, username text, email text, password text);",
-      "data_tokens": "I,L,E,P",
-      "requests": [
-        "SELECT username FROM users WHERE id="
-      ]
+      "data_tokens": "I,L,E,P"
     },
     {
       "table_name": "comments",
       "schema": "CREATE TABLE comments (id INTEGER PRIMARY KEY, comment text);",
-      "data_tokens": "I,T",
-      "requests": [
-        "SELECT comment FROM comments WHERE id="
-      ]
+      "data_tokens": "I,T"
     }
   ]
 }
