@@ -2,7 +2,7 @@ Emulators
 ---------
 RFI emulator
 ~~~~~~~~~~~~
-Emulate RFI_ vulnerability. This attack type is detected with pattern: 
+It emulates RFI_ vulnerability. This attack type is detected with pattern:
 
 ::
 
@@ -22,7 +22,7 @@ RFI emulation include two steps:
 
 LFI emulator
 ~~~~~~~~~~~~
-Emulate LFI_ vulnerability. This attack type is detected with pattern: 
+It emulates LFI_ vulnerability. This attack type is detected with pattern:
 
 ::
 
@@ -59,7 +59,7 @@ When LFI attack is detected, LFI emulator:
 
 XSS emulator
 ~~~~~~~~~~~~
-Emulate XSS_ vulnerability. This attack type is detected with pattern:
+It emulates XSS_ vulnerability. This attack type is detected with pattern:
 
 ::
 
@@ -73,7 +73,19 @@ Emulator returns the script body and the page, into which this script must be in
 * Page is selected from the current session paths (see :doc:`sessions`). It's the last page with mime type ``text/html``.
 * Script is injected into page on SNARE side.
 
+SQLi emulator
+~~~~~~~~~~~~~
+
+It emulates `SQL injection`_ vulnerability. This attack is detected by ``libinjection``. To install ``libinjection``, see the official manual_.
+
+The emulator copies the original database (see :doc:`db_setup` for more info about db) to a dummy database for every attacker.
+It uses UUID of the session for the attacker's db name. Every query is executed on the attacker's db.
+The emulator returns the result of the execution and the page where SNARE should show the result.
+
+
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
 .. _LFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Local_File_Inclusion
 .. _XSS: https://en.wikipedia.org/wiki/Cross-site_scripting
+.. _SQL injection: https://en.wikipedia.org/wiki/SQL_injection
+.. _manual: https://github.com/client9/libinjection/wiki/doc-sqli-python
