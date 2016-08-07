@@ -2,7 +2,7 @@ Emulators
 ---------
 RFI emulator
 ~~~~~~~~~~~~
-It eEmulates RFI_ vulnerability. This attack type is detected with pattern:
+It emulates RFI_ vulnerability. This attack type is detected with pattern:
 
 ::
 
