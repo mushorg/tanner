@@ -17,15 +17,41 @@ class SqliEmulator:
             os.makedirs(self.working_dir)
         db = os.path.join(self.working_dir, self.db_name)
         if not os.path.exists(db):
-           yield from self.helper.setup_db_from_config(self.working_dir, self.db_name)
+            yield from self.helper.setup_db_from_config(self.working_dir, self.db_name)
 
-    @staticmethod
-    def map_query(query):
+    @asyncio.coroutine
+    def create_query_map(self):
+        query_map = None
+        tables = []
+
+        db = os.path.join(self.working_dir, self.db_name)
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+
+        select_tables = 'SELECT name FROM sqlite_master WHERE type=\'table\''
+
+        try:
+            for row in c.execute(select_tables):
+                tables.append(row[0])
+        except sqlite3.OperationalError as e:
+            print(e)
+        else:
+            query_map = dict.fromkeys(tables)
+            for table in tables:
+                query = 'PRAGMA table_info(' + table + ')'
+                columns = []
+                try:
+                    for row in c.execute(query):
+                        columns.append(row[1])
+                    query_map[table] = columns
+                except sqlite3.OperationalError as e:
+                    print(e)
+            return query_map
+
+    @asyncio.coroutine
+    def map_query(self, query):
         db_query = None
-        query_map = {
-            'users': ['id', 'login', 'email', 'username', 'password', 'pass', 'log'],
-            'comments': ['comment']
-        }
+        query_map = yield from self.create_query_map()
         parsed_query = urllib.parse.parse_qsl(query)
         param = parsed_query[0][0]
         param_value = parsed_query[0][1].replace('\'', ' ')
@@ -56,9 +82,10 @@ class SqliEmulator:
     def get_sqli_result(self, path, dummy_db):
         path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
-        db_query = self.map_query(query)
+        db_query = yield from self.map_query(query)
         execute_result = self.execute_query(db_query, dummy_db)
-        execute_result = ' '.join([str(x) for x in execute_result])
+        if type(execute_result) == list:
+            execute_result = ' '.join([str(x) for x in execute_result])
         result = dict(value=execute_result, page='/index.html')
         return result
 
