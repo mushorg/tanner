@@ -44,14 +44,25 @@ class BaseHandler:
         return res
 
     @asyncio.coroutine
-    def detect_attack(self, data, session, path):
+    def handle_post(self, session, data):
         detection = dict(name='unknown', order=0)
-        if data['method'] == 'POST':
-            # TODO: check if sqli
-            xss_result = yield from self.emulators['xss'].handle(None, session, data)
-            if xss_result:
-                detection = {'name': 'xss', 'order': 3, 'payload': xss_result}
+        xss_result = yield from self.emulators['xss'].handle(None, session, data)
+        if xss_result:
+            detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
+        else:
+            sqli_data = []
+            for (param, value) in data['post_data'].items():
+                sqli = yield from self.check_sqli(value)
+                if sqli:
+                    sqli_data.append((param, value))
+            if sqli_data:
+                sqli_result = yield from self.emulators['sqli'].handle(sqli_data, session, 1)
+                detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
+        return detection
 
+    @asyncio.coroutine
+    def handle_get(self, path):
+        detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
@@ -62,7 +73,6 @@ class BaseHandler:
             sqli = yield from self.check_sqli(q[1])
             if sqli:
                 detection = {'name': 'sqli', 'order': 2}
-
         else:
             path = urllib.parse.unquote(path)
             for pattern, patter_details in self.patterns.items():
@@ -72,15 +82,19 @@ class BaseHandler:
         return detection
 
     @asyncio.coroutine
-    def emulate(self, detection, session, path):
-        name = detection['name']
-        if name in self.emulators:
-            emulator = self.emulators[name]
-            emulation_result = yield from emulator.handle(path, session)
-            detection['payload'] = emulation_result
+    def emulate(self, data, session, path):
+        if data['method'] == 'POST':
+            detection = yield from self.handle_post(session, data)
+        else:
+            detection = yield from self.handle_get(path)
+            name = detection['name']
+            if name in self.emulators:
+                emulator = self.emulators[name]
+                emulation_result = yield from emulator.handle(path, session)
+                detection['payload'] = emulation_result
+        return detection
 
     @asyncio.coroutine
     def handle(self, data, session, path):
-        detection = yield from self.detect_attack(data, session, path)
-        yield from self.emulate(detection, session, path)
+        detection = yield from self.emulate(data, session, path)
         return detection

@@ -52,17 +52,12 @@ class SqliEmulator:
     @asyncio.coroutine
     def map_query(self, query):
         db_query = None
-        parsed_query = urllib.parse.parse_qsl(query)
-        param = parsed_query[0][0]
-        param_value = parsed_query[0][1].replace('\'', ' ')
-        tables = [k for k, v in self.query_map.items() if parsed_query[0][0] in v]
+        param = query[0][0]
+        param_value = query[0][1].replace('\'', ' ')
+        tables = [k for k, v in self.query_map.items() if query[0][0] in v]
         if tables:
             db_query = 'SELECT * from ' + tables[0] + ' WHERE ' + param + '=' + param_value + ';'
 
-        if db_query is None:
-            db_query = 'You have an error in your SQL syntax; check the manual\
-                        that corresponds to your MySQL server version for the\
-                        right syntax to use near {} at line 1'.format(param)
         return db_query
 
     @staticmethod
@@ -78,15 +73,25 @@ class SqliEmulator:
             result = str(e)
         return result
 
-    @asyncio.coroutine
-    def get_sqli_result(self, path, dummy_db):
+    @staticmethod
+    def prepare_get_query(path):
         path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
+        parsed_query = urllib.parse.parse_qsl(query)
+        return parsed_query
+
+    @asyncio.coroutine
+    def get_sqli_result(self, query, dummy_db):
         db_query = yield from self.map_query(query)
-        execute_result = self.execute_query(db_query, dummy_db)
-        if type(execute_result) == list:
-            execute_result = ' '.join([str(x) for x in execute_result])
-        result = dict(value=execute_result, page='/index.html')
+        if db_query is None:
+            result = 'You have an error in your SQL syntax; check the manual\
+                        that corresponds to your MySQL server version for the\
+                        right syntax to use near {} at line 1'.format(query[0][0])
+        else:
+            execute_result = self.execute_query(db_query, dummy_db)
+            if type(execute_result) == list:
+                execute_result = ' '.join([str(x) for x in execute_result])
+            result = dict(value=execute_result, page='/index.html')
         return result
 
     @asyncio.coroutine
@@ -97,10 +102,12 @@ class SqliEmulator:
         return attacker_db
 
     @asyncio.coroutine
-    def handle(self, path, session):
+    def handle(self, path, session, post_request=0):
         yield from self.setup_db()
         if self.query_map is None:
             self.query_map = yield from self.create_query_map()
         attacker_db = yield from self.create_attacker_db(session)
+        if not post_request:
+            path = self.prepare_get_query(path)
         result = yield from self.get_sqli_result(path, attacker_db)
         return result
