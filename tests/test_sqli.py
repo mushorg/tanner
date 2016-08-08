@@ -9,16 +9,12 @@ class SqliTest(unittest.TestCase):
     def setUp(self):
         open('/tmp/test.db', 'a').close()
 
-        @asyncio.coroutine
-        def foo():
-            query_map = {
-                'users': ['id', 'login', 'email', 'username', 'password', 'pass', 'log'],
-                'comments': ['comment']
-            }
-            return query_map
-
+        query_map = {
+            'users': ['id', 'login', 'email', 'username', 'password', 'pass', 'log'],
+            'comments': ['comment']
+        }
         self.handler = sqli_emulator.SqliEmulator('test.db', '/tmp/')
-        self.handler.create_query_map = foo
+        self.handler.query_map = query_map
 
     def test_db_copy(self):
         session = mock.Mock()

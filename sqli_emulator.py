@@ -10,6 +10,7 @@ class SqliEmulator:
         self.db_name = db_name
         self.working_dir = working_dir
         self.helper = db_helper.DBHelper()
+        self.query_map = None
 
     @asyncio.coroutine
     def setup_db(self):
@@ -51,11 +52,10 @@ class SqliEmulator:
     @asyncio.coroutine
     def map_query(self, query):
         db_query = None
-        query_map = yield from self.create_query_map()
         parsed_query = urllib.parse.parse_qsl(query)
         param = parsed_query[0][0]
         param_value = parsed_query[0][1].replace('\'', ' ')
-        tables = [k for k, v in query_map.items() if parsed_query[0][0] in v]
+        tables = [k for k, v in self.query_map.items() if parsed_query[0][0] in v]
         if tables:
             db_query = 'SELECT * from ' + tables[0] + ' WHERE ' + param + '=' + param_value + ';'
 
@@ -99,6 +99,8 @@ class SqliEmulator:
     @asyncio.coroutine
     def handle(self, path, session):
         yield from self.setup_db()
+        if self.query_map is None:
+            self.query_map = yield from self.create_query_map()
         attacker_db = yield from self.create_attacker_db(session)
         result = yield from self.get_sqli_result(path, attacker_db)
         return result
