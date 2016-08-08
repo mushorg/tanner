@@ -21,7 +21,7 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def create_query_map(self):
-        query_map = None
+        query_map = {}
         tables = []
 
         db = os.path.join(self.working_dir, self.db_name)
@@ -46,7 +46,7 @@ class SqliEmulator:
                     query_map[table] = columns
                 except sqlite3.OperationalError as e:
                     print(e)
-            return query_map
+        return query_map
 
     @asyncio.coroutine
     def map_query(self, query):
