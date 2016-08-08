@@ -8,7 +8,7 @@
     },
     {
       "table_name": "comments",
-      "schema": "CREATE TABLE comments (id INTEGER PRIMARY KEY, comment text);",
+      "schema": "CREATE TABLE comments (comment_id INTEGER PRIMARY KEY, comment text);",
       "data_tokens": "I,T"
     }
   ]
