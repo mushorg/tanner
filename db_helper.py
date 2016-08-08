@@ -8,7 +8,6 @@ import asyncio
 
 
 class DBHelper:
-
     @asyncio.coroutine
     def read_config(self):
         if not os.path.exists('/opt/tanner/db/db_config.json'):
@@ -22,7 +21,7 @@ class DBHelper:
                 return config
 
     @asyncio.coroutine
-    def insert_dummy_data(self,table_name, data_tokens, cursor):
+    def insert_dummy_data(self, table_name, data_tokens, cursor):
         """
         Insert dummy data based on data tokens
         I - integer id
@@ -52,7 +51,8 @@ class DBHelper:
                     data = random.choice(dummy_data)
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) + random.choice(domains)
+                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) + random.choice(
+                        domains)
                     values.append(data)
                 if token == 'P':
                     data = random.choice(dummy_data)
