@@ -2,7 +2,6 @@ import re
 import patterns
 import urllib.parse
 import asyncio
-from asyncio.subprocess import PIPE
 import rfi_emulator
 import xss_emulator
 import lfi_emulator
@@ -27,34 +26,13 @@ class BaseHandler:
         }
 
     @asyncio.coroutine
-    def check_sqli(self, path):
-        @asyncio.coroutine
-        def _run_cmd(cmd):
-            proc = yield from asyncio.wait_for(asyncio.create_subprocess_exec(*cmd, stdout=PIPE), 5)
-            line = yield from asyncio.wait_for(proc.stdout.readline(), 10)
-            return line
-
-        command = ['/usr/bin/python2', 'sqli_check.py', path]
-        res = yield from _run_cmd(command)
-        if res is not None:
-            try:
-                res = int(res.decode('utf-8'))
-            except ValueError:
-                res = 0
-        return res
-
-    @asyncio.coroutine
     def handle_post(self, session, data):
         detection = dict(name='unknown', order=0)
         xss_result = yield from self.emulators['xss'].handle(None, session, data)
         if xss_result:
             detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
         else:
-            sqli_data = []
-            for (param, value) in data['post_data'].items():
-                sqli = yield from self.check_sqli(value)
-                if sqli:
-                    sqli_data.append((param, value))
+            sqli_data = yield from self.emulators['sqli'].check_post_data(data)
             if sqli_data:
                 sqli_result = yield from self.emulators['sqli'].handle(sqli_data, session, 1)
                 detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
@@ -67,12 +45,9 @@ class BaseHandler:
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
 
-        query = urllib.parse.urlparse(path).query
-        parsed_queries = urllib.parse.parse_qsl(query)
-        for q in parsed_queries:
-            sqli = yield from self.check_sqli(q[1])
-            if sqli:
-                detection = {'name': 'sqli', 'order': 2}
+        sqli = yield from self.emulators['sqli'].check_get_data(path)
+        if sqli:
+            detection = {'name': 'sqli', 'order': 2}
         else:
             path = urllib.parse.unquote(path)
             for pattern, patter_details in self.patterns.items():

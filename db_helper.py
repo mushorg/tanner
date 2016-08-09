@@ -103,3 +103,32 @@ class DBHelper:
             return
         shutil.copy(src, dst)
         return dst
+
+    @asyncio.coroutine
+    def create_query_map(self,working_dir,db_name,):
+        query_map = {}
+        tables = []
+
+        db = os.path.join(working_dir, db_name)
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+
+        select_tables = 'SELECT name FROM sqlite_master WHERE type=\'table\''
+
+        try:
+            for row in c.execute(select_tables):
+                tables.append(row[0])
+        except sqlite3.OperationalError as e:
+            print(e)
+        else:
+            query_map = dict.fromkeys(tables)
+            for table in tables:
+                query = 'PRAGMA table_info(' + table + ')'
+                columns = []
+                try:
+                    for row in c.execute(query):
+                        columns.append(row[1])
+                    query_map[table] = columns
+                except sqlite3.OperationalError as e:
+                    print(e)
+        return query_map
