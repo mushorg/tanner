@@ -2,6 +2,7 @@
 
 import json
 import asyncio
+import syslog
 import aiohttp
 import aiohttp.server
 import dorks_manager
@@ -32,16 +33,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             data = json.loads(data.decode('utf-8'))
             path = data['path']
         except (TypeError, ValueError, KeyError) as e:
-            print('error parsing: {}'.format(data))
+            syslog.syslog(syslog.LOG_ERR, 'error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
-            print(path)
+            syslog.syslog(syslog.LOG_NOTICE, 'Requested path {}'.format(path))
             self.dorks.extract_path(path)
             detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
-            print(m)
+            syslog.syslog(syslog.LOG_NOTICE, 'TANNER response {}'.format(m))
             return m
 
     @asyncio.coroutine
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
-    print('serving on', srv.sockets[0].getsockname())
+    syslog.syslog(syslog.LOG_INFO, 'serving on {}'.format(srv.sockets[0].getsockname()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:

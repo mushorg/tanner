@@ -5,6 +5,7 @@ import shutil
 import os
 import re
 import asyncio
+import syslog
 
 
 class DBHelper:
@@ -16,7 +17,7 @@ class DBHelper:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as e:
-                print('Failed to load json', e)
+                syslog.syslog(syslog.LOG_ERR, 'Failed to load json', e)
             else:
                 return config
 
@@ -99,13 +100,13 @@ class DBHelper:
         src = self.get_abs_path(src, working_dir)
         dst = self.get_abs_path(dst, working_dir)
         if os.path.exists(dst):
-            print("Destination already exists")
-            return
-        shutil.copy(src, dst)
+            syslog.syslog(syslog.LOG_INFO, 'Attacker db already exists')
+        else:
+            shutil.copy(src, dst)
         return dst
 
     @asyncio.coroutine
-    def create_query_map(self,working_dir,db_name,):
+    def create_query_map(self, working_dir, db_name, ):
         query_map = {}
         tables = []
 
@@ -119,7 +120,8 @@ class DBHelper:
             for row in c.execute(select_tables):
                 tables.append(row[0])
         except sqlite3.OperationalError as e:
-            print(e)
+            error = 'Error during query map creation ' + str(e)
+            syslog.syslog(syslog.LOG_ERR, error)
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
@@ -130,5 +132,6 @@ class DBHelper:
                         columns.append(row[1])
                     query_map[table] = columns
                 except sqlite3.OperationalError as e:
-                    print(e)
+                    error = 'Error during query map creation ' + str(e)
+                    syslog.syslog(syslog.LOG_ERR, error)
         return query_map

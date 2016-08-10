@@ -1,6 +1,7 @@
 import asyncio
 import redis
 import os
+import syslog
 from session import Session
 from session_analyzer import SessionAnalyzer
 
@@ -23,8 +24,8 @@ class SessionManager:
         if session is None:
             try:
                 new_session = Session(valid_data)
-            except KeyError:
-                print('Bad session')
+            except KeyError as e:
+                syslog.syslog(syslog.LOG_ERR, 'Error during session creation {}'.format(e))
                 return
             self.sessions.append(new_session)
             return new_session
@@ -64,15 +65,15 @@ class SessionManager:
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
-            #remove associated db
+            # remove associated db
             try:
                 os.remove(sess.associated_db)
             except TypeError as e:
-                print('Cannot remove db. The db doesn\'t exist', e)
+                syslog.syslog(syslog.LOG_ERR, 'Cannot remove attacker db. The db doesn\'t exist {}'.format(e))
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
                 yield from self.analyzer.analyze(sess.get_key())
             except redis.ConnectionError as e:
-                print('Error connect to redis, session stay in memory', e)
+                syslog.syslog(syslog.LOG_ERR, 'Error connect to redis, session stay in memory. {}'.format(e))
                 self.sessions.append(sess)

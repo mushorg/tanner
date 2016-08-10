@@ -87,7 +87,6 @@ class SqliEmulator:
         result = []
         conn = sqlite3.connect(db)
         c = conn.cursor()
-        print(query)
         try:
             for row in c.execute(query):
                 result.append(list(row))

@@ -1,6 +1,7 @@
 import asyncio
 import redis
 import json
+import syslog
 from urllib.parse import urlparse, parse_qs
 
 
@@ -27,7 +28,7 @@ class Api:
         try:
             query_res = self.r.smembers('snare_ids')
         except redis.ConnectionError as e:
-            print('Can not connect to redis', e)
+            syslog.syslog(syslog.LOG_ERR, 'Can not connect to redis', e)
         return list(query_res)
 
     @asyncio.coroutine
@@ -36,7 +37,7 @@ class Api:
         try:
             query_res = self.r.lrange(uuid[0], 0, n)
         except redis.ConnectionError as e:
-            print('Can not connect to redis', e)
+            syslog.syslog(syslog.LOG_ERR, 'Can not connect to redis', e)
         else:
             if not query_res:
                 return 'Invalid SNARE UUID'
