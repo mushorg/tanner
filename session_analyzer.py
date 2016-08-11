@@ -1,7 +1,7 @@
 import redis
 import json
 import asyncio
-import syslog
+import logging
 import socket
 import operator
 from dorks_manager import DorksManager
@@ -11,6 +11,7 @@ class SessionAnalyzer:
     def __init__(self):
         self.r = redis.StrictRedis(host='localhost', port=6379)
         self.queue = asyncio.Queue()
+        self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
 
     @asyncio.coroutine
     def analyze(self, session_key):
@@ -20,7 +21,7 @@ class SessionAnalyzer:
             session = self.r.get(session_key)
             session = json.loads(session.decode('utf-8'))
         except (redis.ConnectionError, TypeError, ValueError) as e:
-            syslog.syslog(syslog.LOG_ERR, 'Can\'t get session for analyze'.format(e))
+            self.logger.error('Can\'t get session for analyze'.format(e))
         else:
             result = self.create_stats(session)
             yield from self.queue.put(result)
@@ -36,7 +37,7 @@ class SessionAnalyzer:
                 self.r.lpush(s_key, json.dumps(session))
                 self.r.delete(del_key)
             except redis.ConnectionError as e:
-                syslog.syslog(syslog.LOG_ERR, 'Error with redis. Session will be returned to the queue: {}'.format(e))
+                self.logger.error('Error with redis. Session will be returned to the queue: {}'.format(e))
                 self.queue.put(session)
 
     def create_stats(self, session):

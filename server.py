@@ -2,7 +2,8 @@
 
 import json
 import asyncio
-import syslog
+import logging
+import logging.handlers
 import aiohttp
 import aiohttp.server
 import dorks_manager
@@ -10,6 +11,14 @@ import session_manager
 import api
 import base_handler
 
+logger = logging.getLogger('tanner')
+logger.setLevel(logging.DEBUG)
+handler = logging.handlers.SysLogHandler(address='/dev/log')
+
+formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')
+handler.setFormatter(formatter)
+
+logger.addHandler(handler)
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
@@ -19,6 +28,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         self.base_handler = base_handler.BaseHandler()
         self.dorks = dorks_manager.DorksManager()
         self.api = api.Api()
+        self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -33,16 +43,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             data = json.loads(data.decode('utf-8'))
             path = data['path']
         except (TypeError, ValueError, KeyError) as e:
-            syslog.syslog(syslog.LOG_ERR, 'error parsing: {}'.format(data))
+            logger.error('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
-            syslog.syslog(syslog.LOG_NOTICE, 'Requested path {}'.format(path))
+            self.logger.info('Requested path {}'.format(path))
             self.dorks.extract_path(path)
             detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
-            syslog.syslog(syslog.LOG_NOTICE, 'TANNER response {}'.format(m))
+            self.logger.info('TANNER response {}'.format(m))
             return m
 
     @asyncio.coroutine
@@ -77,7 +87,7 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
-    syslog.syslog(syslog.LOG_INFO, 'serving on {}'.format(srv.sockets[0].getsockname()))
+    logger.info('serving on {}'.format(srv.sockets[0].getsockname()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:

@@ -3,13 +3,14 @@ import re
 import asyncio
 import hashlib
 import os
-import syslog
+import logging
 import patterns
 
 
 class RfiEmulator:
     def __init__(self, root_dir):
         self.script_dir = root_dir + 'file/'
+        self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
     @asyncio.coroutine
     def download_file(self, path):
@@ -30,7 +31,7 @@ class RfiEmulator:
                 resp = yield from client.get(url)
                 data = yield from resp.text()
         except aiohttp.ClientError as e:
-            syslog.syslog(syslog.LOG_ERR, 'Error during downloading the rfi script'.format(e))
+            self.logger.error('Error during downloading the rfi script'.format(e))
         else:
             resp.release()
             file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
@@ -53,7 +54,7 @@ class RfiEmulator:
                 resp = yield from session.post('http://127.0.0.1:8088/', data=script_data)
                 rfi_result = yield from resp.json()
         except aiohttp.ClientError as e:
-            syslog.syslog(syslog.LOG_ERR, 'Error during connection to php sandbox {}'.format(e))
+            self.logger.error('Error during connection to php sandbox {}'.format(e))
         else:
             resp.release()
         finally:

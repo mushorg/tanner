@@ -1,7 +1,7 @@
 import asyncio
 import redis
 import os
-import syslog
+import logging
 from session import Session
 from session_analyzer import SessionAnalyzer
 
@@ -11,6 +11,7 @@ class SessionManager:
         self.sessions = []
         self.r = redis.StrictRedis(host='localhost', port=6379)
         self.analyzer = SessionAnalyzer()
+        self.logger = logging.getLogger('tanner.session_manager.SessionManager')
 
     @asyncio.coroutine
     def add_or_update_session(self, raw_data):
@@ -25,7 +26,7 @@ class SessionManager:
             try:
                 new_session = Session(valid_data)
             except KeyError as e:
-                syslog.syslog(syslog.LOG_ERR, 'Error during session creation {}'.format(e))
+                self.logger.error('Error during session creation {}'.format(e))
                 return
             self.sessions.append(new_session)
             return new_session
@@ -69,11 +70,11 @@ class SessionManager:
             try:
                 os.remove(sess.associated_db)
             except TypeError as e:
-                syslog.syslog(syslog.LOG_ERR, 'Cannot remove attacker db. The db doesn\'t exist {}'.format(e))
+                self.logger.error('Cannot remove attacker db. The db doesn\'t exist {}'.format(e))
             self.sessions.remove(sess)
             try:
                 self.r.set(sess.get_key(), sess.to_json())
                 yield from self.analyzer.analyze(sess.get_key())
             except redis.ConnectionError as e:
-                syslog.syslog(syslog.LOG_ERR, 'Error connect to redis, session stay in memory. {}'.format(e))
+                self.logger.error('Error connect to redis, session stay in memory. {}'.format(e))
                 self.sessions.append(sess)

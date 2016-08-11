@@ -1,12 +1,13 @@
 import asyncio
 import redis
 import json
-import syslog
+import logging
 from urllib.parse import urlparse, parse_qs
 
 
 class Api:
     def __init__(self):
+        self.logger = logging.getLogger('tanner.api.Api')
         self.r = redis.StrictRedis(host='localhost', port=6379, decode_responses=True)
 
     @asyncio.coroutine
@@ -28,7 +29,7 @@ class Api:
         try:
             query_res = self.r.smembers('snare_ids')
         except redis.ConnectionError as e:
-            syslog.syslog(syslog.LOG_ERR, 'Can not connect to redis', e)
+            self.logger.error('Can not connect to redis', e)
         return list(query_res)
 
     @asyncio.coroutine
@@ -37,7 +38,7 @@ class Api:
         try:
             query_res = self.r.lrange(uuid[0], 0, n)
         except redis.ConnectionError as e:
-            syslog.syslog(syslog.LOG_ERR, 'Can not connect to redis', e)
+            self.logger.error('Can not connect to redis', e)
         else:
             if not query_res:
                 return 'Invalid SNARE UUID'
