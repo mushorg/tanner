@@ -2,12 +2,16 @@
 
 import json
 import asyncio
+import logging
 import aiohttp
 import aiohttp.server
 import dorks_manager
 import session_manager
 import api
 import base_handler
+import logger
+
+logger = logger.Logger.create_logger('tanner.log', 'tanner')
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -18,6 +22,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         self.base_handler = base_handler.BaseHandler()
         self.dorks = dorks_manager.DorksManager()
         self.api = api.Api()
+        self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
     def _make_response(self, msg):
         m = json.dumps(dict(
@@ -32,16 +37,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             data = json.loads(data.decode('utf-8'))
             path = data['path']
         except (TypeError, ValueError, KeyError) as e:
-            print('error parsing: {}'.format(data))
+            self.logger.error('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
-            print(path)
+            self.logger.info('Requested path {}'.format(path))
             self.dorks.extract_path(path)
             detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
-            print(m)
+            self.logger.info('TANNER response {}'.format(m))
             return m
 
     @asyncio.coroutine
@@ -76,7 +81,7 @@ if __name__ == '__main__':
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
     srv = loop.run_until_complete(f)
-    print('serving on', srv.sockets[0].getsockname())
+    logger.info('serving on {}'.format(srv.sockets[0].getsockname()))
     try:
         loop.run_forever()
     except KeyboardInterrupt:

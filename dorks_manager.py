@@ -36,7 +36,6 @@ class DorksManager:
         extracted = re.match(patterns.QUERY, path)
         if extracted:
             extracted = extracted.group(0)
-            print("extracted %s" % extracted)
             if not self.user_dorks_key:
                 self.user_dorks_key = uuid.uuid4().hex
 

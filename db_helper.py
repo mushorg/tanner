@@ -5,9 +5,13 @@ import shutil
 import os
 import re
 import asyncio
+import logging
 
 
 class DBHelper:
+    def __init__(self):
+        self.logger = logging.getLogger('tanner.db_helper.DBHelper')
+
     @asyncio.coroutine
     def read_config(self):
         if not os.path.exists('/opt/tanner/db/db_config.json'):
@@ -16,7 +20,7 @@ class DBHelper:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as e:
-                print('Failed to load json', e)
+                self.logger.info('Failed to load json: {}'.format(e))
             else:
                 return config
 
@@ -99,13 +103,13 @@ class DBHelper:
         src = self.get_abs_path(src, working_dir)
         dst = self.get_abs_path(dst, working_dir)
         if os.path.exists(dst):
-            print("Destination already exists")
-            return
-        shutil.copy(src, dst)
+            self.logger.info('Attacker db already exists')
+        else:
+            shutil.copy(src, dst)
         return dst
 
     @asyncio.coroutine
-    def create_query_map(self,working_dir,db_name,):
+    def create_query_map(self, working_dir, db_name, ):
         query_map = {}
         tables = []
 
@@ -119,7 +123,7 @@ class DBHelper:
             for row in c.execute(select_tables):
                 tables.append(row[0])
         except sqlite3.OperationalError as e:
-            print(e)
+            self.logger.error('Error during query map creation: {}'.format(e))
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
@@ -130,5 +134,5 @@ class DBHelper:
                         columns.append(row[1])
                     query_map[table] = columns
                 except sqlite3.OperationalError as e:
-                    print(e)
+                    self.logger.error('Error during query map creation: {}'.format(e))
         return query_map

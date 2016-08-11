@@ -1,6 +1,7 @@
 import redis
 import json
 import asyncio
+import logging
 import socket
 import operator
 from dorks_manager import DorksManager
@@ -10,6 +11,7 @@ class SessionAnalyzer:
     def __init__(self):
         self.r = redis.StrictRedis(host='localhost', port=6379)
         self.queue = asyncio.Queue()
+        self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
 
     @asyncio.coroutine
     def analyze(self, session_key):
@@ -19,7 +21,7 @@ class SessionAnalyzer:
             session = self.r.get(session_key)
             session = json.loads(session.decode('utf-8'))
         except (redis.ConnectionError, TypeError, ValueError) as e:
-            print("Can't get session for analyze", e)
+            self.logger.error('Can\'t get session for analyze'.format(e))
         else:
             result = self.create_stats(session)
             yield from self.queue.put(result)
@@ -35,7 +37,7 @@ class SessionAnalyzer:
                 self.r.lpush(s_key, json.dumps(session))
                 self.r.delete(del_key)
             except redis.ConnectionError as e:
-                print('Error with redis. Session will be returned to the queue', e)
+                self.logger.error('Error with redis. Session will be returned to the queue: {}'.format(e))
                 self.queue.put(session)
 
     def create_stats(self, session):
@@ -86,7 +88,8 @@ class SessionAnalyzer:
                 attack_types.append(path['attack_type'])
         return tbr_average, errors, hidden_links, attack_types
 
-    def choose_possible_owner(self, stats):
+    @staticmethod
+    def choose_possible_owner(stats):
         possible_owners = dict(
             user=0,
             tool=0,
