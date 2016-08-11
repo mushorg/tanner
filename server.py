@@ -11,17 +11,19 @@ import session_manager
 import api
 import base_handler
 
+LOG_FILENAME = 'tanner.log'
 logger = logging.getLogger('tanner')
 logger.setLevel(logging.DEBUG)
-handler = logging.handlers.SysLogHandler(address='/dev/log')
+handler = logging.handlers.RotatingFileHandler(LOG_FILENAME)
 
-formatter = logging.Formatter('%(name)s.%(funcName)s: %(message)s')
+formatter = logging.Formatter('%(levelname)s:%(name)s:%(funcName)s: %(message)s')
 handler.setFormatter(formatter)
 
 logger.addHandler(handler)
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
+
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.base_handler = base_handler.BaseHandler()
@@ -81,7 +83,6 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
 
 if __name__ == '__main__':
-
     loop = asyncio.get_event_loop()
     f = loop.create_server(
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
