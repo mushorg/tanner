@@ -15,14 +15,13 @@ logger = logging.getLogger('tanner')
 logger.setLevel(logging.DEBUG)
 handler = logging.handlers.SysLogHandler(address='/dev/log')
 
-formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')
+formatter = logging.Formatter('%(name)s.%(funcName)s: %(message)s')
 handler.setFormatter(formatter)
 
 logger.addHandler(handler)
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
-
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.base_handler = base_handler.BaseHandler()
@@ -43,7 +42,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             data = json.loads(data.decode('utf-8'))
             path = data['path']
         except (TypeError, ValueError, KeyError) as e:
-            logger.error('error parsing: {}'.format(data))
+            self.logger.error('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
@@ -82,6 +81,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
 
 if __name__ == '__main__':
+
     loop = asyncio.get_event_loop()
     f = loop.create_server(
         lambda: HttpRequestHandler(debug=False, keep_alive=75),

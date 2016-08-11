@@ -2,7 +2,6 @@ import asyncio
 import unittest
 import json
 import server
-import lfi_emulator
 from unittest import mock
 
 
@@ -14,7 +13,6 @@ class TestServer(unittest.TestCase):
         self.MockedRequestHandler = server.HttpRequestHandler
         with mock.patch('dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
-               # with mock.patch('sqli_emulator.SqliEmulator', mock.Mock(), create=True):
                     self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
 
         self.handler.dorks = dorks
