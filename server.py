@@ -3,23 +3,16 @@
 import json
 import asyncio
 import logging
-import logging.handlers
 import aiohttp
 import aiohttp.server
 import dorks_manager
 import session_manager
 import api
 import base_handler
+import logger
 
-LOG_FILENAME = 'tanner.log'
-logger = logging.getLogger('tanner')
-logger.setLevel(logging.DEBUG)
-handler = logging.handlers.RotatingFileHandler(LOG_FILENAME)
+logger = logger.Logger.create_logger('tanner.log', 'tanner')
 
-formatter = logging.Formatter('%(levelname)s:%(name)s:%(funcName)s: %(message)s')
-handler.setFormatter(formatter)
-
-logger.addHandler(handler)
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
