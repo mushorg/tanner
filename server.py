@@ -5,13 +5,18 @@ import asyncio
 import logging
 import aiohttp
 import aiohttp.server
+import asyncio_redis
 import dorks_manager
 import session_manager
 import api
 import base_handler
 import logger
+import uvloop
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logger = logger.Logger.create_logger('tanner.log', 'tanner')
+redis_client = asyncio.get_event_loop().run_until_complete(
+    asyncio_redis.Pool.create(host='localhost', port=6379, poolsize=10))
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -20,11 +25,12 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.base_handler = base_handler.BaseHandler()
-        self.dorks = dorks_manager.DorksManager()
-        self.api = api.Api()
+        self.dorks = dorks_manager.DorksManager(redis_client)
+        self.api = api.Api(redis_client)
         self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
-    def _make_response(self, msg):
+    @staticmethod
+    def _make_response(msg):
         m = json.dumps(dict(
             version=1,
             response=dict(message=msg)
@@ -87,5 +93,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        redis_client.close()
         srv.close()
         loop.close()
