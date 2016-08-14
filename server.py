@@ -21,10 +21,10 @@ redis_client = asyncio.get_event_loop().run_until_complete(
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
+    base_handler = base_handler.BaseHandler()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.base_handler = base_handler.BaseHandler()
         self.dorks = dorks_manager.DorksManager(redis_client)
         self.api = api.Api(redis_client)
         self.logger = logging.getLogger('tanner.server.HttpRequestHandler')

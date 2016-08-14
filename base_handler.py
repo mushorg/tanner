@@ -45,15 +45,17 @@ class BaseHandler:
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
 
-        sqli = yield from self.emulators['sqli'].check_get_data(path)
-        if sqli:
-            detection = {'name': 'sqli', 'order': 2}
-        else:
-            path = urllib.parse.unquote(path)
-            for pattern, patter_details in self.patterns.items():
-                if pattern.match(path):
-                    if detection['order'] < patter_details['order']:
-                        detection = patter_details
+        path = urllib.parse.unquote(path)
+        for pattern, patter_details in self.patterns.items():
+            if pattern.match(path):
+                if detection['order'] < patter_details['order']:
+                    detection = patter_details
+
+        if detection['order'] < 1:
+            sqli = yield from self.emulators['sqli'].check_get_data(path)
+            if sqli:
+                detection = {'name': 'sqli', 'order': 2}
+
         return detection
 
     @asyncio.coroutine
