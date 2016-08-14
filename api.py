@@ -2,12 +2,11 @@ import asyncio
 import asyncio_redis
 import json
 import logging
-from redis_client import RedisClient
 from urllib.parse import urlparse, parse_qs
 
 
 class Api:
-    def __init__(self,redis_client):
+    def __init__(self, redis_client):
         self.logger = logging.getLogger('tanner.api.Api')
         self.redis = redis_client
 
