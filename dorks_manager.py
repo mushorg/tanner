@@ -2,7 +2,8 @@ import pickle
 import re
 import random
 import os
-import redis
+import asyncio
+import asyncio_redis
 import uuid
 import patterns
 
@@ -15,13 +16,14 @@ class DorksManager:
         with open('user_dorks.pickle', 'rb') as ud:
             user_dorks = pickle.load(ud)
 
-    def __init__(self):
-        self.r = redis.StrictRedis(host='localhost', port=6379)
-        if not self.r.exists(self.dorks_key):
-            self.push_init_dorks('dorks.pickle', self.dorks_key)
-        if not self.r.exists(self.user_dorks_key):
-            self.push_init_dorks('user_dorks.pickle', self.user_dorks_key)
+    def __init__(self, redis_client):
+        self.redis = redis_client
+        # if not (yield from self.redis.exists(self.dorks_key)):
+        #  self.push_init_dorks('dorks.pickle', self.dorks_key)
+        #   if not (yield from self.redis.exists(self.user_dorks_key)):
+        # self.push_init_dorks('user_dorks.pickle', self.user_dorks_key)
 
+    @asyncio.coroutine
     def push_init_dorks(self, file_name, redis_key):
         dorks = None
         if os.path.exists(file_name):
@@ -30,8 +32,9 @@ class DorksManager:
         if dorks:
             if type(dorks) is str:
                 dorks = dorks.split()
-            self.r.sadd(redis_key, *dorks)
+            yield from self.redis.sadd(redis_key, *dorks)
 
+    @asyncio.coroutine
     def extract_path(self, path):
         extracted = re.match(patterns.QUERY, path)
         if extracted:
@@ -40,13 +43,16 @@ class DorksManager:
                 self.user_dorks_key = uuid.uuid4().hex
 
             extracted = extracted.split()
-            self.r.sadd(self.user_dorks_key, *extracted)
+            yield from self.redis.sadd(self.user_dorks_key, *extracted)
 
+    @asyncio.coroutine
     def choose_dorks(self):
         chosen_dorks = []
         max_dorks = 50
-        dorks = self.r.smembers(self.dorks_key)
-        user_dorks = self.r.smembers(self.user_dorks_key)
+        dorks = yield from self.redis.smembers(self.dorks_key)
+        dorks = yield from dorks.asset()
+        user_dorks = self.redis.smembers(self.user_dorks_key)
+        user_dorks = yield from user_dorks.asset()
         chosen_dorks.extend(random.sample(dorks, random.randint(0.5 * max_dorks, max_dorks)))
         try:
             if max_dorks > len(user_dorks):
