@@ -15,18 +15,19 @@ import uvloop
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logger = logger.Logger.create_logger('tanner.log', 'tanner')
-redis_client = asyncio.get_event_loop().run_until_complete(
-    asyncio_redis.Pool.create(host='localhost', port=6379, poolsize=10))
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     session_manager = session_manager.SessionManager()
     base_handler = base_handler.BaseHandler()
+    dorks = dorks_manager.DorksManager()
+    loop = asyncio.get_event_loop()
+    redis_client = loop.run_until_complete(
+        asyncio_redis.Pool.create(host='localhost', port=6379, poolsize=1000, loop=loop))
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
-        self.dorks = dorks_manager.DorksManager(redis_client)
-        self.api = api.Api(redis_client)
+        self.api = api.Api()
         self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
     @staticmethod
@@ -38,7 +39,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         return m
 
     @asyncio.coroutine
-    def handle_event(self, data):
+    def handle_event(self, data, redis_client):
         try:
             data = json.loads(data.decode('utf-8'))
             path = data['path']
@@ -48,7 +49,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         else:
             session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
             self.logger.info('Requested path {}'.format(path))
-            self.dorks.extract_path(path)
+            yield from self.dorks.extract_path(path, redis_client)
             detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
             m = self._make_response(msg=dict(detection=detection))
@@ -61,15 +62,16 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             self.writer, 200, http_version=message.version
         )
         if message.path == '/dorks':
+            dorks = yield from self.dorks.choose_dorks(self.redis_client)
             m = json.dumps(
-                dict(version=1, response=dict(dorks=self.dorks.choose_dorks())),
+                dict(version=1, response=dict(dorks=dorks)),
                 sort_keys=True, indent=2
             ).encode('utf-8')
         elif message.path == '/event':
             data = yield from payload.read()
-            m = yield from self.handle_event(data)
+            m = yield from self.handle_event(data, self.redis_client)
         elif message.path.startswith('/api'):
-            data = yield from self.api.handle_api_request(message.path)
+            data = yield from self.api.handle_api_request(message.path, self.redis_client)
             m = self._make_response(data)
         else:
             m = self._make_response(msg='')
@@ -93,6 +95,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        redis_client.close()
-        srv.close()
+        HttpRequestHandler.redis_client.close()
+        loop.stop()
         loop.close()
