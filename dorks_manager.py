@@ -23,7 +23,6 @@ class DorksManager:
         if os.path.exists(file_name):
             with open(file_name, 'rb') as ud:
                 dorks = pickle.load(ud)
-            ud.close()
         if dorks:
             if type(dorks) is str:
                 dorks = dorks.split()

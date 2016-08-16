@@ -24,7 +24,6 @@ class LfiEmulator:
             if file_path in f:
                 with open(f) as lfile:
                     result = lfile.read()
-                lfile.close()
         return result
 
     @asyncio.coroutine
@@ -41,14 +40,12 @@ class LfiEmulator:
             if not files:
                 with open('data/vdocs.json') as vdf:
                     vdocs = json.load(vdf)
-                vdf.close()
         if vdocs:
             for k, v in vdocs.items():
                 filename = self.vdoc_path + 'linux/' + k
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 with open(filename, 'w') as vd:
                     vd.write(v)
-                vd.close()
 
     @asyncio.coroutine
     def handle(self, path, session=None):

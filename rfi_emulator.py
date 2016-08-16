@@ -38,7 +38,6 @@ class RfiEmulator:
             file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
             with open(self.script_dir + file_name, 'w') as rfile:
                 rfile.write(data)
-            rfile.close()
         finally:
             return file_name
 
@@ -51,7 +50,6 @@ class RfiEmulator:
             return rfi_result
         with open(self.script_dir + file_name) as f:
             script_data = f.read()
-        f.close()
         try:
             with aiohttp.ClientSession() as session:
                 resp = yield from session.post('http://127.0.0.1:8088/', data=script_data)
