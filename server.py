@@ -18,11 +18,11 @@ logger = logger.Logger.create_logger('tanner.log', 'tanner')
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
-    session_manager = session_manager.SessionManager()
-    dorks = dorks_manager.DorksManager()
     loop = asyncio.get_event_loop()
     redis_client = loop.run_until_complete(
         asyncio_redis.Pool.create(host='localhost', port=6379, poolsize=100, loop=loop))
+    session_manager = session_manager.SessionManager(redis_client)
+    dorks = dorks_manager.DorksManager()
 
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()

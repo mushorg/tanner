@@ -6,10 +6,10 @@ from unittest import mock
 
 class TestSessions(unittest.TestCase):
     def setUp(self):
-        with mock.patch('redis.StrictRedis', mock.Mock(), create=True):
-            self.handler = session_manager.SessionManager()
-            self.handler.analyzer = mock.Mock()
-            self.handler.analyzer.send = mock.Mock()
+
+        self.handler = session_manager.SessionManager(mock.Mock)
+        self.handler.analyzer = mock.Mock()
+        self.handler.analyzer.send = mock.Mock()
 
     def test_validate_missing_peer(self):
         data = {

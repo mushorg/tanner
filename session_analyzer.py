@@ -1,4 +1,4 @@
-import redis
+import asyncio_redis
 import json
 import asyncio
 import logging
@@ -8,8 +8,8 @@ from dorks_manager import DorksManager
 
 
 class SessionAnalyzer:
-    def __init__(self):
-        self.r = redis.StrictRedis(host='localhost', port=6379)
+    def __init__(self, redis_client):
+        self.redis_client = redis_client
         self.queue = asyncio.Queue()
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
 
@@ -18,9 +18,9 @@ class SessionAnalyzer:
         session = None
         yield from asyncio.sleep(1)
         try:
-            session = self.r.get(session_key)
+            session = yield from self.redis_client.get(session_key)
             session = json.loads(session.decode('utf-8'))
-        except (redis.ConnectionError, TypeError, ValueError) as e:
+        except (asyncio_redis.NotConnectedError, TypeError, ValueError) as e:
             self.logger.error('Can\'t get session for analyze'.format(e))
         else:
             result = self.create_stats(session)
@@ -34,16 +34,17 @@ class SessionAnalyzer:
             s_key = session['sensor_uuid']
             del_key = session['uuid']
             try:
-                self.r.lpush(s_key, json.dumps(session))
-                self.r.delete(del_key)
-            except redis.ConnectionError as e:
+                yield from self.redis_client.lpush(s_key, json.dumps(session))
+                yield from self.redis_client.delete(del_key)
+            except asyncio_redis.NotConnectedError as e:
                 self.logger.error('Error with redis. Session will be returned to the queue: {}'.format(e))
                 self.queue.put(session)
 
+    @asyncio.coroutine
     def create_stats(self, session):
         sess_duration = session['end_time'] - session['start_time']
         rps = sess_duration / session['count']
-        tbr, errors, hidden_links, attack_types = self.analyze_paths(session['paths'])
+        tbr, errors, hidden_links, attack_types = yield from self.analyze_paths(session['paths'])
 
         stats = dict(
             uuid=session['uuid'],
@@ -66,11 +67,12 @@ class SessionAnalyzer:
         stats.update(owner)
         return stats
 
+    @asyncio.coroutine
     def analyze_paths(self, paths):
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = self.r.smembers(DorksManager.dorks_key)
+        dorks = yield from self.redis_client.smembers_asset(DorksManager.dorks_key)
 
         for i, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
