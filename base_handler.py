@@ -51,7 +51,7 @@ class BaseHandler:
                 if detection['order'] < patter_details['order']:
                     detection = patter_details
 
-        if detection['order'] < 1:
+        if detection['order'] <= 1:
             sqli = yield from self.emulators['sqli'].check_get_data(path)
             if sqli:
                 detection = {'name': 'sqli', 'order': 2}
