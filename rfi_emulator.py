@@ -31,7 +31,7 @@ class RfiEmulator:
                 resp = yield from client.get(url)
                 data = yield from resp.text()
         except aiohttp.ClientError as e:
-            self.logger.error('Error during downloading the rfi script'.format(e))
+            self.logger.error('Error during downloading the rfi script %', e)
         else:
             yield from resp.release()
             yield from client.close()
