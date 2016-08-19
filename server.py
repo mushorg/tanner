@@ -18,10 +18,8 @@ logger = logger.Logger.create_logger('tanner.log', 'tanner')
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
-    loop = asyncio.get_event_loop()
-    redis_client = loop.run_until_complete(
-        asyncio_redis.Pool.create(host='localhost', port=6379, poolsize=100, loop=loop))
-    session_manager = session_manager.SessionManager(redis_client)
+    redis_client = None
+    session_manager = session_manager.SessionManager()
     dorks = dorks_manager.DorksManager()
 
     def __init__(self, *args, **kwargs):
@@ -47,7 +45,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             self.logger.error('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)
         else:
-            session = yield from HttpRequestHandler.session_manager.add_or_update_session(data)
+            session = yield from HttpRequestHandler.session_manager.add_or_update_session(data, self.redis_client)
             self.logger.info('Requested path {}'.format(path))
             yield from self.dorks.extract_path(path, redis_client)
             detection = yield from self.base_handler.handle(data, session, path)
@@ -83,8 +81,23 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
         yield from response.write_eof()
 
 
+@asyncio.coroutine
+def get_redis_client():
+    try:
+        redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
+            host='localhost', port=6379, poolsize=80, loop=loop), timeout=1)
+    except asyncio.TimeoutError as timeout:
+        global logger
+        logger.error('Problem with redis connection. Please, check your redis server. %s', timeout)
+        exit()
+    else:
+        HttpRequestHandler.redis_client = redis_client
+
+
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
+    if HttpRequestHandler.redis_client is None:
+        loop.run_until_complete(get_redis_client())
     f = loop.create_server(
         lambda: HttpRequestHandler(debug=False, keep_alive=75),
         '0.0.0.0', int('8090'))
@@ -96,5 +109,6 @@ if __name__ == '__main__':
         pass
     finally:
         HttpRequestHandler.redis_client.close()
-        loop.stop()
+        srv.close()
+        loop.run_until_complete(srv.wait_closed())
         loop.close()

@@ -6,8 +6,7 @@ from unittest import mock
 
 class TestSessions(unittest.TestCase):
     def setUp(self):
-
-        self.handler = session_manager.SessionManager(mock.Mock)
+        self.handler = session_manager.SessionManager()
         self.handler.analyzer = mock.Mock()
         self.handler.analyzer.send = mock.Mock()
 
