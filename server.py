@@ -5,6 +5,7 @@ import asyncio
 import logging
 import aiohttp
 import aiohttp.server
+from urllib.parse import unquote
 import asyncio_redis
 import dorks_manager
 import session_manager
@@ -40,7 +41,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def handle_event(self, data, redis_client):
         try:
             data = json.loads(data.decode('utf-8'))
-            path = data['path']
+            path = unquote(data['path'])
         except (TypeError, ValueError, KeyError) as e:
             self.logger.error('error parsing: {}'.format(data))
             m = self._make_response(msg=type(e).__name__)

@@ -63,13 +63,13 @@ class DorksManager:
         chosen_dorks = []
         max_dorks = 50
         transaction = yield from redis_client.multi()
-        dorks = yield from transaction.smembers(self.dorks_key)
-        user_dorks = yield from transaction.smembers(self.user_dorks_key)
+        dorks = yield from transaction.smembers_asset(self.dorks_key)
+        user_dorks = yield from transaction.smembers_asset(self.user_dorks_key)
 
         yield from transaction.exec()
 
-        dorks = yield from (yield from dorks).asset()
-        user_dorks = yield from (yield from user_dorks).asset()
+        dorks, user_dorks = yield from dorks
+        user_dorks = yield from user_dorks
         chosen_dorks.extend(random.sample(dorks, random.randint(0.5 * max_dorks, max_dorks)))
         try:
             if max_dorks > len(user_dorks):

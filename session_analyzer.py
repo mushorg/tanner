@@ -22,7 +22,7 @@ class SessionAnalyzer:
         except (asyncio_redis.NotConnectedError, TypeError, ValueError) as e:
             self.logger.error('Can\'t get session for analyze'.format(e))
         else:
-            result = self.create_stats(session)
+            result = yield from self.create_stats(session, redis_client)
             yield from self.queue.put(result)
             yield from self.save_session(redis_client)
 
