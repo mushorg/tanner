@@ -15,13 +15,13 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def setup_db(self):
-        if self.query_map is None:
-            self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
         db = os.path.join(self.working_dir, self.db_name)
         if not os.path.exists(db):
             yield from self.helper.setup_db_from_config(self.working_dir, self.db_name)
+        if self.query_map is None:
+            self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
 
     @asyncio.coroutine
     def check_sqli(self, path):
@@ -66,13 +66,13 @@ class SqliEmulator:
 
     @staticmethod
     def prepare_get_query(path):
-        path = urllib.parse.unquote(path)
         query = urllib.parse.urlparse(path).query
         parsed_query = urllib.parse.parse_qsl(query)
         return parsed_query
 
     @asyncio.coroutine
     def map_query(self, query):
+        print(self.query_map)
         db_query = None
         param = query[0][0]
         param_value = query[0][1].replace('\'', ' ')
