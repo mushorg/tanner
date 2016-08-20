@@ -17,7 +17,7 @@ class Api:
         parsed_path = urlparse(path)
         query = parse_qs(parsed_path.query)
 
-        if parsed_path.path == '/api/stats' and not query:
+        if parsed_path.path.startswith('/api/stats') and not query:
             result = yield from self.return_stats(redis_client)
         elif parsed_path.path == '/api/stats' and 'uuid' in query:
             result = yield from self.return_uuid_stats(query['uuid'], redis_client, 50)
@@ -37,8 +37,7 @@ class Api:
     def return_uuid_stats(self, uuid, redis_client, n=-1):
         query_res = []
         try:
-            query_res = redis_client.lrange(uuid[0], 0, n)
-            query_res = yield from query_res.asset()
+            query_res = yield from redis_client.lrange_aslist(uuid[0], 0, n)
         except asyncio_redis.NotConnectedError as e:
             self.logger.error('Can not connect to redis', e)
         else:
