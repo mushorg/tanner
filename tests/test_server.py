@@ -7,24 +7,31 @@ from unittest import mock
 
 class TestServer(unittest.TestCase):
     def setUp(self):
+        @asyncio.coroutine
+        def choosed(client):
+            return [x for x in range(10)]
+
         dorks = mock.Mock()
-        attrs = {'choose_dorks.return_value': [x for x in range(10)], 'extract_path.return_value': mock.Mock()}
+        attrs = {'extract_path.return_value': (lambda: (yield None))()}
         dorks.configure_mock(**attrs)
+        dorks.choose_dorks = choosed
+
         self.MockedRequestHandler = server.HttpRequestHandler
+        self.MockedRequestHandler.redis_client = mock.Mock()
         with mock.patch('dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
-                    self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
+                self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
 
         self.handler.dorks = dorks
         self.handler.writer = mock.Mock()
 
         @asyncio.coroutine
-        def foobar(data):
+        def add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
             return sess
 
-        self.handler.session_manager.add_or_update_session = foobar
+        self.handler.session_manager.add_or_update_session = add_or_update_mock
         # self.handler.dorks = dorks
 
         self.m = mock.Mock()

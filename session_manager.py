@@ -1,5 +1,5 @@
 import asyncio
-import redis
+import asyncio_redis
 import os
 import logging
 from session import Session
@@ -9,18 +9,17 @@ from session_analyzer import SessionAnalyzer
 class SessionManager:
     def __init__(self):
         self.sessions = []
-        self.r = redis.StrictRedis(host='localhost', port=6379)
         self.analyzer = SessionAnalyzer()
         self.logger = logging.getLogger('tanner.session_manager.SessionManager')
 
     @asyncio.coroutine
-    def add_or_update_session(self, raw_data):
+    def add_or_update_session(self, raw_data, redis_client):
         # prepare the list of sessions
-        yield from self.delete_old_sessions()
+        yield from self.delete_old_sessions(redis_client)
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
-        self.r.sadd('snare_ids', valid_data['uuid'])
+        yield from redis_client.sadd('snare_ids', [valid_data['uuid']])
         session = self.get_session(valid_data)
         if session is None:
             try:
@@ -62,7 +61,7 @@ class SessionManager:
         return session
 
     @asyncio.coroutine
-    def delete_old_sessions(self):
+    def delete_old_sessions(self, redis_client):
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
@@ -73,8 +72,8 @@ class SessionManager:
                 self.logger.error('Cannot remove attacker db. The db doesn\'t exist {}'.format(e))
             self.sessions.remove(sess)
             try:
-                self.r.set(sess.get_key(), sess.to_json())
-                yield from self.analyzer.analyze(sess.get_key())
-            except redis.ConnectionError as e:
+                yield from redis_client.set(sess.get_key(), sess.to_json())
+                yield from self.analyzer.analyze(sess.get_key(), redis_client)
+            except asyncio_redis.NotConnectedError as e:
                 self.logger.error('Error connect to redis, session stay in memory. {}'.format(e))
                 self.sessions.append(sess)

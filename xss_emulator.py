@@ -6,8 +6,8 @@ import asyncio
 
 
 class XssEmulator:
-    @staticmethod
-    def extract_xss_data(data):
+    @asyncio.coroutine
+    def extract_xss_data(self, data):
         value = ''
         if 'post_data' in data:
             for field, val in data['post_data'].items():
@@ -17,11 +17,12 @@ class XssEmulator:
                     value += val if not value else '\n' + val
         return value
 
+    @asyncio.coroutine
     def get_xss_result(self, session, val):
         result = None
         injectable_page = None
         if session:
-            injectable_page = self.set_xss_page(session)
+            injectable_page = yield from self.set_xss_page(session)
         if injectable_page is None:
             injectable_page = '/index.html'
         if val:
@@ -29,6 +30,7 @@ class XssEmulator:
                           page=injectable_page)
         return result
 
+    @asyncio.coroutine
     def set_xss_page(self, session):
         injectable_page = None
         for page in reversed(session.paths):
@@ -40,6 +42,6 @@ class XssEmulator:
     def handle(self, value, session, raw_data=None):
         xss_result = None
         if not value:
-            value = self.extract_xss_data(raw_data)
-        xss_result = self.get_xss_result(session, value)
+            value = yield from self.extract_xss_data(raw_data)
+        xss_result = yield from self.get_xss_result(session, value)
         return xss_result

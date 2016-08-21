@@ -53,4 +53,4 @@ class Session:
         self.associated_db = db_name
 
     def get_key(self):
-        return self.uuid
+        return str(self.uuid)

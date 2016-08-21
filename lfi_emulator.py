@@ -7,16 +7,19 @@ import asyncio
 
 class LfiEmulator:
     def __init__(self, root_path):
-        self.vdoc_path = root_path + '/virtualdocs/'
+        self.vdoc_path = root_path + '/virtualdocs/linux'
         self.whitelist = []
-        self.setup_vdocs()
+        if not os.path.exists(self.vdoc_path + 'vdoc.lock'):
+            self.setup_vdocs()
 
+    @asyncio.coroutine
     def available_files(self):
         for root, dirs, files in os.walk(self.vdoc_path):
             for f in files:
                 self.whitelist.append(os.path.join(root, f))
 
-    def lfi_result(self, file_path):
+    @asyncio.coroutine
+    def get_lfi_result(self, file_path):
         result = None
         for f in self.whitelist:
             if file_path in f:
@@ -24,6 +27,7 @@ class LfiEmulator:
                     result = lfile.read()
         return result
 
+    @asyncio.coroutine
     def get_file_path(self, path):
         file_path = re.match(patterns.LFI_FILEPATH, path).group(1)
         file_path = os.path.normpath(os.path.join('/', file_path))
@@ -31,21 +35,24 @@ class LfiEmulator:
 
     def setup_vdocs(self):
         vdocs = None
-        if not os.path.exists(self.vdoc_path + 'linux/'):
-            os.makedirs(self.vdoc_path + 'linux/')
-        for root, dirs, files in os.walk(self.vdoc_path + 'linux/'):
+        if not os.path.exists(self.vdoc_path):
+            os.makedirs(self.vdoc_path)
+        for root, dirs, files in os.walk(self.vdoc_path):
             if not files:
                 with open('data/vdocs.json') as vdf:
                     vdocs = json.load(vdf)
         if vdocs:
             for k, v in vdocs.items():
-                filename = self.vdoc_path + 'linux/' + k
+                filename = self.vdoc_path + k
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 with open(filename, 'w') as vd:
                     vd.write(v)
+            open(self.vdoc_path + 'vdoc.lock', 'a').close()
 
     @asyncio.coroutine
     def handle(self, path, session=None):
-        self.available_files()
-        file_path = self.get_file_path(path)
-        return self.lfi_result(file_path)
+        if not self.whitelist:
+            yield from self.available_files()
+        file_path = yield from self.get_file_path(path)
+        result = yield from self.get_lfi_result(file_path)
+        return result

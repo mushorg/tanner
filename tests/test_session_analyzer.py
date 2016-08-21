@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 import json
-import redis
+import asyncio_redis
 from unittest import mock
 from session_analyzer import SessionAnalyzer
 
@@ -24,20 +24,38 @@ session = b'{"uuid": "c546114f97f548f982756495f963e280", "start_time": 146609181
 class TestSessionAnalyzer(unittest.TestCase):
     def setUp(self):
         self.session = json.loads(session.decode('utf-8'))
-        with mock.patch('redis.StrictRedis', mock.Mock()):
-            self.handler = SessionAnalyzer()
-        attrs = {'get.return_value': session, 'smembers.return_value': set(),'lpush.return_value':''}
-        self.handler.r = mock.Mock(**attrs)
+        self.handler = SessionAnalyzer()
 
     def tests_load_session_fail(self):
+        @asyncio.coroutine
+        def sess_get():
+            return asyncio_redis.NotConnectedError
+
+        redis_mock = mock.Mock()
+        redis_mock.get = sess_get
         res = None
         loop = asyncio.get_event_loop()
         redis_mock = mock.Mock()
-        redis_mock.side_effect = redis.ConnectionError
-        with mock.patch('redis.StrictRedis.get', redis_mock):
-            loop.run_until_complete(self.handler.analyze(None))
-        self.assertRaises(redis.ConnectionError)
+        redis_mock.get = sess_get
+        loop.run_until_complete(self.handler.analyze(None, redis_mock))
+        self.assertRaises(asyncio_redis.NotConnectedError)
 
     def test_create_stats(self):
-        stats = self.handler.create_stats(self.session)
+        @asyncio.coroutine
+        def sess_get():
+            return session
+
+        @asyncio.coroutine
+        def set_of_members(key):
+            return set()
+
+        @asyncio.coroutine
+        def push_list():
+            return ''
+
+        redis_mock = mock.Mock()
+        redis_mock.get = sess_get
+        redis_mock.smembers_asset = set_of_members
+        redis_mock.lpush = push_list
+        stats = asyncio.get_event_loop().run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])

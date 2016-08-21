@@ -16,9 +16,8 @@ class TestRfiEmulator(unittest.TestCase):
 
     def test_http_download_fail(self):
         path = 'file=http://foobarfvfd'
-
-        with self.assertRaises(aiohttp.errors.ClientOSError):
-            yield from self.handler.download_file(path)
+        filename = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        self.assertIsNone(filename)
 
     def test_ftp_download(self):
         path = 'file=ftp://mirror.yandex.ru/archlinux/lastupdate'

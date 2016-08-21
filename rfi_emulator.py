@@ -31,9 +31,10 @@ class RfiEmulator:
                 resp = yield from client.get(url)
                 data = yield from resp.text()
         except aiohttp.ClientError as e:
-            self.logger.error('Error during downloading the rfi script'.format(e))
+            self.logger.error('Error during downloading the rfi script %', e)
         else:
-            resp.release()
+            yield from resp.release()
+            yield from client.close()
             file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
             with open(self.script_dir + file_name, 'w') as rfile:
                 rfile.write(data)
@@ -42,8 +43,8 @@ class RfiEmulator:
 
     @asyncio.coroutine
     def get_rfi_result(self, path):
-        yield from asyncio.sleep(1)
         rfi_result = None
+        yield from asyncio.sleep(1)
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result
@@ -56,7 +57,8 @@ class RfiEmulator:
         except aiohttp.ClientError as e:
             self.logger.error('Error during connection to php sandbox {}'.format(e))
         else:
-            resp.release()
+            yield from resp.release()
+            yield from session.close()
         finally:
             return rfi_result
 
