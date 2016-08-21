@@ -8,7 +8,6 @@ from urllib.parse import urlparse, parse_qs
 class Api:
     def __init__(self):
         self.logger = logging.getLogger('tanner.api.Api')
-        # self.redis = redis_client
 
     @asyncio.coroutine
     def handle_api_request(self, path, redis_client):

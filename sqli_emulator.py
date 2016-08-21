@@ -72,7 +72,6 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def map_query(self, query):
-        print(self.query_map)
         db_query = None
         param = query[0][0]
         param_value = query[0][1].replace('\'', ' ')
