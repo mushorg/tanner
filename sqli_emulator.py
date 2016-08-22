@@ -1,8 +1,9 @@
 import asyncio
+from asyncio.subprocess import PIPE
 import sqlite3
 import os
 import urllib.parse
-from asyncio.subprocess import PIPE
+
 import db_helper
 
 
@@ -23,8 +24,9 @@ class SqliEmulator:
         if self.query_map is None:
             self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
 
+    @staticmethod
     @asyncio.coroutine
-    def check_sqli(self, path):
+    def check_sqli(path):
         @asyncio.coroutine
         def _run_cmd(cmd):
             proc = yield from asyncio.wait_for(asyncio.create_subprocess_exec(*cmd, stdout=PIPE), 5)
@@ -51,16 +53,19 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def check_get_data(self, path):
-        query = urllib.parse.urlparse(path).query
-        parsed_queries = urllib.parse.parse_qsl(query)
-        for q in parsed_queries:
-            sqli = yield from self.check_sqli(q[1])
+        request_query = urllib.parse.urlparse(path).query
+        parsed_queries = urllib.parse.parse_qsl(request_query)
+        for query in parsed_queries:
+            sqli = yield from self.check_sqli(query[1])
             return sqli
 
     @asyncio.coroutine
     def create_attacker_db(self, session):
         attacker_db_name = session.uuid.hex + '.db'
-        attacker_db = yield from self.helper.copy_db(self.db_name, attacker_db_name, self.working_dir)
+        attacker_db = yield from self.helper.copy_db(self.db_name,
+                                                     attacker_db_name,
+                                                     self.working_dir
+                                                    )
         session.associate_db(attacker_db)
         return attacker_db
 
@@ -85,12 +90,12 @@ class SqliEmulator:
     def execute_query(query, db):
         result = []
         conn = sqlite3.connect(db)
-        c = conn.cursor()
+        cursor = conn.cursor()
         try:
-            for row in c.execute(query):
+            for row in cursor.execute(query):
                 result.append(list(row))
-        except sqlite3.OperationalError as e:
-            result = str(e)
+        except sqlite3.OperationalError as sqlite_error:
+            result = str(sqlite_error)
         return result
 
     @asyncio.coroutine
@@ -102,7 +107,7 @@ class SqliEmulator:
                         right syntax to use near {} at line 1'.format(query[0][0])
         else:
             execute_result = self.execute_query(db_query, attacker_db)
-            if type(execute_result) == list:
+            if isinstance(execute_result, list):
                 execute_result = ' '.join([str(x) for x in execute_result])
             result = dict(value=execute_result, page='/index.html')
         return result

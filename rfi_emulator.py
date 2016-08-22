@@ -1,9 +1,10 @@
-import aiohttp
-import re
 import asyncio
 import hashlib
-import os
 import logging
+import os
+import re
+
+import aiohttp
 import patterns
 
 
@@ -30,16 +31,15 @@ class RfiEmulator:
             with aiohttp.ClientSession() as client:
                 resp = yield from client.get(url)
                 data = yield from resp.text()
-        except aiohttp.ClientError as e:
-            self.logger.error('Error during downloading the rfi script %', e)
+        except aiohttp.ClientError as client_error:
+            self.logger.error('Error during downloading the rfi script %s', client_error)
         else:
             yield from resp.release()
             yield from client.close()
             file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
             with open(self.script_dir + file_name, 'w') as rfile:
                 rfile.write(data)
-        finally:
-            return file_name
+        return file_name
 
     @asyncio.coroutine
     def get_rfi_result(self, path):
@@ -48,19 +48,18 @@ class RfiEmulator:
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result
-        with open(self.script_dir + file_name) as f:
-            script_data = f.read()
+        with open(self.script_dir + file_name) as script:
+            script_data = script.read()
         try:
             with aiohttp.ClientSession() as session:
                 resp = yield from session.post('http://127.0.0.1:8088/', data=script_data)
                 rfi_result = yield from resp.json()
-        except aiohttp.ClientError as e:
-            self.logger.error('Error during connection to php sandbox {}'.format(e))
+        except aiohttp.ClientError as client_error:
+            self.logger.error('Error during connection to php sandbox %s', client_error)
         else:
             yield from resp.release()
             yield from session.close()
-        finally:
-            return rfi_result
+        return rfi_result
 
     @asyncio.coroutine
     def handle(self, path, session=None):
