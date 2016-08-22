@@ -68,7 +68,7 @@ class DorksManager:
 
         yield from transaction.exec()
 
-        dorks, user_dorks = yield from dorks
+        dorks = yield from dorks
         user_dorks = yield from user_dorks
         chosen_dorks.extend(random.sample(dorks, random.randint(0.5 * max_dorks, max_dorks)))
         try:
