@@ -1,13 +1,15 @@
-import patterns
-import urllib.parse
-import re
-import mimetypes
 import asyncio
+import mimetypes
+import re
+import urllib.parse
+
+import patterns
 
 
 class XssEmulator:
+    @staticmethod
     @asyncio.coroutine
-    def extract_xss_data(self, data):
+    def extract_xss_data(data):
         value = ''
         if 'post_data' in data:
             for field, val in data['post_data'].items():
@@ -30,8 +32,9 @@ class XssEmulator:
                           page=injectable_page)
         return result
 
+    @staticmethod
     @asyncio.coroutine
-    def set_xss_page(self, session):
+    def set_xss_page(session):
         injectable_page = None
         for page in reversed(session.paths):
             if mimetypes.guess_type(page['path'])[0] == 'text/html':

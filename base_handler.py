@@ -1,7 +1,8 @@
-import re
-import patterns
-import urllib.parse
 import asyncio
+import re
+import urllib.parse
+
+import patterns
 import rfi_emulator
 import xss_emulator
 import lfi_emulator
