@@ -35,11 +35,8 @@ class DorksManager:
         extracted = re.match(patterns.QUERY, path)
         if extracted:
             extracted = extracted.group(0)
-            if not self.user_dorks_key:
-                self.user_dorks_key = uuid.uuid4().hex
 
-            extracted = extracted.split()
-            yield from redis_client.sadd(self.user_dorks_key, extracted)
+            yield from redis_client.sadd(self.user_dorks_key, [extracted])
 
     @asyncio.coroutine
     def init_dorks(self, redis_client):
