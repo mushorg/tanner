@@ -1,8 +1,9 @@
+import asyncio
+import json
 import os
 import re
-import json
+
 import patterns
-import asyncio
 
 
 class LfiEmulator:
@@ -15,15 +16,15 @@ class LfiEmulator:
     @asyncio.coroutine
     def available_files(self):
         for root, dirs, files in os.walk(self.vdoc_path):
-            for f in files:
-                self.whitelist.append(os.path.join(root, f))
+            for filename in files:
+                self.whitelist.append(os.path.join(root, filename))
 
     @asyncio.coroutine
     def get_lfi_result(self, file_path):
         result = None
-        for f in self.whitelist:
-            if file_path in f:
-                with open(f) as lfile:
+        for filename in self.whitelist:
+            if file_path in filename:
+                with open(filename) as lfile:
                     result = lfile.read()
         return result
 
@@ -42,11 +43,11 @@ class LfiEmulator:
                 with open('data/vdocs.json') as vdf:
                     vdocs = json.load(vdf)
         if vdocs:
-            for k, v in vdocs.items():
-                filename = self.vdoc_path + k
+            for key, value in vdocs.items():
+                filename = self.vdoc_path + key
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 with open(filename, 'w') as vd:
-                    vd.write(v)
+                    vd.write(value)
             open(self.vdoc_path + 'vdoc.lock', 'a').close()
 
     @asyncio.coroutine

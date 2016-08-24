@@ -2,7 +2,7 @@ import logging
 import logging.handlers
 
 
-class Logger():
+class Logger:
     @staticmethod
     def create_logger(filename, logger_name):
         log_filename = filename

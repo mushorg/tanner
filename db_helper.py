@@ -1,11 +1,11 @@
-import sqlite3
-import json
-import random
-import shutil
-import os
-import re
 import asyncio
+import json
 import logging
+import os
+import random
+import re
+import shutil
+import sqlite3
 
 
 class DBHelper:
@@ -19,13 +19,14 @@ class DBHelper:
         with open('/opt/tanner/db/db_config.json') as db_config:
             try:
                 config = json.load(db_config)
-            except json.JSONDecodeError as e:
-                self.logger.info('Failed to load json: {}'.format(e))
+            except json.JSONDecodeError as json_error:
+                self.logger.info('Failed to load json: %s', json_error)
             else:
                 return config
 
+    @staticmethod
     @asyncio.coroutine
-    def insert_dummy_data(self, table_name, data_tokens, cursor):
+    def insert_dummy_data(table_name, data_tokens, cursor):
         """
         Insert dummy data based on data tokens
         I - integer id
@@ -39,7 +40,8 @@ class DBHelper:
         with open('/usr/share/dict/words') as dummy:
             dummy_data = dummy.read()
             dummy_data = dummy_data.split('\n')
-            dummy_data = [x for x in dummy_data if (len(x) > 5 and re.match(re.compile('[0-9a-zA-Z]'), x))]
+            dummy_data = [x for x in dummy_data if len(x) > 5 and
+                          re.match(re.compile('[0-9a-zA-Z]'), x)]
 
         domains = ['.com', '.net', '.org']
         token_list = data_tokens.split(',')
@@ -55,8 +57,8 @@ class DBHelper:
                     data = random.choice(dummy_data)
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) + random.choice(
-                        domains)
+                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) \
+                           + random.choice(domains)
                     values.append(data)
                 if token == 'P':
                     data = random.choice(dummy_data)
@@ -72,7 +74,8 @@ class DBHelper:
             inserted_string_patt *= len(token_list)
             inserted_string_patt = inserted_string_patt[:-1]
 
-        cursor.executemany("INSERT INTO " + table_name + " VALUES(" + inserted_string_patt + ")", inserted_data)
+        cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
+                           inserted_string_patt + ")", inserted_data)
 
     @asyncio.coroutine
     def setup_db_from_config(self, working_dir, name=None):
@@ -83,11 +86,11 @@ class DBHelper:
             db_name = working_dir + config['name'] + '.db'
 
         conn = sqlite3.connect(db_name)
-        c = conn.cursor()
+        cursor = conn.cursor()
         for table in config['tables']:
             query = table['schema']
-            c.execute(query)
-            yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], c)
+            cursor.execute(query)
+            yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
             conn.commit()
 
         conn.close()
@@ -115,24 +118,24 @@ class DBHelper:
 
         db = os.path.join(working_dir, db_name)
         conn = sqlite3.connect(db)
-        c = conn.cursor()
+        cursor = conn.cursor()
 
         select_tables = 'SELECT name FROM sqlite_master WHERE type=\'table\''
 
         try:
-            for row in c.execute(select_tables):
+            for row in cursor.execute(select_tables):
                 tables.append(row[0])
-        except sqlite3.OperationalError as e:
-            self.logger.error('Error during query map creation: {}'.format(e))
+        except sqlite3.OperationalError as sqlite_error:
+            self.logger.error('Error during query map creation: %s', sqlite_error)
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
                 query = 'PRAGMA table_info(' + table + ')'
                 columns = []
                 try:
-                    for row in c.execute(query):
+                    for row in cursor.execute(query):
                         columns.append(row[1])
                     query_map[table] = columns
-                except sqlite3.OperationalError as e:
-                    self.logger.error('Error during query map creation: {}'.format(e))
+                except sqlite3.OperationalError as sqlite_error:
+                    self.logger.error('Error during query map creation: %s', sqlite_error)
         return query_map
