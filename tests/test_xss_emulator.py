@@ -1,12 +1,13 @@
 import unittest
-import xss_emulator
-import session
 from unittest import mock
+
+from tanner import session
+from tanner.emulators import xss
 
 
 class TestXSSEmulator(unittest.TestCase):
     def setUp(self):
-        self.handler = xss_emulator.XssEmulator()
+        self.handler = xss.XssEmulator()
 
     def test_post_xss(self):
         data = {

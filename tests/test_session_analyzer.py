@@ -1,9 +1,11 @@
 import asyncio
-import unittest
 import json
-import asyncio_redis
+import unittest
 from unittest import mock
-from session_analyzer import SessionAnalyzer
+
+import asyncio_redis
+
+from tanner.session_analyzer import SessionAnalyzer
 
 session = b'{"uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
           b'"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \

@@ -7,13 +7,12 @@ from urllib.parse import unquote
 
 import aiohttp
 import aiohttp.server
-import api
 import asyncio_redis
-import base_handler
-import dorks_manager
-import logger
-import session_manager
 import uvloop
+
+from tanner import api, dorks_manager, session_manager
+from tanner.emulators import base
+from tanner.utils import logger
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 LOGGER = logger.Logger.create_logger('tanner.log', 'tanner')
@@ -27,7 +26,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.api = api.Api()
-        self.base_handler = base_handler.BaseHandler()
+        self.base_handler = base.BaseHandler()
         self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
     @staticmethod

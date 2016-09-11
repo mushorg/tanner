@@ -1,11 +1,11 @@
-import lfi_emulator
 import unittest
-import os
+
+from tanner.emulators import lfi
 
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
-        self.handler = lfi_emulator.LfiEmulator('/tmp/')
+        self.handler = lfi.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
         path = '/?foo=/etc/passwd'

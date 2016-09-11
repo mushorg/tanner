@@ -1,8 +1,9 @@
 import asyncio
-import unittest
 import json
-import server
+import unittest
 from unittest import mock
+
+from tanner import server
 
 
 class TestServer(unittest.TestCase):

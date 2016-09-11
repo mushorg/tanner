@@ -2,11 +2,8 @@ import asyncio
 import re
 import urllib.parse
 
-import patterns
-import rfi_emulator
-import xss_emulator
-import lfi_emulator
-import sqli_emulator
+from tanner.emulators import lfi, rfi, sqli, xss
+from tanner.utils import patterns
 
 
 class BaseHandler:
@@ -20,10 +17,10 @@ class BaseHandler:
 
     def __init__(self):
         self.emulators = {
-            'rfi': rfi_emulator.RfiEmulator('/opt/tanner/'),
-            'lfi': lfi_emulator.LfiEmulator('/opt/tanner/'),
-            'xss': xss_emulator.XssEmulator(),
-            'sqli': sqli_emulator.SqliEmulator('words.db', '/opt/tanner/db/')
+            'rfi': rfi.RfiEmulator('/opt/tanner/'),
+            'lfi': lfi.LfiEmulator('/opt/tanner/'),
+            'xss': xss.XssEmulator(),
+            'sqli': sqli.SqliEmulator('words.db', '/opt/tanner/db/')
         }
 
     @asyncio.coroutine

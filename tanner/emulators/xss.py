@@ -3,7 +3,7 @@ import mimetypes
 import re
 import urllib.parse
 
-import patterns
+from tanner.utils import patterns
 
 
 class XssEmulator:

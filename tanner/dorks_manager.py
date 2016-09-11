@@ -7,7 +7,8 @@ import re
 import uuid
 
 import asyncio_redis
-import patterns
+
+from tanner.utils import patterns
 
 
 class DorksManager:

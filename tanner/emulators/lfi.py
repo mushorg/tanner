@@ -3,7 +3,7 @@ import json
 import os
 import re
 
-import patterns
+from tanner.utils import patterns
 
 
 class LfiEmulator:
