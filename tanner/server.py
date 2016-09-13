@@ -96,7 +96,7 @@ def get_redis_client():
         HttpRequestHandler.redis_client = redis_client
 
 
-if __name__ == '__main__':
+def run_server():
     loop = asyncio.get_event_loop()
     if HttpRequestHandler.redis_client is None:
         loop.run_until_complete(get_redis_client())
