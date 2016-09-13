@@ -88,7 +88,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 def get_redis_client():
     try:
         redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
-            host='localhost', port=6379, poolsize=80, loop=loop), timeout=1)
+            host='localhost', port=6379, poolsize=80), timeout=1)
     except asyncio.TimeoutError as timeout:
         LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout)
         exit()
