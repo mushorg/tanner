@@ -19,8 +19,8 @@ class TestServer(unittest.TestCase):
 
         self.MockedRequestHandler = server.HttpRequestHandler
         self.MockedRequestHandler.redis_client = mock.Mock()
-        with mock.patch('dorks_manager.DorksManager', mock.Mock()):
-            with mock.patch('lfi_emulator.LfiEmulator', mock.Mock(), create=True):
+        with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
+            with mock.patch('tanner.emulators.lfi.LfiEmulator', mock.Mock(), create=True):
                 self.handler = self.MockedRequestHandler(debug=False, keep_alive=75)
 
         self.handler.dorks = dorks
