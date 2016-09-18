@@ -1,0 +1,4 @@
+#!/usr/bin/python3.5
+from tanner import server
+
+server.run_server()

@@ -5,7 +5,8 @@ import os
 import re
 
 import aiohttp
-import patterns
+
+from tanner.utils import patterns
 
 
 class RfiEmulator:

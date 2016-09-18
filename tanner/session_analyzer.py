@@ -5,7 +5,8 @@ import operator
 import socket
 
 import asyncio_redis
-from dorks_manager import DorksManager
+
+from tanner.dorks_manager import DorksManager
 
 
 class SessionAnalyzer:

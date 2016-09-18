@@ -1,13 +1,14 @@
-import unittest
-import rfi_emulator
 import asyncio
+import unittest
+
 import aiohttp
-import os
+
+from tanner.emulators import rfi
 
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
-        self.handler = rfi_emulator.RfiEmulator('/tmp/')
+        self.handler = rfi.RfiEmulator('/tmp/')
 
     def test_http_download(self):
         path = 'file=http://example.com'

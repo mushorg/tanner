@@ -2,8 +2,9 @@ import asyncio
 import logging
 
 import asyncio_redis
-from session import Session
-from session_analyzer import SessionAnalyzer
+
+from tanner.session import Session
+from tanner.session_analyzer import SessionAnalyzer
 
 
 class SessionManager:

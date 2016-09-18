@@ -7,13 +7,12 @@ from urllib.parse import unquote
 
 import aiohttp
 import aiohttp.server
-import api
 import asyncio_redis
-import base_handler
-import dorks_manager
-import logger
-import session_manager
 import uvloop
+
+from tanner import api, dorks_manager, session_manager
+from tanner.emulators import base
+from tanner.utils import logger
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 LOGGER = logger.Logger.create_logger('tanner.log', 'tanner')
@@ -27,7 +26,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.api = api.Api()
-        self.base_handler = base_handler.BaseHandler()
+        self.base_handler = base.BaseHandler()
         self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
 
     @staticmethod
@@ -89,7 +88,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 def get_redis_client():
     try:
         redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
-            host='localhost', port=6379, poolsize=80, loop=loop), timeout=1)
+            host='localhost', port=6379, poolsize=80), timeout=1)
     except asyncio.TimeoutError as timeout:
         LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout)
         exit()
@@ -97,7 +96,7 @@ def get_redis_client():
         HttpRequestHandler.redis_client = redis_client
 
 
-if __name__ == '__main__':
+def run_server():
     loop = asyncio.get_event_loop()
     if HttpRequestHandler.redis_client is None:
         loop.run_until_complete(get_redis_client())

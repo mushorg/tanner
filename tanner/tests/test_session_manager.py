@@ -1,7 +1,7 @@
 import unittest
-import session_manager
-import session
 from unittest import mock
+
+from tanner import session, session_manager
 
 
 class TestSessions(unittest.TestCase):

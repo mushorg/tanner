@@ -1,8 +1,9 @@
-import unittest
 import asyncio
 import os
+import unittest
 from unittest import mock
-import sqli_emulator
+
+from tanner.emulators import sqli
 
 
 class SqliTest(unittest.TestCase):
@@ -13,7 +14,7 @@ class SqliTest(unittest.TestCase):
             'users': ['id', 'login', 'email', 'username', 'password', 'pass', 'log'],
             'comments': ['comment']
         }
-        self.handler = sqli_emulator.SqliEmulator('test.db', '/tmp/')
+        self.handler = sqli.SqliEmulator('test.db', '/tmp/')
         self.handler.query_map = query_map
 
     def test_db_copy(self):
