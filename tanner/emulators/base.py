@@ -15,12 +15,12 @@ class BaseHandler:
         patterns.XSS_ATTACK: dict(name='xss', order=3)
     }
 
-    def __init__(self):
+    def __init__(self, base_dir, db_name):
         self.emulators = {
-            'rfi': rfi.RfiEmulator('/opt/tanner/'),
-            'lfi': lfi.LfiEmulator('/opt/tanner/'),
+            'rfi': rfi.RfiEmulator(base_dir),
+            'lfi': lfi.LfiEmulator(base_dir),
             'xss': xss.XssEmulator(),
-            'sqli': sqli.SqliEmulator('words.db', '/opt/tanner/db/')
+            'sqli': sqli.SqliEmulator(db_name, base_dir)
         }
 
     @asyncio.coroutine

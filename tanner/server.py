@@ -12,10 +12,10 @@ import uvloop
 
 from tanner import api, dorks_manager, session_manager
 from tanner.emulators import base
-from tanner.utils import logger
+
+LOGGER = logging.getLogger(__name__)
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-LOGGER = logger.Logger.create_logger('tanner.log', 'tanner')
 
 
 class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
@@ -26,8 +26,8 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, *args, **kwargs):
         super(HttpRequestHandler, self).__init__()
         self.api = api.Api()
-        self.base_handler = base.BaseHandler()
-        self.logger = logging.getLogger('tanner.server.HttpRequestHandler')
+        self.base_handler = base.BaseHandler(kwargs['base_dir'], kwargs['db_name'])
+        self.logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 
     @staticmethod
     def _make_response(msg):
@@ -85,24 +85,27 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
 
 @asyncio.coroutine
-def get_redis_client():
+def get_redis_client(host, port, poolsize, timeout):
     try:
         redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
-            host='localhost', port=6379, poolsize=80), timeout=1)
-    except asyncio.TimeoutError as timeout:
-        LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout)
+            host=host, port=int(port), poolsize=int(poolsize)), timeout=int(timeout))
+    except asyncio.TimeoutError as timeout_error:
+        LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout_error)
         exit()
     else:
         HttpRequestHandler.redis_client = redis_client
 
 
-def run_server():
+def run_server(config):
     loop = asyncio.get_event_loop()
     if HttpRequestHandler.redis_client is None:
-        loop.run_until_complete(get_redis_client())
+        loop.run_until_complete(
+            get_redis_client(config['REDIS']['host'], config['REDIS']['port'], config['REDIS']['poolsize'],
+                             config['REDIS']['timeout']))
     f = loop.create_server(
-        lambda: HttpRequestHandler(debug=False, keep_alive=75),
-        '0.0.0.0', int('8090'))
+        lambda: HttpRequestHandler(debug=False, keep_alive=75, base_dir=config['EMULATORS']['root_dir'],
+                                   db_name=config['SQLI']['db_name']),
+        config['TANNER']['host'], int(config['TANNER']['port']))
     srv = loop.run_until_complete(f)
     LOGGER.info('serving on %s', srv.sockets[0].getsockname())
     try:
