@@ -10,7 +10,7 @@ import aiohttp.server
 import asyncio_redis
 import uvloop
 
-from tanner import api, dorks_manager, session_manager
+from tanner import api, dorks_manager, session_manager, config
 from tanner.emulators import base
 
 LOGGER = logging.getLogger(__name__)
@@ -96,24 +96,33 @@ def get_redis_client(host, port, poolsize, timeout):
         HttpRequestHandler.redis_client = redis_client
 
 
-def run_server(config):
+def run_server():
     loop = asyncio.get_event_loop()
-    if HttpRequestHandler.redis_client is None:
-        loop.run_until_complete(
-            get_redis_client(config['REDIS']['host'], config['REDIS']['port'], config['REDIS']['poolsize'],
-                             config['REDIS']['timeout']))
-    f = loop.create_server(
-        lambda: HttpRequestHandler(debug=False, keep_alive=75, base_dir=config['EMULATORS']['root_dir'],
-                                   db_name=config['SQLI']['db_name']),
-        config['TANNER']['host'], int(config['TANNER']['port']))
-    srv = loop.run_until_complete(f)
-    LOGGER.info('serving on %s', srv.sockets[0].getsockname())
+    srv = None
     try:
+        if HttpRequestHandler.redis_client is None:
+            loop.run_until_complete(
+                get_redis_client(config.TannerConfig.config['REDIS']['host'],
+                                 config.TannerConfig.config['REDIS']['port'],
+                                 config.TannerConfig.config['REDIS']['poolsize'],
+                                 config.TannerConfig.config['REDIS']['timeout']))
+        f = loop.create_server(
+            lambda: HttpRequestHandler(debug=False, keep_alive=75,
+                                       base_dir=config.TannerConfig.config['EMULATORS']['root_dir'],
+                                       db_name=config.TannerConfig.config['SQLI']['db_name']),
+            config.TannerConfig.config['TANNER']['host'], int(config.TannerConfig.config['TANNER']['port']))
+        srv = loop.run_until_complete(f)
+        LOGGER.info('serving on %s', srv.sockets[0].getsockname())
         loop.run_forever()
+    except KeyError:
+        LOGGER.error("Error in config. Please, use correct config file")
+        exit(1)
     except KeyboardInterrupt:
         pass
     finally:
-        HttpRequestHandler.redis_client.close()
-        srv.close()
-        loop.run_until_complete(srv.wait_closed())
+        if HttpRequestHandler.redis_client is not None:
+            HttpRequestHandler.redis_client.close()
+        if srv:
+            srv.close()
+            loop.run_until_complete(srv.wait_closed())
         loop.close()

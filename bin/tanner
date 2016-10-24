@@ -1,35 +1,20 @@
 #!/usr/bin/python3.5
-import configparser
 import argparse
-import os
+
 from tanner import server
 from tanner.utils import logger
+from tanner import config
 
 LOGGER = logger.Logger.create_logger('tanner.log', __package__)
 
 
-def create_default_config(config):
-    if not os.path.exists('/opt/tanner/config.cfg'):
-        config = configparser.ConfigParser()
-        config['TANNER'] = {'host': '0.0.0.0', 'port': 8090}
-        config['REDIS'] = {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1}
-        config['EMULATORS'] = {'root_dir': '/opt/tanner'}
-        config['SQLI'] = {'db_name': 'tanner.db'}
-        with open('/opt/tanner/config.cfg', 'w') as configfile:
-            config.write(configfile)
-
-
 def main():
-    config = configparser.ConfigParser()
-    create_default_config(config)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config", default='/opt/tanner/config.cfg')
     args = parser.parse_args()
 
-    if not os.path.exists(args.config):
-        LOGGER.warning('No config found. Use default config')
-    config.read(args.config)
-    server.run_server(config)
+    config.TannerConfig.set_config(args.config)
+    server.run_server()
 
 
 if __name__ == "__main__":
