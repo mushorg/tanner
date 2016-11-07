@@ -13,9 +13,11 @@ class DBHelper:
         self.logger = logging.getLogger('tanner.db_helper.DBHelper')
 
     @asyncio.coroutine
-    def read_config(self):
+    def read_config(self, working_dir):
+        orig_conf = os.path.join(os.getcwd(), 'data/db_config.json')
+        dst_conf = os.path.join(working_dir, 'db_config.json')
         if not os.path.exists('/opt/tanner/db/db_config.json'):
-            shutil.move('data/db_config.json', '/opt/tanner/db/db_config.json')
+            shutil.move(orig_conf, dst_conf)
         with open('/opt/tanner/db/db_config.json') as db_config:
             try:
                 config = json.load(db_config)
@@ -79,7 +81,7 @@ class DBHelper:
 
     @asyncio.coroutine
     def setup_db_from_config(self, working_dir, name=None):
-        config = yield from self.read_config()
+        config = yield from self.read_config(working_dir)
         if name is not None:
             db_name = working_dir + name
         else:
