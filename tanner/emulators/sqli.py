@@ -10,7 +10,7 @@ from tanner.utils import db_helper
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
         self.db_name = db_name
-        self.working_dir = working_dir
+        self.working_dir = os.path.join(working_dir, 'db/')
         self.helper = db_helper.DBHelper()
         self.query_map = None
 
@@ -65,7 +65,7 @@ class SqliEmulator:
         attacker_db = yield from self.helper.copy_db(self.db_name,
                                                      attacker_db_name,
                                                      self.working_dir
-                                                    )
+                                                     )
         session.associate_db(attacker_db)
         return attacker_db
 
