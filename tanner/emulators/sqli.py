@@ -33,7 +33,7 @@ class SqliEmulator:
             line = yield from asyncio.wait_for(proc.stdout.readline(), 10)
             return line
 
-        script_path = os.path.join(os.getcwd(), 'utils/sqli_check.py')
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../utils/sqli_check.py')
         command = ['/usr/bin/python2', script_path, path]
         res = yield from _run_cmd(command)
         if res is not None:

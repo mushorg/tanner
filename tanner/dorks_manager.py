@@ -5,6 +5,7 @@ import pickle
 import random
 import re
 import uuid
+import math
 
 import asyncio_redis
 
@@ -82,12 +83,12 @@ class DorksManager:
         else:
             dorks = yield from dorks
             user_dorks = yield from user_dorks
-            chosen_dorks.extend(random.sample(dorks, random.randint(0.5 * max_dorks, max_dorks)))
+            chosen_dorks.extend(random.sample(dorks, random.randint(math.floor(0.5 * max_dorks), max_dorks)))
             try:
                 if max_dorks > len(user_dorks):
                     max_dorks = len(user_dorks)
                 chosen_dorks.extend(random.sample(
-                    user_dorks, random.randint(0.5 * max_dorks, max_dorks)))
+                    user_dorks, random.randint(math.floor(0.5 * max_dorks), max_dorks)))
             except TypeError:
                 pass
             return chosen_dorks
