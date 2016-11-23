@@ -30,5 +30,7 @@ Setup and run TANNER
 """"""""""""""""""""
 
 #. Get TANNER: ``git clone https://github.com/mushorg/tanner.git``
+#. Go to the tanner source directory ``cd tanner``
 #. Install requirements: ``pip3 install -r requirements.txt``
-#. Run TANNER: ``sudo python3 server.py --interface localhost``
+#. Install tanner ``python3 setup.py install``
+#. Run TANNER: ``sudo tanner``
