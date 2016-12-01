@@ -37,8 +37,10 @@ Getting Started
 
 
 1. Get TANNER: `git clone https://github.com/mushorg/tanner.git`
-2. Install requirements: `pip3 install -r requirements.txt`
-3. Run TANNER: `sudo python3 server.py --interface localhost`
+2. Go to the TANNER source  directory: ``cd tanner`` 
+3. Install requirements: `pip3 install -r requirements.txt`
+4. Install TANNER: ``python3 setup.py install``
+5. Run TANNER: ``sudo tanner``
 
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
