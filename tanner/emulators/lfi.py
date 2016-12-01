@@ -3,14 +3,15 @@ import json
 import os
 import re
 
+from tanner import config
 from tanner.utils import patterns
 
 
 class LfiEmulator:
     def __init__(self, root_path):
-        self.vdoc_path = root_path + '/virtualdocs/linux'
+        self.vdoc_path = os.path.join(root_path, 'virtualdocs/linux')
         self.whitelist = []
-        if not os.path.exists(self.vdoc_path + 'vdoc.lock'):
+        if not os.path.exists(os.path.join(self.vdoc_path, 'vdoc.lock')):
             self.setup_vdocs()
 
     @asyncio.coroutine
@@ -40,15 +41,15 @@ class LfiEmulator:
             os.makedirs(self.vdoc_path)
         for root, dirs, files in os.walk(self.vdoc_path):
             if not files:
-                with open('data/vdocs.json') as vdf:
+                with open(config.TannerConfig.config['DATA']['vdocs']) as vdf:
                     vdocs = json.load(vdf)
         if vdocs:
             for key, value in vdocs.items():
-                filename = self.vdoc_path + key
+                filename = os.path.join(self.vdoc_path, key)
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
                 with open(filename, 'w') as vd:
                     vd.write(value)
-            open(self.vdoc_path + 'vdoc.lock', 'a').close()
+            open(os.path.join(self.vdoc_path, 'vdoc.lock'), 'a').close()
 
     @asyncio.coroutine
     def handle(self, path, session=None):

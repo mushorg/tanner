@@ -5,6 +5,7 @@ import urllib.parse
 from asyncio.subprocess import PIPE
 
 from tanner.utils import db_helper
+from tanner import config
 
 
 class SqliEmulator:
