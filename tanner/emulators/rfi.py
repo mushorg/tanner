@@ -11,7 +11,7 @@ from tanner.utils import patterns
 
 class RfiEmulator:
     def __init__(self, root_dir):
-        self.script_dir = os.path.join(root_dir,'file')
+        self.script_dir = os.path.join(root_dir,'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
     @asyncio.coroutine
