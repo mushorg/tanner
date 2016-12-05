@@ -1,10 +1,12 @@
 import unittest
 
 from tanner.emulators import lfi
+from tanner import config
 
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
+        config.TannerConfig.set_config('/tmp/tanner.conf')
         self.handler = lfi.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
