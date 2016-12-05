@@ -34,3 +34,8 @@ class TestRfiEmulator(unittest.TestCase):
         data = "test data"
         with self.assertRaises(aiohttp.errors.ClientOSError):
             yield from self.handler.get_rfi_result(data)
+
+    def test_invalid_scheme(self):
+        path = 'file=file://mirror.yandex.ru/archlinux/foobar'
+        data = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        self.assertIsNone(data)

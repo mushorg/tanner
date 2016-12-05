@@ -3,15 +3,19 @@ import hashlib
 import logging
 import os
 import re
+import time
 
 import aiohttp
+from ftplib import FTP
+from concurrent.futures import ThreadPoolExecutor
+import yarl
 
 from tanner.utils import patterns
 
 
 class RfiEmulator:
     def __init__(self, root_dir):
-        self.script_dir = os.path.join(root_dir,'files')
+        self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
     @asyncio.coroutine
@@ -22,24 +26,44 @@ class RfiEmulator:
         if url is None:
             return None
         url = url.group(1)
+        url = yarl.URL(url)
 
         if not os.path.exists(self.script_dir):
             os.makedirs(self.script_dir)
 
-        if not (url.startswith("http") or url.startswith("ftp")):
-            return None
-        try:
-            with aiohttp.ClientSession() as client:
-                resp = yield from client.get(url)
-                data = yield from resp.text()
-        except aiohttp.ClientError as client_error:
-            self.logger.error('Error during downloading the rfi script %s', client_error)
+        if url.scheme == "ftp":
+            pool = ThreadPoolExecutor()
+            loop = asyncio.get_event_loop()
+            ftp_future = loop.run_in_executor(pool, self.download_file_ftp,url)
+            file_name = yield from ftp_future
+
         else:
-            yield from resp.release()
-            yield from client.close()
-            file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
-            with open(os.path.join(self.script_dir,file_name), 'bw') as rfile:
-                rfile.write(data.encode('utf-8'))
+            try:
+                with aiohttp.ClientSession() as client:
+                    resp = yield from client.get(url)
+                    data = yield from resp.text()
+            except aiohttp.ClientError as client_error:
+                self.logger.error('Error during downloading the rfi script %s', client_error)
+            else:
+                yield from resp.release()
+                yield from client.close()
+                tmp_filename = url.name + str(time.time())
+                file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
+                with open(os.path.join(self.script_dir, file_name), 'bw') as rfile:
+                    rfile.write(data.encode('utf-8'))
+        return file_name
+
+    def download_file_ftp(self, url):
+        host = url.host
+        ftp_path = url.path.rsplit('/', 1)[0][1:]
+        name = url.name
+        ftp = FTP(host)
+        ftp.login()
+        ftp.cwd(ftp_path)
+        tmp_filename = name + str(time.time())
+        file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
+        with open(file_name, 'wb') as ftp_script:
+            ftp.retrbinary('RETR %s' % name, ftp_script.write)
         return file_name
 
     @asyncio.coroutine
@@ -49,7 +73,7 @@ class RfiEmulator:
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result
-        with open(os.path.join(self.script_dir,file_name),'br') as script:
+        with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
         try:
             with aiohttp.ClientSession() as session:
