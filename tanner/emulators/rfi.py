@@ -4,12 +4,11 @@ import logging
 import os
 import re
 import time
+import ftplib
+from concurrent.futures import ThreadPoolExecutor
 
 import aiohttp
-from ftplib import FTP
-from concurrent.futures import ThreadPoolExecutor
 import yarl
-
 from tanner.utils import patterns
 
 
@@ -34,7 +33,7 @@ class RfiEmulator:
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
             loop = asyncio.get_event_loop()
-            ftp_future = loop.run_in_executor(pool, self.download_file_ftp,url)
+            ftp_future = loop.run_in_executor(pool, self.download_file_ftp, url)
             file_name = yield from ftp_future
 
         else:
@@ -57,14 +56,19 @@ class RfiEmulator:
         host = url.host
         ftp_path = url.path.rsplit('/', 1)[0][1:]
         name = url.name
-        ftp = FTP(host)
-        ftp.login()
-        ftp.cwd(ftp_path)
-        tmp_filename = name + str(time.time())
-        file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
-        with open(file_name, 'wb') as ftp_script:
-            ftp.retrbinary('RETR %s' % name, ftp_script.write)
-        return file_name
+        try:
+            ftp = ftplib.FTP(host)
+            ftp.login()
+            ftp.cwd(ftp_path)
+            tmp_filename = name + str(time.time())
+            file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
+            with open(file_name, 'wb') as ftp_script:
+                ftp.retrbinary('RETR %s' % name, ftp_script.write)
+        except ftplib.all_errors as ftp_errors:
+            self.logger.error("Problem with ftp download %s", ftp_errors)
+            return None
+        else:
+            return file_name
 
     @asyncio.coroutine
     def get_rfi_result(self, path):
