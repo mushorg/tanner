@@ -7,6 +7,8 @@ import re
 import shutil
 import sqlite3
 
+from tanner.config import TannerConfig
+
 
 class DBHelper:
     def __init__(self):
@@ -14,11 +16,7 @@ class DBHelper:
 
     @asyncio.coroutine
     def read_config(self, working_dir):
-        orig_conf = os.path.join(os.getcwd(), 'data/db_config.json')
-        dst_conf = os.path.join(working_dir, 'db_config.json')
-        if not os.path.exists('/opt/tanner/db/db_config.json'):
-            shutil.move(orig_conf, dst_conf)
-        with open('/opt/tanner/db/db_config.json') as db_config:
+        with open(TannerConfig.config['DATA']['db_config']) as db_config:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as json_error:
@@ -83,9 +81,9 @@ class DBHelper:
     def setup_db_from_config(self, working_dir, name=None):
         config = yield from self.read_config(working_dir)
         if name is not None:
-            db_name = working_dir + name
+            db_name = os.path.join(working_dir, name)
         else:
-            db_name = working_dir + config['name'] + '.db'
+            db_name = os.path.join(working_dir, config['name'] + '.db')
 
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()

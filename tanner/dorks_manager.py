@@ -10,7 +10,7 @@ import math
 import asyncio_redis
 
 from tanner.utils import patterns
-
+from tanner import config
 
 class DorksManager:
     dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'dorks').hex
@@ -60,9 +60,9 @@ class DorksManager:
             user_dorks_existed = yield from user_dorks_exist
 
             if not dorks_existed:
-                yield from self.push_init_dorks('dorks.pickle', self.dorks_key, redis_client)
+                yield from self.push_init_dorks(config.TannerConfig.config['DATA']['dorks'], self.dorks_key, redis_client)
             if not user_dorks_existed:
-                yield from self.push_init_dorks('user_dorks.pickle', self.user_dorks_key, redis_client)
+                yield from self.push_init_dorks(config.TannerConfig.config['DATA']['user_dorks'], self.user_dorks_key, redis_client)
 
             self.init_done = True
 

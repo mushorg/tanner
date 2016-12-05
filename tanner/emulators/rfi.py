@@ -11,7 +11,7 @@ from tanner.utils import patterns
 
 class RfiEmulator:
     def __init__(self, root_dir):
-        self.script_dir = root_dir + 'file/'
+        self.script_dir = os.path.join(root_dir,'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
     @asyncio.coroutine
@@ -38,8 +38,8 @@ class RfiEmulator:
             yield from resp.release()
             yield from client.close()
             file_name = hashlib.md5(data.encode('utf-8')).hexdigest()
-            with open(self.script_dir + file_name, 'w') as rfile:
-                rfile.write(data)
+            with open(os.path.join(self.script_dir,file_name), 'bw') as rfile:
+                rfile.write(data.encode('utf-8'))
         return file_name
 
     @asyncio.coroutine
@@ -49,7 +49,7 @@ class RfiEmulator:
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result
-        with open(self.script_dir + file_name) as script:
+        with open(os.path.join(self.script_dir,file_name),'br') as script:
             script_data = script.read()
         try:
             with aiohttp.ClientSession() as session:
