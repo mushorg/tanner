@@ -15,7 +15,7 @@ Basic Concept
 Getting Started
 ---------------
 
-- You need Python3. We tested primarily with >=3.4
+- You need Python3. We tested primarily with **python 3.5**
 - This was tested with a recent Ubuntu based Linux.
 
 
