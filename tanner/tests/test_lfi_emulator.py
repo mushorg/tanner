@@ -1,12 +1,16 @@
 import unittest
-
+from unittest import mock
 from tanner.emulators import lfi
 from tanner import config
 
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
-        config.TannerConfig.set_config('/tmp/tanner.conf')
+        d=dict(DATA={'vdocs':'../data/vdocs.json'})
+        m = mock.MagicMock()
+        m.__getitem__.side_effect = d.__getitem__
+        m.__iter__.side_effect = d.__iter__
+        config.TannerConfig.config = m
         self.handler = lfi.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
