@@ -1,5 +1,9 @@
 import json
-import pymongo
+try:
+    import pymongo
+    MONGO = True
+except ImportError:
+    MONGO = False
 from bson.objectid import ObjectId
 from gridfs import GridFS
 
@@ -8,21 +12,24 @@ from tanner import config
 
 class Reporting():
     def __init__(self):
-        # Create the connection
-        mongo_uri = config.TannerConfig.config['MONGO']['URI']
+        if MONGO:
+            # Create the connection
+            mongo_uri = config.TannerConfig.config['MONGO']['URI']
 
-        connection = pymongo.MongoClient(mongo_uri)
+            connection = pymongo.MongoClient(mongo_uri)
 
-        # Connect to Databases.
-        tandb = connection['tanner']
-        tandbfs = connection['voldbfs']
+            # Connect to Databases.
+            tandb = connection['tanner']
+            tandbfs = connection['voldbfs']
 
-        # Get Collections
-        self.tan_sessions = tandb.sessions
-        self.tan_files = GridFS(tandbfs)
+            # Get Collections
+            self.tan_sessions = tandb.sessions
+            self.tan_files = GridFS(tandbfs)
 
-        # Indexes
-        self.tan_sessions.create_index([('$**', 'text')])
+            # Indexes
+            self.tan_sessions.create_index([('$**', 'text')])
+        else:
+            print('pymongo not found. pip install pymongo')
 
 
     def update_session(self, session_id, new_values):
