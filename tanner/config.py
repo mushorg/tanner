@@ -29,4 +29,6 @@ class TannerConfig():
         config['EMULATORS'] = {'root_dir': '/opt/tanner'}
         config['SQLI'] = {'db_name': 'tanner.db'}
         config['LOGGER'] = {'log_file': '/opt/tanner/tanner.log'}
+        config['MONGO'] = {'enabled': 'False', 'URI': 'mongodb://localhost'}
+        config['LOCALLOG'] = {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
         TannerConfig.write_config(config_path, config)
