@@ -31,7 +31,10 @@ class LfiEmulator:
 
     @asyncio.coroutine
     def get_file_path(self, path):
-        file_path = re.match(patterns.LFI_FILEPATH, path).group(1)
+        try:
+            file_path = re.match(patterns.LFI_FILEPATH, path).group(1)
+        except Exception as e:
+            file_path = path
         file_path = os.path.normpath(os.path.join('/', file_path))
         return file_path
 
