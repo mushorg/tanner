@@ -4,10 +4,18 @@ import unittest
 from unittest import mock
 
 from tanner import server
+from tanner import config
 
 
 class TestServer(unittest.TestCase):
     def setUp(self):
+        d = dict(MONGO={'enabled': 'False', 'URI': 'mongodb://localhost'},
+                 LOCALLOG={'enabled': 'False', 'PATH': '/tmp/tanner_report.json'})
+        m = mock.MagicMock()
+        m.__getitem__.side_effect = d.__getitem__
+        m.__iter__.side_effect = d.__iter__
+        config.TannerConfig.config = m
+
         @asyncio.coroutine
         def choosed(client):
             return [x for x in range(10)]
