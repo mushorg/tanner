@@ -1,4 +1,5 @@
 aiohttp
+yarl
 redis
 asyncio_redis
 uvloop
