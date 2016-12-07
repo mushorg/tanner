@@ -12,6 +12,8 @@ import uvloop
 
 from tanner import api, dorks_manager, session_manager, config
 from tanner.emulators import base
+from tanner.reporting.log_mongodb import Reporting as mongo_report
+from tanner.reporting.log_local import Reporting as local_report
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +57,22 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session.set_attack_type(path, detection['name'])
             response_msg = self._make_response(msg=dict(detection=detection))
             self.logger.info('TANNER response %s', response_msg)
+
+            session_data = data
+            session_data['response_msg'] = response_msg
+
+            # Log to Mongo
+            if config.TannerConfig.config['MONGO']['enabled'] == 'True':
+
+                db = mongo_report()
+                session_id = db.create_session(session_data)
+                self.logger.info("Writing session to DB: {}".format(session_id))
+
+            if config.TannerConfig.config['LOCALLOG']['enabled'] == 'True':
+                lr = local_report()
+                lr.create_session(session_data)
+
+
             return response_msg
 
     @asyncio.coroutine
