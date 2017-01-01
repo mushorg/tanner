@@ -9,11 +9,23 @@ from tanner.utils import logger
 
 
 def main():
+
+    print("""
+      _________    _   ___   ____________
+     /_  __/   |  / | / / | / / ____/ __ \\
+      / / / /| | /  |/ /  |/ / __/ / /_/ /
+     / / / ___ |/ /|  / /|  / /___/ _, _/
+    /_/ /_/  |_/_/ |_/_/ |_/_____/_/ |_|
+
+    """)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config", default='/opt/tanner/config.cfg')
     args = parser.parse_args()
     config.TannerConfig.set_config(args.config)
     logger.Logger.create_logger(config.TannerConfig.config['LOGGER']['log_file'], __package__)
+    print("App logs will be stored in", config.TannerConfig.config['LOGGER']['log_file'])
+    if config.TannerConfig.config['LOCALLOG']['enabled'] == 'True':
+        print("Data logs will be stored in", config.TannerConfig.config['LOCALLOG']['PATH'])
     tanner.server.run_server()
 
 
