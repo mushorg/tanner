@@ -34,16 +34,6 @@ class TannerConfig():
 
         cfg.read(config_path)
         TannerConfig.config = cfg
-        TannerConfig.validate_config(config_path)
-
-    @staticmethod
-    def validate_config(config_path):
-        required_keys = list(config_template.keys())
-        if not TannerConfig.config.sections() == required_keys:
-            missing_section = list(set(required_keys) - set(TannerConfig.config.sections()))
-            LOGGER.warning("Section %s missing, use default values", missing_section)
-            for sect in missing_section:
-                TannerConfig.config[sect] = config_template[sect]
 
     @staticmethod
     def create_default_config(config, config_path):
@@ -55,7 +45,7 @@ class TannerConfig():
     def get(section, value):
         try:
             res = TannerConfig.config.get(section, value)
-        except configparser.NoOptionError:
+        except (configparser.NoOptionError, configparser.NoSectionError):
             LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
             res = config_template[section][value]
         return res
