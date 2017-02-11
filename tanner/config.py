@@ -1,7 +1,6 @@
 import configparser
 import os
 import io
-import sys
 import logging
 
 LOGGER = logging.getLogger('tanner.config')
@@ -42,13 +41,16 @@ class TannerConfig():
         required_keys = list(config_template.keys())
         if not TannerConfig.config.sections() == required_keys:
             missing_section = list(set(required_keys)-set(TannerConfig.config.sections()))
-            LOGGER.warning("Section %s missing, use default values".format(" ".join(missing_section)))
+            LOGGER.warning("Section {} missing, use default values".format(" ".join(missing_section)))
             for sect in missing_section:
                 TannerConfig.config[sect] = config_template[sect]
-                TannerConfig.write_config(config_path, TannerConfig.config)
 
     @staticmethod
     def create_default_config(config, config_path):
         buf = io.StringIO(config_template)
         config.readfp(buf)
         TannerConfig.write_config(config_path, config)
+
+    @staticmethod
+    def get(section, value):
+        return TannerConfig.config[section].get(value, config_template[section][value])

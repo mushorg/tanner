@@ -9,7 +9,7 @@ class Reporting():
         pass
 
     def create_session(self, session_data):
-        report_file = config.TannerConfig.config['LOCALLOG']['PATH']
+        report_file = config.TannerConfig.get('LOCALLOG', 'PATH')
         with open(report_file, 'a') as out:
             out.write('{0}\n'.format(session_data))
         return '1'
