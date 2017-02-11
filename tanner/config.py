@@ -40,7 +40,7 @@ class TannerConfig():
     def validate_config(config_path):
         required_keys = list(config_template.keys())
         if not TannerConfig.config.sections() == required_keys:
-            missing_section = list(set(required_keys)-set(TannerConfig.config.sections()))
+            missing_section = list(set(required_keys) - set(TannerConfig.config.sections()))
             LOGGER.warning("Section %s missing, use default values", missing_section)
             for sect in missing_section:
                 TannerConfig.config[sect] = config_template[sect]
@@ -54,8 +54,8 @@ class TannerConfig():
     @staticmethod
     def get(section, value):
         try:
-            res = TannerConfig.config.get(section,value)
+            res = TannerConfig.config.get(section, value)
         except configparser.NoOptionError:
-            LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section,value)
+            LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
             res = config_template[section][value]
         return res

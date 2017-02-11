@@ -3,14 +3,11 @@ import argparse
 import os
 import tanner
 from tanner.config import TannerConfig
-from tanner import  server
+from tanner import server
 from tanner.utils import logger
 
 
-
-
 def main():
-
     print("""
       _________    _   ___   ____________
      /_  __/   |  / | / / | / / ____/ __ \\

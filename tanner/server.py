@@ -12,8 +12,8 @@ import uvloop
 
 from tanner import api, dorks_manager, session_manager, config
 from tanner.emulators import base
-from tanner.reporting.log_mongodb import Reporting as mongo_report
 from tanner.reporting.log_local import Reporting as local_report
+from tanner.reporting.log_mongodb import Reporting as mongo_report
 
 LOGGER = logging.getLogger(__name__)
 
