@@ -3,7 +3,7 @@ import os
 import io
 import logging
 
-LOGGER = logging.getLogger('tanner.config')
+LOGGER = logging.getLogger(__name__)
 
 config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
                             'user_dorks': '/opt/tanner/data/user_dorks.pickle',
@@ -41,7 +41,7 @@ class TannerConfig():
         required_keys = list(config_template.keys())
         if not TannerConfig.config.sections() == required_keys:
             missing_section = list(set(required_keys)-set(TannerConfig.config.sections()))
-            LOGGER.warning("Section {} missing, use default values".format(" ".join(missing_section)))
+            LOGGER.warning("Section %s missing, use default values", missing_section)
             for sect in missing_section:
                 TannerConfig.config[sect] = config_template[sect]
 
@@ -53,4 +53,9 @@ class TannerConfig():
 
     @staticmethod
     def get(section, value):
-        return TannerConfig.config[section].get(value, config_template[section][value])
+        try:
+            res = TannerConfig.config.get(section,value)
+        except configparser.NoOptionError:
+            LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section,value)
+            res = config_template[section][value]
+        return res

@@ -130,9 +130,6 @@ def run_server():
         srv = loop.run_until_complete(f)
         LOGGER.info('serving on %s', srv.sockets[0].getsockname())
         loop.run_forever()
-    except KeyError:
-        LOGGER.error("Error in config. Please, use correct config file")
-        exit(1)
     except KeyboardInterrupt:
         pass
     finally:
