@@ -7,11 +7,8 @@ from tanner import config
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
-        d=dict(DATA={'vdocs':os.path.join(os.getcwd(),'data/vdocs.json')})
-        m = mock.MagicMock()
-        m.__getitem__.side_effect = d.__getitem__
-        m.__iter__.side_effect = d.__iter__
-        config.TannerConfig.config = m
+        vdocs = os.path.join(os.getcwd(),'data/vdocs.json')
+        config.TannerConfig.get = mock.MagicMock(return_value=vdocs)
         self.handler = lfi.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
