@@ -60,9 +60,9 @@ class DorksManager:
             user_dorks_existed = yield from user_dorks_exist
 
             if not dorks_existed:
-                yield from self.push_init_dorks(config.TannerConfig.config['DATA']['dorks'], self.dorks_key, redis_client)
+                yield from self.push_init_dorks(config.TannerConfig.get('DATA', 'dorks'), self.dorks_key, redis_client)
             if not user_dorks_existed:
-                yield from self.push_init_dorks(config.TannerConfig.config['DATA']['user_dorks'], self.user_dorks_key, redis_client)
+                yield from self.push_init_dorks(config.TannerConfig.get('DATA', 'user_dorks'), self.user_dorks_key, redis_client)
 
             self.init_done = True
 

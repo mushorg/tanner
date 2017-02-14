@@ -41,7 +41,7 @@ class LfiEmulator:
             os.makedirs(self.vdoc_path)
         for root, dirs, files in os.walk(self.vdoc_path):
             if not files:
-                with open(config.TannerConfig.config['DATA']['vdocs']) as vdf:
+                with open(config.TannerConfig.get('DATA', 'vdocs')) as vdf:
                     vdocs = json.load(vdf)
         if vdocs:
             for key, value in vdocs.items():

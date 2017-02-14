@@ -16,7 +16,7 @@ class DBHelper:
 
     @asyncio.coroutine
     def read_config(self, working_dir):
-        with open(TannerConfig.config['DATA']['db_config']) as db_config:
+        with open(TannerConfig.get('DATA', 'db_config')) as db_config:
             try:
                 config = json.load(db_config)
             except json.JSONDecodeError as json_error:

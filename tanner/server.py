@@ -12,8 +12,8 @@ import uvloop
 
 from tanner import api, dorks_manager, session_manager, config
 from tanner.emulators import base
-from tanner.reporting.log_mongodb import Reporting as mongo_report
 from tanner.reporting.log_local import Reporting as local_report
+from tanner.reporting.log_mongodb import Reporting as mongo_report
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,16 +62,14 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             session_data['response_msg'] = response_msg
 
             # Log to Mongo
-            if config.TannerConfig.config['MONGO']['enabled'] == 'True':
-
+            if config.TannerConfig.get('MONGO', 'enabled') == 'True':
                 db = mongo_report()
                 session_id = db.create_session(session_data)
                 self.logger.info("Writing session to DB: {}".format(session_id))
 
-            if config.TannerConfig.config['LOCALLOG']['enabled'] == 'True':
+            if config.TannerConfig.get('LOCALLOG', 'enabled') == 'True':
                 lr = local_report()
                 lr.create_session(session_data)
-
 
             return response_msg
 
@@ -103,8 +101,12 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
 
 
 @asyncio.coroutine
-def get_redis_client(host, port, poolsize, timeout):
+def get_redis_client():
     try:
+        host = config.TannerConfig.get('REDIS', 'host')
+        port = config.TannerConfig.get('REDIS', 'port')
+        poolsize = config.TannerConfig.get('REDIS', 'poolsize')
+        timeout = config.TannerConfig.get('REDIS', 'timeout')
         redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
             host=host, port=int(port), poolsize=int(poolsize)), timeout=int(timeout))
     except asyncio.TimeoutError as timeout_error:
@@ -119,22 +121,15 @@ def run_server():
     srv = None
     try:
         if HttpRequestHandler.redis_client is None:
-            loop.run_until_complete(
-                get_redis_client(config.TannerConfig.config['REDIS']['host'],
-                                 config.TannerConfig.config['REDIS']['port'],
-                                 config.TannerConfig.config['REDIS']['poolsize'],
-                                 config.TannerConfig.config['REDIS']['timeout']))
+            loop.run_until_complete(get_redis_client())
         f = loop.create_server(
             lambda: HttpRequestHandler(debug=False, keep_alive=75,
-                                       base_dir=config.TannerConfig.config['EMULATORS']['root_dir'],
-                                       db_name=config.TannerConfig.config['SQLI']['db_name']),
-            config.TannerConfig.config['TANNER']['host'], int(config.TannerConfig.config['TANNER']['port']))
+                                       base_dir=config.TannerConfig.get('EMULATORS', 'root_dir'),
+                                       db_name=config.TannerConfig.get('SQLI', 'db_name')),
+            config.TannerConfig.get('TANNER', 'host'), int(config.TannerConfig.get('TANNER', 'port')))
         srv = loop.run_until_complete(f)
         LOGGER.info('serving on %s', srv.sockets[0].getsockname())
         loop.run_forever()
-    except KeyError:
-        LOGGER.error("Error in config. Please, use correct config file")
-        exit(1)
     except KeyboardInterrupt:
         pass
     finally:

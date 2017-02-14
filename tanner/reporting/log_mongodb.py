@@ -14,7 +14,7 @@ class Reporting():
     def __init__(self):
         if MONGO:
             # Create the connection
-            mongo_uri = config.TannerConfig.config['MONGO']['URI']
+            mongo_uri = config.TannerConfig.get('MONGO', 'URI')
 
             connection = pymongo.MongoClient(mongo_uri)
 
