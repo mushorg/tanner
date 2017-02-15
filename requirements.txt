@@ -4,3 +4,4 @@ redis
 asyncio_redis
 uvloop
 pymongo
+pylibinjection
