@@ -32,9 +32,12 @@ class TannerConfig():
 
     @staticmethod
     def get(section, value):
-        try:
-            res = TannerConfig.config.get(section, value)
-        except (configparser.NoOptionError, configparser.NoSectionError, AttributeError):
-            LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
-            res = config_template[section][value]
-        return res
+        if TannerConfig.config is not None:
+            try:
+                res = TannerConfig.config.get(section, value)
+            except (configparser.NoOptionError, configparser.NoSectionError):
+                LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
+                res = config_template[section][value]
+            return res
+        else:
+            return config_template[section][value]
