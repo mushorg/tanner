@@ -1,9 +1,9 @@
 import configparser
 import logging
 import os
+import sys
 
 LOGGER = logging.getLogger(__name__)
-
 config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
                             'user_dorks': '/opt/tanner/data/user_dorks.pickle',
                             'vdocs': '/opt/tanner/data/vdocs.json'},
@@ -21,15 +21,11 @@ class TannerConfig():
     config = None
 
     @staticmethod
-    def write_config(filename, cfg):
-        with open(filename, 'w') as configfile:
-            cfg.write(configfile)
-
-    @staticmethod
     def set_config(config_path):
         cfg = configparser.ConfigParser()
         if not os.path.exists(config_path):
-            return
+            print("Config file {} doesn't exist. Check the config path or use default".format(config_path))
+            sys.exit(1)
 
         cfg.read(config_path)
         TannerConfig.config = cfg

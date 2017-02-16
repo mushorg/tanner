@@ -17,9 +17,10 @@ def main():
 
     """)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", help="tanner config", default='/opt/tanner/config.cfg')
+    parser.add_argument("--config", help="tanner config")
     args = parser.parse_args()
-    TannerConfig.set_config(args.config)
+    if args.config:
+        TannerConfig.set_config(args.config)
     log_file_name = TannerConfig.get("LOGGER", "log_file")
     logger.Logger.create_logger(log_file_name, __package__)
     print("App logs will be stored in", log_file_name)
