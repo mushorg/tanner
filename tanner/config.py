@@ -1,7 +1,6 @@
 import configparser
-import os
-import io
 import logging
+import os
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,22 +29,16 @@ class TannerConfig():
     def set_config(config_path):
         cfg = configparser.ConfigParser()
         if not os.path.exists(config_path):
-            TannerConfig.create_default_config(cfg, config_path)
+            return
 
         cfg.read(config_path)
         TannerConfig.config = cfg
 
     @staticmethod
-    def create_default_config(config, config_path):
-        buf = io.StringIO(config_template)
-        config.readfp(buf)
-        TannerConfig.write_config(config_path, config)
-
-    @staticmethod
     def get(section, value):
         try:
             res = TannerConfig.config.get(section, value)
-        except (configparser.NoOptionError, configparser.NoSectionError):
+        except (configparser.NoOptionError, configparser.NoSectionError, AttributeError):
             LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
             res = config_template[section][value]
         return res
