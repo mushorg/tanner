@@ -2,6 +2,7 @@ import asyncio
 import os
 import sqlite3
 import urllib.parse
+import pylibinjection
 from asyncio.subprocess import PIPE
 
 from tanner.utils import db_helper
@@ -28,21 +29,7 @@ class SqliEmulator:
     @staticmethod
     @asyncio.coroutine
     def check_sqli(path):
-        @asyncio.coroutine
-        def _run_cmd(cmd):
-            proc = yield from asyncio.wait_for(asyncio.create_subprocess_exec(*cmd, stdout=PIPE), 5)
-            line = yield from asyncio.wait_for(proc.stdout.readline(), 10)
-            return line
-
-        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../utils/sqli_check.py')
-        command = ['/usr/bin/python2', script_path, path]
-        res = yield from _run_cmd(command)
-        if res is not None:
-            try:
-                res = int(res.decode('utf-8'))
-            except ValueError:
-                res = 0
-        return res
+        return int(pylibinjection.detect_sqli(bytes(path, 'utf-8'))['sqli'])
 
     @asyncio.coroutine
     def check_post_data(self, data):
