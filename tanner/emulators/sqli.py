@@ -30,7 +30,7 @@ class SqliEmulator:
     def check_sqli(path):
         payload = bytes(path, 'utf-8')
         sqli = pylibinjection.detect_sqli(payload)
-        return int(sqli)['sqli']
+        return int(sqli['sqli'])
 
     @asyncio.coroutine
     def check_post_data(self, data):
