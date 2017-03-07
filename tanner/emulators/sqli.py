@@ -36,7 +36,7 @@ class SqliEmulator:
     def check_post_data(self, data):
         sqli_data = []
         for (param, value) in data['post_data'].items():
-            sqli = yield from self.check_sqli(value)
+            sqli = self.check_sqli(value)
             if sqli:
                 sqli_data.append((param, value))
         return sqli_data
@@ -46,7 +46,7 @@ class SqliEmulator:
         request_query = urllib.parse.urlparse(path).query
         parsed_queries = urllib.parse.parse_qsl(request_query)
         for query in parsed_queries:
-            sqli = yield from self.check_sqli(query[1])
+            sqli = self.check_sqli(query[1])
             return sqli
 
     @asyncio.coroutine
