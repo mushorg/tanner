@@ -27,9 +27,10 @@ class SqliEmulator:
             self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
 
     @staticmethod
-    @asyncio.coroutine
     def check_sqli(path):
-        return int(pylibinjection.detect_sqli(bytes(path, 'utf-8'))['sqli'])
+        payload = bytes(path, 'utf-8')
+        sqli = pylibinjection.detect_sqli(payload)
+        return int(sqli)['sqli'])
 
     @asyncio.coroutine
     def check_post_data(self, data):
