@@ -2,6 +2,7 @@ import asyncio
 import os
 import sqlite3
 import urllib.parse
+import pylibinjection
 from asyncio.subprocess import PIPE
 
 from tanner.utils import db_helper
@@ -26,29 +27,16 @@ class SqliEmulator:
             self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
 
     @staticmethod
-    @asyncio.coroutine
     def check_sqli(path):
-        @asyncio.coroutine
-        def _run_cmd(cmd):
-            proc = yield from asyncio.wait_for(asyncio.create_subprocess_exec(*cmd, stdout=PIPE), 5)
-            line = yield from asyncio.wait_for(proc.stdout.readline(), 10)
-            return line
-
-        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../utils/sqli_check.py')
-        command = ['/usr/bin/python2', script_path, path]
-        res = yield from _run_cmd(command)
-        if res is not None:
-            try:
-                res = int(res.decode('utf-8'))
-            except ValueError:
-                res = 0
-        return res
+        payload = bytes(path, 'utf-8')
+        sqli = pylibinjection.detect_sqli(payload)
+        return int(sqli['sqli'])
 
     @asyncio.coroutine
     def check_post_data(self, data):
         sqli_data = []
         for (param, value) in data['post_data'].items():
-            sqli = yield from self.check_sqli(value)
+            sqli = self.check_sqli(value)
             if sqli:
                 sqli_data.append((param, value))
         return sqli_data
@@ -58,7 +46,7 @@ class SqliEmulator:
         request_query = urllib.parse.urlparse(path).query
         parsed_queries = urllib.parse.parse_qsl(request_query)
         for query in parsed_queries:
-            sqli = yield from self.check_sqli(query[1])
+            sqli = self.check_sqli(query[1])
             return sqli
 
     @asyncio.coroutine
