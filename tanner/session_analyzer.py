@@ -63,7 +63,9 @@ class SessionAnalyzer:
             errors=errors,
             hidden_links=hidden_links,
             attack_types=attack_types,
-            paths=session['paths']
+            paths=session['paths'],
+            cookies=session['cookies'],
+            sess_id=session['sess_id']
         )
 
         owner = self.choose_possible_owner(stats)

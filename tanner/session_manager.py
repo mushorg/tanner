@@ -49,14 +49,20 @@ class SessionManager:
             data['uuid'] = None
         if 'status' not in data:
             data['status'] = 200 if 'error' not in data else 500
+        if 'cookies' not in data:
+            data['cookies'] = dict(sess_id=None)
+        if 'cookies' in data and 'sess_id' not in data['cookies']:
+            data['cookies']['sess_id'] = None
+
         return data
 
     def get_session(self, data):
         session = None
         ip = data['peer']['ip']
         user_agent = data['headers']['user-agent']
+        sess_id = data['cookies']['sess_id']
         for sess in self.sessions:
-            if sess.ip == ip and sess.user_agent == user_agent:
+            if sess.ip == ip and sess.user_agent == user_agent and sess_id == sess.sess_id:
                 session = sess
                 break
         return session
