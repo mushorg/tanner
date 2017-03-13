@@ -55,7 +55,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             yield from self.dorks.extract_path(path, redis_client)
             detection = yield from self.base_handler.handle(data, session, path)
             session.set_attack_type(path, detection['name'])
-            response_msg = self._make_response(msg=dict(detection=detection, sess_id=session.get_sess_id()))
+            response_msg = self._make_response(msg=dict(detection=detection, sess_uuid=session.get_uuid()))
             self.logger.info('TANNER response %s', response_msg)
 
             session_data = data

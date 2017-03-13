@@ -50,9 +50,9 @@ class SessionManager:
         if 'status' not in data:
             data['status'] = 200 if 'error' not in data else 500
         if 'cookies' not in data:
-            data['cookies'] = dict(sess_id=None)
-        if 'cookies' in data and 'sess_id' not in data['cookies']:
-            data['cookies']['sess_id'] = None
+            data['cookies'] = dict(sess_uuid=None)
+        if 'cookies' in data and 'sess_uuid' not in data['cookies']:
+            data['cookies']['sess_uuid'] = None
 
         return data
 
@@ -60,9 +60,9 @@ class SessionManager:
         session = None
         ip = data['peer']['ip']
         user_agent = data['headers']['user-agent']
-        sess_id = data['cookies']['sess_id']
+        sess_uuid = data['cookies']['sess_uuid']
         for sess in self.sessions:
-            if sess.ip == ip and sess.user_agent == user_agent and sess_id == sess.sess_id:
+            if sess.ip == ip and sess.user_agent == user_agent and sess_uuid == sess.get_uuid():
                 session = sess
                 break
         return session
@@ -75,8 +75,8 @@ class SessionManager:
             sess.remove_associated_db()
             self.sessions.remove(sess)
             try:
-                yield from redis_client.set(sess.get_key(), sess.to_json())
-                yield from self.analyzer.analyze(sess.get_key(), redis_client)
+                yield from redis_client.set(sess.get_uuid(), sess.to_json())
+                yield from self.analyzer.analyze(sess.get_uuid(), redis_client)
             except asyncio_redis.NotConnectedError as redis_error:
                 self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
                 self.sessions.append(sess)

@@ -20,8 +20,7 @@ class Session:
         except KeyError:
             raise
 
-        self.uuid = uuid.uuid4()
-        self.sess_id = str(self.uuid)
+        self.sess_uuid = uuid.uuid4()
         self.start_timestamp = time.time()
         self.timestamp = time.time()
         self.count = 1
@@ -43,13 +42,12 @@ class Session:
         sess = dict(peer=dict(ip=self.ip, port=self.port),
                     user_agent=self.user_agent,
                     sensor=self.sensor,
-                    uuid=self.uuid.hex,
+                    sess_uuid=self.sess_uuid.hex,
                     start_time=self.start_timestamp,
                     end_time=self.timestamp,
                     count=self.count,
                     paths=self.paths,
-                    cookies=self.cookies,
-                    sess_id=self.sess_id.hex
+                    cookies=self.cookies
                    )
         return json.dumps(sess)
 
@@ -65,8 +63,5 @@ class Session:
         if self.associated_db is not None and os.path.exists(self.associated_db):
             os.remove(self.associated_db)
 
-    def get_key(self):
-        return str(self.uuid)
-
-    def get_sess_id(self):
-        return self.sess_id
+    def get_uuid(self):
+        return str(self.sess_uuid)
