@@ -21,7 +21,7 @@ class Session:
             raise
 
         self.uuid = uuid.uuid4()
-        self.sess_id = self.uuid
+        self.sess_id = str(self.uuid)
         self.start_timestamp = time.time()
         self.timestamp = time.time()
         self.count = 1
@@ -67,3 +67,6 @@ class Session:
 
     def get_key(self):
         return str(self.uuid)
+
+    def get_sess_id(self):
+        return self.sess_id
