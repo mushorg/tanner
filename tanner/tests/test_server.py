@@ -2,6 +2,7 @@ import asyncio
 import json
 import unittest
 from unittest import mock
+import uuid
 
 from tanner import server
 from tanner import config
@@ -34,10 +35,12 @@ class TestServer(unittest.TestCase):
         self.handler.dorks = dorks
         self.handler.writer = mock.Mock()
 
+        self.test_uuid = uuid.uuid4()
         @asyncio.coroutine
         def add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
+            sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
             return sess
 
         self.handler.session_manager.add_or_update_session = add_or_update_mock
@@ -94,7 +97,7 @@ class TestServer(unittest.TestCase):
 
                 assert_content = dict(
                     version=1,
-                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload=None)))
+                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload=None), sess_uuid=str(self.test_uuid)))
                 )
 
                 self.assertDictEqual(content, assert_content)
@@ -124,7 +127,7 @@ class TestServer(unittest.TestCase):
 
                 assert_content = dict(
                     version=1,
-                    response=dict(message=dict(detection=dict(name='index', order=1)))
+                    response=dict(message=dict(detection=dict(name='index', order=1), sess_uuid=str(self.test_uuid)))
                 )
 
                 self.assertDictEqual(content, assert_content)

@@ -7,7 +7,7 @@ import asyncio_redis
 
 from tanner.session_analyzer import SessionAnalyzer
 
-session = b'{"uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
+session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
           b'"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
           b'Chrome/53.0.2767.4 Safari/537.36", "end_time": 1466091899.9854035, ' \
           b'"sensor": "78e51180-bf0d-4757-8a04-f000e5efa179", "count": 24, ' \
@@ -20,7 +20,8 @@ session = b'{"uuid": "c546114f97f548f982756495f963e280", "start_time": 146609181
           b'"response_status": 200}, {"timestamp": 1466091899.9854052, ' \
           b'"path": "/wow-movie.html?exec=/../../../..///././././.../../../etc/passwd",' \
           b' "attack_type": "lfi", "response_status": 200}], ' \
-          b'"peer": {"port": 56970, "ip": "192.168.1.3"}}'
+          b'"peer": {"port": 56970, "ip": "192.168.1.3"}, ' \
+          b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
 
 
 class TestSessionAnalyzer(unittest.TestCase):

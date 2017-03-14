@@ -33,7 +33,7 @@ class SessionAnalyzer:
         while not self.queue.empty():
             session = yield from self.queue.get()
             s_key = session['sensor_uuid']
-            del_key = session['uuid']
+            del_key = session['sess_uuid']
             try:
                 yield from redis_client.lpush(s_key, [json.dumps(session)])
                 yield from redis_client.delete([del_key])
@@ -50,7 +50,7 @@ class SessionAnalyzer:
                                                                                 redis_client)
 
         stats = dict(
-            uuid=session['uuid'],
+            sess_uuid=session['sess_uuid'],
             peer_ip=session['peer']['ip'],
             peer_port=session['peer']['port'],
             user_agent=session['user_agent'],
@@ -63,7 +63,8 @@ class SessionAnalyzer:
             errors=errors,
             hidden_links=hidden_links,
             attack_types=attack_types,
-            paths=session['paths']
+            paths=session['paths'],
+            cookies=session['cookies']
         )
 
         owner = self.choose_possible_owner(stats)

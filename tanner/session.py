@@ -15,11 +15,12 @@ class Session:
             self.sensor = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time(),
                            'response_status': data['status']}]
+            self.cookies = data['cookies']
             self.associated_db = None
         except KeyError:
             raise
 
-        self.uuid = uuid.uuid4()
+        self.sess_uuid = uuid.uuid4()
         self.start_timestamp = time.time()
         self.timestamp = time.time()
         self.count = 1
@@ -29,6 +30,8 @@ class Session:
         self.count += 1
         self.paths.append({'path': data['path'], 'timestamp': time.time(),
                            'response_status': data['status']})
+        for (key, value) in data['cookies'].items():
+            self.cookies.update({key: value})
 
     def is_expired(self):
         exp_time = self.timestamp + self.KEEP_ALIVE_TIME
@@ -39,11 +42,12 @@ class Session:
         sess = dict(peer=dict(ip=self.ip, port=self.port),
                     user_agent=self.user_agent,
                     sensor=self.sensor,
-                    uuid=self.uuid.hex,
+                    sess_uuid=self.sess_uuid.hex,
                     start_time=self.start_timestamp,
                     end_time=self.timestamp,
                     count=self.count,
-                    paths=self.paths
+                    paths=self.paths,
+                    cookies=self.cookies
                    )
         return json.dumps(sess)
 
@@ -59,5 +63,5 @@ class Session:
         if self.associated_db is not None and os.path.exists(self.associated_db):
             os.remove(self.associated_db)
 
-    def get_key(self):
-        return str(self.uuid)
+    def get_uuid(self):
+        return str(self.sess_uuid)
