@@ -8,7 +8,7 @@ class Logger:
         log_filename = filename
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.DEBUG)
-        handler = logging.handlers.RotatingFileHandler(log_filename)
+        handler = logging.handlers.RotatingFileHandler(log_filename, encoding='utf-8')
 
         formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s:%(name)s:%(funcName)s: %(message)s',
                                       datefmt='%Y-%m-%d %H:%M')
