@@ -1,6 +1,7 @@
 import asyncio
 import re
 import urllib.parse
+import yarl
 
 from tanner.emulators import lfi, rfi, sqli, xss
 from tanner.utils import patterns
@@ -9,7 +10,6 @@ from tanner.utils import patterns
 class BaseHandler:
     # Reference patterns
     patterns = {
-        patterns.INDEX: dict(name='index', order=1),
         patterns.RFI_ATTACK: dict(name='rfi', order=2),
         patterns.LFI_ATTACK: dict(name='lfi', order=2),
         patterns.XSS_ATTACK: dict(name='xss', order=3)
@@ -37,17 +37,27 @@ class BaseHandler:
         return detection
 
     @asyncio.coroutine
-    def handle_get(self, path):
+    def handle_get(self, session, path):
         detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
+        if re.match(patterns.INDEX, path):
+            detection = {'name': 'index', 'order': 1}
 
         path = urllib.parse.unquote(path)
-        for pattern, patter_details in self.patterns.items():
-            if pattern.match(path):
-                if detection['order'] < patter_details['order']:
-                    detection = patter_details
+        query = yarl.URL(path).query
+
+        for name, value in query.items():
+            for pattern, patter_details in self.patterns.items():
+                if pattern.match(value):
+                    if detection['order'] < patter_details['order']:
+                        detection = patter_details
+                        attack_value = value
+
+        if detection['name'] in self.emulators:
+            emulation_result = yield from self.emulators[detection['name']].handle(attack_value, session)
+            detection['payload'] = emulation_result
 
         if detection['order'] <= 1:
             sqli = yield from self.emulators['sqli'].check_get_data(path)
@@ -61,12 +71,8 @@ class BaseHandler:
         if data['method'] == 'POST':
             detection = yield from self.handle_post(session, data)
         else:
-            detection = yield from self.handle_get(path)
-            name = detection['name']
-            if name in self.emulators:
-                emulator = self.emulators[name]
-                emulation_result = yield from emulator.handle(path, session)
-                detection['payload'] = emulation_result
+            detection = yield from self.handle_get(session, path)
+
         return detection
 
     @asyncio.coroutine
