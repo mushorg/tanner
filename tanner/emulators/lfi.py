@@ -11,8 +11,7 @@ class LfiEmulator:
     def __init__(self, root_path):
         self.vdoc_path = os.path.join(root_path, 'virtualdocs/linux')
         self.whitelist = []
-        if not os.path.exists(os.path.join(self.vdoc_path, 'vdoc.lock')):
-            self.setup_vdocs()
+        self.setup_or_update_vdocs()
 
     @asyncio.coroutine
     def available_files(self):
@@ -39,21 +38,20 @@ class LfiEmulator:
             file_path = path
         return file_path
 
-    def setup_vdocs(self):
-        vdocs = None
+    def setup_or_update_vdocs(self):
         if not os.path.exists(self.vdoc_path):
             os.makedirs(self.vdoc_path)
-        for root, dirs, files in os.walk(self.vdoc_path):
-            if not files:
-                with open(config.TannerConfig.get('DATA', 'vdocs')) as vdf:
-                    vdocs = json.load(vdf)
+
+        with open(config.TannerConfig.get('DATA', 'vdocs')) as vdf:
+        	vdocs = json.load(vdf)
+
         if vdocs:
             for key, value in vdocs.items():
                 filename = os.path.join(self.vdoc_path, key)
-                os.makedirs(os.path.dirname(filename), exist_ok=True)
-                with open(filename, 'w') as vd:
-                    vd.write(value)
-            open(os.path.join(self.vdoc_path, 'vdoc.lock'), 'a').close()
+                if not os.path.exists(filename):
+	                os.makedirs(os.path.dirname(filename), exist_ok=True)
+	                with open(filename, 'w') as vd:
+	                	vd.write(value)
 
     @asyncio.coroutine
     def handle(self, path, session=None):
