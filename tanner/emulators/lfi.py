@@ -23,10 +23,9 @@ class LfiEmulator:
     @asyncio.coroutine
     def get_lfi_result(self, file_path):
         result = None
-        for filename in self.whitelist:
-            if file_path in filename:
-                with open(filename) as lfile:
-                    result = lfile.read()
+        if file_path in self.whitelist:
+            with open(file_path) as lfile:
+                result = lfile.read()
         return result
 
     @asyncio.coroutine
