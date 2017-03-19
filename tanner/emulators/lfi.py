@@ -23,16 +23,20 @@ class LfiEmulator:
     @asyncio.coroutine
     def get_lfi_result(self, file_path):
         result = None
-        for filename in self.whitelist:
-            if file_path in filename:
-                with open(filename) as lfile:
-                    result = lfile.read()
+        if file_path in self.whitelist:
+            with open(file_path) as lfile:
+                result = lfile.read()
         return result
 
     @asyncio.coroutine
     def get_file_path(self, path):
-        file_path = re.match(patterns.LFI_FILEPATH, path).group(1)
-        file_path = os.path.normpath(os.path.join('/', file_path))
+        file_match = re.match(patterns.LFI_FILEPATH, path)
+        if file_match:
+            file_path_relative = file_match.group(1)
+            file_path_relative = os.path.normpath(os.path.join('/', file_path_relative))
+            file_path = os.path.join(self.vdoc_path, file_path_relative[1:])
+        else:
+            file_path = path
         return file_path
 
     def setup_vdocs(self):
