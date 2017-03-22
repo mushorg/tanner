@@ -21,7 +21,7 @@ class SqliTest(unittest.TestCase):
 
     def test_db_copy(self):
         session = mock.Mock()
-        session.uuid.hex = 'ad16014d-9b4a-451d-a6d1-fc8681566458'
+        session.sess_uuid.hex = 'ad16014d-9b4a-451d-a6d1-fc8681566458'
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.handler.create_attacker_db(session))
         self.assertTrue(os.path.exists('/tmp/db/ad16014d-9b4a-451d-a6d1-fc8681566458.db'))

@@ -51,7 +51,7 @@ class SqliEmulator:
 
     @asyncio.coroutine
     def create_attacker_db(self, session):
-        attacker_db_name = session.uuid.hex + '.db'
+        attacker_db_name = session.sess_uuid.hex + '.db'
         attacker_db = yield from self.helper.copy_db(self.db_name,
                                                      attacker_db_name,
                                                      self.working_dir
