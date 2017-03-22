@@ -1,4 +1,4 @@
-aiohttp
+aiohttp<2.0
 yarl
 redis
 asyncio_redis
