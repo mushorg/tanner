@@ -8,5 +8,6 @@ class Reporting:
     def create_session(session_data):
         report_file = config.TannerConfig.get('LOCALLOG', 'PATH')
         with open(report_file, 'a') as out:
-            json.dump({datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f'):session_data}, out)
+            session_data["timestamp"] = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')
+            json.dump(session_data, out)
             out.write('\n')
