@@ -13,7 +13,7 @@ class TestCongif(unittest.TestCase):
 				  'REDIS': {'host': 'localhost', 'port': '1337', 'poolsize': '40', 'timeout': '5'},
 				  'EMULATORS': {'root_dir': '/tmp/user_tanner'},
 				  'SQLI': {'db_name': 'user_tanner.db'},
-				  'LOGGER': {'log_file': '/tmp/user_tanner/user_tanner.log'},
+				  'LOGGER': {'error_log_file': '/opt/tanner/tanner_errors.log', 'event_log_file': '/opt/tanner/tanner_events.log'},
 				  'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
 				  'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'}
 				  }
@@ -56,7 +56,7 @@ class TestCongif(unittest.TestCase):
 		                   'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
 		                   'EMULATORS': {'root_dir': '/opt/tanner'},
 		                   'SQLI': {'db_name': 'tanner.db'},
-		                   'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
+		                   'LOGGER': {'error_log_file': '/opt/tanner/tanner_errors.log', 'event_log_file': '/opt/tanner/tanner_events.log'},
 		                   'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
 		                   'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
 		                   }
