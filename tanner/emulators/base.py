@@ -55,14 +55,15 @@ class BaseHandler:
                         detection = patter_details
                         attack_value = value
 
-        if detection['name'] in self.emulators:
-            emulation_result = yield from self.emulators[detection['name']].handle(attack_value, session)
-            detection['payload'] = emulation_result
-
         if detection['order'] <= 1:
             sqli = yield from self.emulators['sqli'].check_get_data(path)
             if sqli:
                 detection = {'name': 'sqli', 'order': 2}
+                attack_value = path
+
+        if detection['name'] in self.emulators:
+            emulation_result = yield from self.emulators[detection['name']].handle(attack_value, session)
+            detection['payload'] = emulation_result
 
         return detection
 
