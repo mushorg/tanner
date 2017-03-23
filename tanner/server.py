@@ -59,7 +59,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
             self.logger.info('TANNER response %s', response_msg)
 
             session_data = data
-            session_data['response_msg'] = response_msg
+            session_data['response_msg'] = json.loads(response_msg.decode('utf-8'))
 
             # Log to Mongo
             if config.TannerConfig.get('MONGO', 'enabled') == 'True':
