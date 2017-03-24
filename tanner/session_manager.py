@@ -11,7 +11,7 @@ class SessionManager:
     def __init__(self, loop=None):
         self.sessions = []
         self.analyzer = SessionAnalyzer(loop=loop)
-        self.logger = logging.getLogger('tanner.session_manager.SessionManager')
+        self.logger = logging.getLogger(__name__)
 
     @asyncio.coroutine
     def add_or_update_session(self, raw_data, redis_client):
