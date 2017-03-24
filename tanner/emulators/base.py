@@ -1,10 +1,8 @@
 import asyncio
 import re
 import urllib.parse
-
 import yarl
 
-from tanner.config import TannerConfig
 from tanner.emulators import lfi, rfi, sqli, xss
 from tanner.utils import patterns
 
@@ -77,7 +75,7 @@ class BaseHandler:
             detection = yield from self.handle_post(session, data)
         else:
             detection = yield from self.handle_get(session, path)
-        session.set_attack_type(path, detection['name'])
+
         return detection
 
     @asyncio.coroutine
