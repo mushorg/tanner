@@ -1,4 +1,5 @@
 aiohttp<2.0
+elizabeth
 yarl
 redis
 asyncio_redis

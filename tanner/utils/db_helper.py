@@ -1,4 +1,5 @@
 import asyncio
+import elizabeth
 import json
 import logging
 import os
@@ -37,13 +38,6 @@ class DBHelper:
         :return:
         """
 
-        with open('/usr/share/dict/words') as dummy:
-            dummy_data = dummy.read()
-            dummy_data = dummy_data.split('\n')
-            dummy_data = [x for x in dummy_data if len(x) > 5 and
-                          re.match(re.compile('[0-9a-zA-Z]'), x)]
-
-        domains = ['.com', '.net', '.org']
         token_list = data_tokens.split(',')
 
         samples_count = random.randint(100, 1000)
@@ -54,17 +48,17 @@ class DBHelper:
                 if token == 'I':
                     values.append(i)
                 if token == 'L':
-                    data = random.choice(dummy_data)
+                    data = elizabeth.Personal().username()
                     values.append(data)
                 if token == 'E':
-                    data = random.choice(dummy_data) + "@" + str.lower(random.choice(dummy_data)) \
-                           + random.choice(domains)
+                    data = elizabeth.Personal().email()
                     values.append(data)
                 if token == 'P':
-                    data = random.choice(dummy_data)
+                    data = elizabeth.Personal().password()
                     values.append(data)
                 if token == 'T':
-                    data = 'This is a comment number' + str(i)
+                    sample_length = random.randint(1,10)
+                    data = elizabeth.Text().text(quantity= sample_length)
                     values.append(data)
             inserted_data.append(tuple(values))
 
