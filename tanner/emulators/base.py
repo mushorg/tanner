@@ -1,8 +1,10 @@
 import asyncio
 import re
 import urllib.parse
+
 import yarl
 
+from tanner.config import TannerConfig
 from tanner.emulators import lfi, rfi, sqli, xss
 from tanner.utils import patterns
 
@@ -15,7 +17,9 @@ class BaseHandler:
         patterns.XSS_ATTACK: dict(name='xss', order=3)
     }
 
-    def __init__(self, base_dir, db_name, loop=None):
+    def __init__(self, loop=None):
+        base_dir = TannerConfig.get('EMULATORS', 'root_dir')
+        db_name = TannerConfig.get('SQLI', 'db_name')
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop),
             'lfi': lfi.LfiEmulator(base_dir),
@@ -73,7 +77,7 @@ class BaseHandler:
             detection = yield from self.handle_post(session, data)
         else:
             detection = yield from self.handle_get(session, path)
-
+        session.set_attack_type(path, detection['name'])
         return detection
 
     @asyncio.coroutine
