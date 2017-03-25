@@ -16,6 +16,7 @@ Contents:
    sessions
    storage
    dorks
+   config
 
 
 
