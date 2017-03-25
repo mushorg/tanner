@@ -11,16 +11,13 @@ class Api:
         self.logger = logging.getLogger('tanner.api.Api')
 
     @asyncio.coroutine
-    def handle_api_request(self, path, redis_client):
+    def handle_api_request(self, query, params, redis_client):
         result = None
 
-        parsed_path = urlparse(path)
-        query = parse_qs(parsed_path.query)
-
-        if parsed_path.path.startswith('/api/stats') and not query:
+        if query == 'stats' and not params:
             result = yield from self.return_stats(redis_client)
-        elif parsed_path.path == '/api/stats' and 'uuid' in query:
-            result = yield from self.return_uuid_stats(query['uuid'], redis_client, 50)
+        elif query == 'stats' and 'uuid' in params:
+            result = yield from self.return_uuid_stats(params['uuid'], redis_client, 50)
         return result
 
     @asyncio.coroutine
