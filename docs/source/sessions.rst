@@ -13,10 +13,11 @@ Session class accepts ``data`` as a parameter. The ``data`` came from SNARE and 
     * **user_agent** -- peer user agent.
     * **sensor** -- SNARE sensor uuid.
     * **paths** -- list of dictionaries. Contains ``path``, ``timestamp``, ``attack_type`` and SNARE ``response status``.
-    * **uuid** -- randomly generated session uuid.
+    * **sess_uuid** -- randomly generated session uuid.
     * **start_timestamp** -- session start time.
     * **timestamp** -- current session timestamp.
     * **count** -- count of the session's updates (i.e. requested paths).
+    * **cookies** -- dictionary of cookies sent by client or set by server
 
  ``KEEP_ALIVE_TIME`` is the constant, which set up the active session time. Default value is 75.
  After this time, the session is expired and can be deleted.
@@ -28,8 +29,8 @@ Session Manager
 ~~~~~~~~~~~~~~~
 Every session is tracking and recording.
 
-The session is determined by peer ``ip`` and ``user_agent``.
-Session is unique, if there is no sessions with this ``ip`` and ``user_agent``.
+The session is determined by peer ``ip``, ``user_agent`` and ``sess_uuid``.
+Session is unique, if there is no sessions with this ``ip``, ``user_agent`` and ``sess_uuid``.
 If session exists, it will be updated.
 Active sessions are kept in the process memory (see :ref:`session`). After expiration, session is pushed into the Redis (see :doc:`storage`)
 
@@ -45,12 +46,13 @@ When session is deleted from python process memory, it is evaluated by session a
 The result contains next fields:
 
 * *Session attributes*
-    * **uuid** --
+    * **sess_uuid**
     * **peer_ip**
     * **peer_port**
     * **user_agent**
     * **sensor_uuid**
     * **start_time**
+    * **cookies**
 * **end_time** -- last session timestamp
 * **requests_per_second** -- request per second from user
 * **approx_time_between_requests** --
@@ -60,6 +62,3 @@ The result contains next fields:
 * **attack_types** -- list of attack types
 * **paths** -- list of all paths
 * **possible_owners** -- list of possible owners. May be ``user``, ``attacker``, ``tool`` and ``crawler``
-
-
-
