@@ -6,7 +6,7 @@ It emulates RFI_ vulnerability. This attack type is detected with pattern:
 
 ::
 
-.*(=.*(http(s){0,1}|ftp(s){0,1}):).*
+.*(.*(http(s){0,1}|ftp(s){0,1}):).*
 
 RFI emulation include two steps:
 
