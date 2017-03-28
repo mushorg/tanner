@@ -13,8 +13,11 @@ class SqliTest(unittest.TestCase):
         open('/tmp/db/test.db', 'a').close()
 
         query_map = {
-            'users': ['id', 'login', 'email', 'username', 'password', 'pass', 'log'],
-            'comments': ['comment']
+            'users': [{'name':'id', 'type':'INTEGER'}, {'name':'login', 'type':'text'},
+                      {'name':'email', 'type':'text'}, {'name':'username', 'type':'text'},
+                      {'name':'password', 'type':'text'}, {'name':'pass', 'type':'text'},
+                      {'name':'log', 'type':'text'}],
+            'comments': [{'name':'comment', 'type':'text'}]
         }
         self.handler = sqli.SqliEmulator('test.db', '/tmp/')
         self.handler.query_map = query_map
@@ -34,8 +37,8 @@ class SqliTest(unittest.TestCase):
         self.assertEqual(assert_result, result)
 
     def test_map_query_comments(self):
-        query = [('comment', 'some_comment\'UNION SELECT 1,2')]
-        assert_result = 'SELECT * from comments WHERE comment=some_comment UNION SELECT 1,2;'
+        query = [('comment', 'some_comment" UNION SELECT 1,2 AND "1"="1')]
+        assert_result = 'SELECT * from comments WHERE comment="some_comment" UNION SELECT 1,2 AND "1"="1";'
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(self.handler.map_query(query))
         self.assertEqual(assert_result, result)
