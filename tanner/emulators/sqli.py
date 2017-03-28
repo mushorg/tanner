@@ -70,9 +70,17 @@ class SqliEmulator:
         db_query = None
         param = query[0][0]
         param_value = query[0][1].replace('\'', ' ')
-        tables = [k for k, v in self.query_map.items() if query[0][0] in v]
+        tables = []
+        for table, columns in self.query_map.items():
+            for column in columns: 
+                if query[0][0] == column['name']:
+                    tables.append(dict(table_name=table, column=column))
+
         if tables:
-            db_query = 'SELECT * from ' + tables[0] + ' WHERE ' + param + '=' + param_value + ';'
+            if tables[0]['column']['type'] == 'INTEGER':
+                db_query = 'SELECT * from ' + tables[0]['table_name'] + ' WHERE ' + param + '=' + param_value + ';'
+            else:
+                db_query = 'SELECT * from ' + tables[0]['table_name'] + ' WHERE ' + param + '= "' + param_value + '" ;'
 
         return db_query
 

@@ -128,7 +128,7 @@ class DBHelper:
                 columns = []
                 try:
                     for row in cursor.execute(query):
-                        columns.append(row[1])
+                        columns.append(dict(name=row[1], type=row[2]))
                     query_map[table] = columns
                 except sqlite3.OperationalError as sqlite_error:
                     self.logger.error('Error during query map creation: %s', sqlite_error)
