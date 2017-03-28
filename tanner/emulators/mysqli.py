@@ -22,6 +22,15 @@ class MySQLIEmulator:
 		if self.query_map is None:
 			self.query_map = yield from self.helper.create_query_map(self.db_name)
 
+	@asyncio.coroutine
+    def create_attacker_db(self, session):
+        attacker_db_name = session.sess_uuid.hex
+        attacker_db = yield from self.helper.copy_db(self.db_name,
+                                                     attacker_db_name
+                                                     )
+        session.associate_db(attacker_db)
+        return attacker_db
+
 
 if __name__ == '__main__':
 	sqli = MySQLIEmulator('/opt/tanner', 'tanner_db')

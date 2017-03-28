@@ -101,6 +101,23 @@ class MySQLDBHelper:
 
         conn.close()
 
+    @asyncio.coroutine
+    def copy_db(user_db, attacker_db):
+        if check_db_exists(attacker_db):
+            self.logger.info('Attacker db already exists')
+        else:
+            #create new attacker db
+            conn = pymysql.connect(host='localhost', user='root', password='*********')
+            cursor = conn.cursor()
+            cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
+            conn.close()
+            # copy user db to attacker db
+            dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
+            restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
+            copy_db_cmd = dump_db_cmd.format(host='localhost', user='root', password='*********', db_name=user_db)
+            copy_db_cmd+= ' | '
+            copy_db_cmd+= restore_db_cmd.format(host='localhost', user='root', password='*********', db_name=attacker_db)
+            os.system(copy_db_cmd)
 
     @asyncio.coroutine
     def create_query_map(self,db_name, ):
