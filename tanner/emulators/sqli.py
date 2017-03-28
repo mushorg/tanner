@@ -80,7 +80,7 @@ class SqliEmulator:
             if tables[0]['column']['type'] == 'INTEGER':
                 db_query = 'SELECT * from ' + tables[0]['table_name'] + ' WHERE ' + param + '=' + param_value + ';'
             else:
-                db_query = 'SELECT * from ' + tables[0]['table_name'] + ' WHERE ' + param + '= "' + param_value + '" ;'
+                db_query = 'SELECT * from ' + tables[0]['table_name'] + ' WHERE ' + param + '="' + param_value + '";'
 
         return db_query
 
