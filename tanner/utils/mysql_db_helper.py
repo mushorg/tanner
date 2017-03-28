@@ -71,14 +71,23 @@ class MySQLDBHelper:
         cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
                            inserted_string_patt + ")", inserted_data)
 
+    @staticmethod
+    def check_db_exists(db_name):
+        conn = pymysql.connect(host='localhost', user='root', password='*********')
+        cursor = conn.cursor()
+        check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
+        check_DB_exists_query+= 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
+        return cursor.execute(check_DB_exists_query)
+        
     @asyncio.coroutine
-    def setup_db_from_config(self, conn, name=None):
+    def setup_db_from_config(self, name=None):
         config = yield from self.read_config()
         if name is not None:
             db_name = name
         else:
             db_name = config['name']
                
+        conn = pymysql.connect(host='localhost', user='root', password='*********')
         cursor = conn.cursor()
         create_db_query = 'CREATE DATABASE {db_name}'
         cursor.execute(create_db_query.format(db_name=db_name))
@@ -90,12 +99,15 @@ class MySQLDBHelper:
             yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
             conn.commit()
 
+        conn.close()
+
 
     @asyncio.coroutine
-    def create_query_map(self, conn, db_name, ):
+    def create_query_map(self,db_name, ):
         query_map = {}
         tables = []
 
+        conn = pymysql.connect(host='localhost', user='root', password='*********')
         cursor = conn.cursor()
 
         select_tables = 'SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema= \'{db_name}\''
