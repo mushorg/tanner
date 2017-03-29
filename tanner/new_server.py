@@ -86,12 +86,18 @@ class TannerServer:
         app.router.add_get('/api/{api_query}', self.handle_api)
         app.router.add_get('/dorks', self.handle_dorks)
 
-    def start(self):
-        loop = asyncio.get_event_loop()
-        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+    def create_app(self, loop):
         app = web.Application(loop=loop)
         self.setup_routes(app)
-        web.run_app(app, host='0.0.0.0', port=8090)
+        return app
+
+    def start(self):
+        loop = asyncio.get_event_loop()
+        tanner_app = self.create_app(loop)
+        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        host = TannerConfig.get('TANNER', 'host')
+        port = TannerConfig.get('TANNER', 'port')
+        web.run_app(tanner_app, host=host, port=port)
 
 
 if __name__ == "__main__":
