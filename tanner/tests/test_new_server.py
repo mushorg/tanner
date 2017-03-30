@@ -80,7 +80,11 @@ class TestNewServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_dorks_request(self):
-        pass
+        assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
+        request = await self.client.request("GET", "/dorks")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
 
     @unittest_run_loop
     async def test_api_request(self):
