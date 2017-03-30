@@ -16,6 +16,14 @@ class MySQLDBHelper:
         self.logger = logging.getLogger('tanner.db_helper.mysqlDBHelper')
 
     @asyncio.coroutine
+    def connect_to_db():
+        conn = pymysql.connect(host = TannerConfig.get('MYSQLI', 'host'),
+                               user = TannerConfig.get('MYSQLI', 'user'),
+                               password = TannerConfig.get('MYSQLI', 'password')
+                               )
+        return conn
+
+    @asyncio.coroutine
     def read_config(self):
         with open(TannerConfig.get('DATA', 'db_config')) as db_config:
             try:
@@ -73,7 +81,7 @@ class MySQLDBHelper:
 
     @staticmethod
     def check_db_exists(db_name):
-        conn = pymysql.connect(host='localhost', user='root', password='*********')
+        conn = connect_to_db()
         cursor = conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
         check_DB_exists_query+= 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
@@ -87,7 +95,7 @@ class MySQLDBHelper:
         else:
             db_name = config['name']
                
-        conn = pymysql.connect(host='localhost', user='root', password='*********')
+        conn = connect_to_db()
         cursor = conn.cursor()
         create_db_query = 'CREATE DATABASE {db_name}'
         cursor.execute(create_db_query.format(db_name=db_name))
@@ -107,7 +115,7 @@ class MySQLDBHelper:
             self.logger.info('Attacker db already exists')
         else:
             #create new attacker db
-            conn = pymysql.connect(host='localhost', user='root', password='*********')
+            conn = connect_to_db()
             cursor = conn.cursor()
             cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
@@ -124,7 +132,7 @@ class MySQLDBHelper:
         query_map = {}
         tables = []
 
-        conn = pymysql.connect(host='localhost', user='root', password='*********')
+        conn = connect_to_db()
         cursor = conn.cursor()
 
         select_tables = 'SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema= \'{db_name}\''
