@@ -70,7 +70,7 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def handle_api(self, request):
-        api_query = request.match_info.get("api_query", "stats")
+        api_query = request.match_info.get("api_query", list)
         data = await self.api.handle_api_request(api_query, request.url.query, self.redis_client)
         response_msg = self._make_response(data)
         return web.json_response(response_msg)
@@ -83,6 +83,7 @@ class TannerServer:
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)
+        app.router.add_get('/api', self.handle_api)
         app.router.add_get('/api/{api_query}', self.handle_api)
         app.router.add_get('/dorks', self.handle_dorks)
 
