@@ -88,4 +88,12 @@ class TestNewServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_request(self):
-        pass
+        async def _make_api_coroutine(*args, **kwargs):
+            return ["stats", "stats?uuid=<specific uuid>"]
+        assert_content = {"version": 1, "response": {"message": ["stats", "stats?uuid=<specific uuid>"]}}
+
+        self.serv.api.handle_api_request = _make_api_coroutine
+        request = await self.client.request("GET", "/api")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
