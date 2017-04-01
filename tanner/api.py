@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-from urllib.parse import urlparse, parse_qs
 
 import asyncio_redis
 
@@ -18,8 +17,6 @@ class Api:
             result = yield from self.return_stats(redis_client)
         elif query == 'stats' and 'uuid' in params:
             result = yield from self.return_uuid_stats(params['uuid'], redis_client, 50)
-        elif query == list:
-            result = ["stats", "stats?uuid=<specific uuid>"]
         return result
 
     @asyncio.coroutine

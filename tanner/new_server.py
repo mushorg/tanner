@@ -70,8 +70,11 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def handle_api(self, request):
-        api_query = request.match_info.get("api_query", list)
-        data = await self.api.handle_api_request(api_query, request.url.query, self.redis_client)
+        api_query = request.match_info.get("api_query")
+        if api_query is None:
+            data = "tanner api"
+        else:
+            data = await self.api.handle_api_request(api_query, request.url.query, self.redis_client)
         response_msg = self._make_response(data)
         return web.json_response(response_msg)
 
