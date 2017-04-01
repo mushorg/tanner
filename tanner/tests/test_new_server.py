@@ -22,6 +22,7 @@ class TestNewServer(AioHTTPTestCase):
                     self.serv = new_server.TannerServer()
 
         self.test_uuid = uuid.uuid4()
+
         async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
@@ -90,10 +91,22 @@ class TestNewServer(AioHTTPTestCase):
     async def test_api_request(self):
         async def _make_api_coroutine(*args, **kwargs):
             return ["stats", "stats?uuid=<specific uuid>"]
-        assert_content = {"version": 1, "response": {"message": ["stats", "stats?uuid=<specific uuid>"]}}
 
+        assert_content = {"version": 1, "response": {"message": ["stats", "stats?uuid=<specific uuid>"]}}
         self.serv.api.handle_api_request = _make_api_coroutine
         request = await self.client.request("GET", "/api")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
+
+    @unittest_run_loop
+    async def test_stats_api_request(self):
+        async def _make_api_coroutine(*args, **kwargs):
+            return ["1", "2"]
+
+        assert_content = {"version": 1, "response": {"message": ["1", "2"]}}
+        self.serv.api.handle_api_request = _make_api_coroutine
+        request = await self.client.request("GET", "/api/stats")
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
