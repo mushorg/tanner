@@ -69,10 +69,10 @@ class TestNewServer(AioHTTPTestCase):
     @unittest_run_loop
     async def test_events_request(self):
         async def _make_handle_coroutine(*args, **kwargs):
-            return {"method": "GET", "path": "/index.html"}
+            return {'name': 'index', 'order': 1, "payload": None}
 
         detection_assert = {'version': 1, 'response': {
-            'message': {'detection': {'method': 'GET', 'path': '/index.html'}, 'sess_uuid': str(self.test_uuid)}}}
+            'message': {'detection': {'name': 'index', 'order': 1, "payload": None}, 'sess_uuid': str(self.test_uuid)}}}
         self.serv.base_handler.handle = _make_handle_coroutine
         request = await self.client.request("POST", "/event", data=b"{\"path\":\"/index.html\"}")
         assert request.status == 200
