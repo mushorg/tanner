@@ -17,10 +17,13 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 class TannerServer:
     def __init__(self):
+        base_dir = TannerConfig.get('EMULATORS', 'root_dir')
+        db_name = TannerConfig.get('SQLI', 'db_name')
+
         self.session_manager = session_manager.SessionManager()
         self.dorks = dorks_manager.DorksManager()
         self.api = api.Api()
-        self.base_handler = base.BaseHandler()
+        self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.redis_client = None
 
@@ -51,6 +54,7 @@ class TannerServer:
             self.logger.info('Requested path %s', path)
             await self.dorks.extract_path(path, self.redis_client)
             detection = await self.base_handler.handle(data, session, path)
+            session.set_attack_type(path, detection["name"])
 
             response_msg = self._make_response(msg=dict(detection=detection, sess_uuid=session.get_uuid()))
             self.logger.info('TANNER response %s', response_msg)
