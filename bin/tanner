@@ -21,9 +21,11 @@ def main():
     args = parser.parse_args()
     if args.config:
         TannerConfig.set_config(args.config)
-    log_file_name = TannerConfig.get("LOGGER", "log_file")
-    logger.Logger.create_logger(log_file_name, __package__)
-    print("App logs will be stored in", log_file_name)
+    error_log_file_name = TannerConfig.get("LOGGER", "error_log_file")
+    event_log_file_name = TannerConfig.get("LOGGER", "event_log_file")
+    logger.Logger.create_logger(error_log_file_name, event_log_file_name, __package__)
+    print("App event logs will be stored in", event_log_file_name)
+    print("App error logs will be stored in", error_log_file_name)
     if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
         print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
     tanner.server.run_server()
