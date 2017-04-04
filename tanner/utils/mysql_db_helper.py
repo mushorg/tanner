@@ -6,6 +6,7 @@ import os
 import random
 import re
 import shutil
+import subprocess
 import pymysql
 
 from tanner.config import TannerConfig
@@ -16,7 +17,7 @@ class MySQLDBHelper:
         self.logger = logging.getLogger('tanner.db_helper.mysqlDBHelper')
 
     @asyncio.coroutine
-    def connect_to_db():
+    def connect_to_db(self):
         conn = pymysql.connect(host = TannerConfig.get('MYSQLI', 'host'),
                                user = TannerConfig.get('MYSQLI', 'user'),
                                password = TannerConfig.get('MYSQLI', 'password')
@@ -81,7 +82,7 @@ class MySQLDBHelper:
 
     @staticmethod
     def check_db_exists(db_name):
-        conn = connect_to_db()
+        conn = yield from self.connect_to_db()
         cursor = conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
         check_DB_exists_query+= 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
@@ -95,7 +96,7 @@ class MySQLDBHelper:
         else:
             db_name = config['name']
                
-        conn = connect_to_db()
+        conn = yield from self.connect_to_db()
         cursor = conn.cursor()
         create_db_query = 'CREATE DATABASE {db_name}'
         cursor.execute(create_db_query.format(db_name=db_name))
@@ -115,7 +116,7 @@ class MySQLDBHelper:
             self.logger.info('Attacker db already exists')
         else:
             #create new attacker db
-            conn = connect_to_db()
+            conn = yield from self.connect_to_db()
             cursor = conn.cursor()
             cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
@@ -125,14 +126,14 @@ class MySQLDBHelper:
             copy_db_cmd = dump_db_cmd.format(host='localhost', user='root', password='*********', db_name=user_db)
             copy_db_cmd+= ' | '
             copy_db_cmd+= restore_db_cmd.format(host='localhost', user='root', password='*********', db_name=attacker_db)
-            os.system(copy_db_cmd)
+            subprocess.call(copy_db_cmd)
 
     @asyncio.coroutine
     def create_query_map(self,db_name, ):
         query_map = {}
         tables = []
 
-        conn = connect_to_db()
+        conn = yield from self.connect_to_db()
         cursor = conn.cursor()
 
         select_tables = 'SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema= \'{db_name}\''
