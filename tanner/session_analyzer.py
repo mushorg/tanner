@@ -10,8 +10,8 @@ from tanner.dorks_manager import DorksManager
 
 
 class SessionAnalyzer:
-    def __init__(self):
-        self.queue = asyncio.Queue()
+    def __init__(self, loop=None):
+        self.queue = asyncio.Queue(loop=loop)
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
 
     @asyncio.coroutine

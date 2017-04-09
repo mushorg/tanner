@@ -26,22 +26,21 @@ session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466
 
 class TestSessionAnalyzer(unittest.TestCase):
     def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
         self.session = json.loads(session.decode('utf-8'))
-        self.handler = SessionAnalyzer()
+        self.handler = SessionAnalyzer(loop=self.loop)
 
     def tests_load_session_fail(self):
         @asyncio.coroutine
-        def sess_get():
+        def sess_get(key):
             return asyncio_redis.NotConnectedError
 
         redis_mock = mock.Mock()
         redis_mock.get = sess_get
         res = None
-        loop = asyncio.get_event_loop()
-        redis_mock = mock.Mock()
-        redis_mock.get = sess_get
-        loop.run_until_complete(self.handler.analyze(None, redis_mock))
-        self.assertRaises(asyncio_redis.NotConnectedError)
+        with self.assertLogs():
+            self.loop.run_until_complete(self.handler.analyze(None, redis_mock))
 
     def test_create_stats(self):
         @asyncio.coroutine
@@ -60,5 +59,5 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock.get = sess_get
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
-        stats = asyncio.get_event_loop().run_until_complete(self.handler.create_stats(self.session, redis_mock))
+        stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
