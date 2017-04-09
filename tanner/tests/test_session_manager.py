@@ -137,19 +137,14 @@ class TestSessions(unittest.TestCase):
 
     def test_deleting_sessions(self):
         @asyncio.coroutine
-        def sess_get(key):
-            return b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
-                   b'"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
-                   b'Chrome/53.0.2767.4 Safari/537.36", "end_time": 1466091899.9854035, ' \
-                   b'"sensor": "78e51180-bf0d-4757-8a04-f000e5efa179", "count": 1, ' \
-                   b'"paths": [{"timestamp": 1466091813.4779778, "path": "/", "attack_type": "index", "response_status": 200}]' \
-                   b'"peer": {"port": 56970, "ip": "192.168.1.3"}, ' \
-                   b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
-
-        @asyncio.coroutine
-        def sess_set(key, value):
+        def analyze(session_key, redis_client):
             return None
 
+        @asyncio.coroutine
+        def sess_set(key, val):
+            return None
+
+        self.handler.analyzer.analyze = analyze
         data = {
             'peer': {
                 'ip': None,
@@ -167,7 +162,6 @@ class TestSessions(unittest.TestCase):
         self.handler.sessions.append(sess)
         redis_mock = mock.Mock()
         redis_mock.set = sess_set
-        redis_mock.get = sess_get
         self.loop.run_until_complete(self.handler.delete_old_sessions(redis_mock))
         self.assertListEqual(self.handler.sessions, [])
 
