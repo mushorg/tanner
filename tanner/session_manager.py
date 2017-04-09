@@ -8,9 +8,9 @@ from tanner.session_analyzer import SessionAnalyzer
 
 
 class SessionManager:
-    def __init__(self):
+    def __init__(self, loop=None):
         self.sessions = []
-        self.analyzer = SessionAnalyzer()
+        self.analyzer = SessionAnalyzer(loop=loop)
         self.logger = logging.getLogger('tanner.session_manager.SessionManager')
 
     @asyncio.coroutine
