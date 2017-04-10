@@ -74,7 +74,7 @@ class RfiEmulator:
     @asyncio.coroutine
     def get_rfi_result(self, path):
         rfi_result = None
-        yield from asyncio.sleep(1)
+        yield from asyncio.sleep(1, loop=self._loop)
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result

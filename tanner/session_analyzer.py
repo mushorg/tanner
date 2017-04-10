@@ -11,13 +11,14 @@ from tanner.dorks_manager import DorksManager
 
 class SessionAnalyzer:
     def __init__(self, loop=None):
-        self.queue = asyncio.Queue(loop=loop)
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
+        self.queue = asyncio.Queue(loop=self._loop)
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
 
     @asyncio.coroutine
     def analyze(self, session_key, redis_client):
         session = None
-        yield from asyncio.sleep(1)
+        yield from asyncio.sleep(1, loop=self._loop)
         try:
             session = yield from redis_client.get(session_key)
             session = json.loads(session)
