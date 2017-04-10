@@ -13,7 +13,8 @@ from tanner.utils import patterns
 
 
 class RfiEmulator:
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, loop=None):
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
@@ -32,8 +33,7 @@ class RfiEmulator:
 
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
-            loop = asyncio.get_event_loop()
-            ftp_future = loop.run_in_executor(pool, self.download_file_ftp, url)
+            ftp_future = self._loop.run_in_executor(pool, self.download_file_ftp, url)
             file_name = yield from ftp_future
 
         else:

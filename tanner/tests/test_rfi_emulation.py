@@ -9,7 +9,7 @@ class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
-        self.handler = rfi.RfiEmulator('/tmp/')
+        self.handler = rfi.RfiEmulator('/tmp/', loop=self.loop)
 
     def test_http_download(self):
         path = 'http://example.com'

@@ -28,7 +28,7 @@ class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
     def __init__(self, loop=None, *args, **kwargs):
         super(HttpRequestHandler, self).__init__(loop=loop)
         self.api = api.Api()
-        self.base_handler = base.BaseHandler(kwargs['base_dir'], kwargs['db_name'])
+        self.base_handler = base.BaseHandler(kwargs['base_dir'], kwargs['db_name'], loop=loop)
         self.logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 
     @staticmethod
