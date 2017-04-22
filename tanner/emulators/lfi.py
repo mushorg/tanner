@@ -43,15 +43,15 @@ class LfiEmulator:
             os.makedirs(self.vdoc_path)
 
         with open(config.TannerConfig.get('DATA', 'vdocs')) as vdf:
-        	vdocs = json.load(vdf)
+            vdocs = json.load(vdf)
 
         if vdocs:
             for key, value in vdocs.items():
                 filename = os.path.join(self.vdoc_path, key)
                 if not os.path.exists(filename):
-	                os.makedirs(os.path.dirname(filename), exist_ok=True)
-	                with open(filename, 'w') as vd:
-	                	vd.write(value)
+                    os.makedirs(os.path.dirname(filename), exist_ok=True)
+                    with open(filename, 'w') as vd:
+                        vd.write(value)
 
     @asyncio.coroutine
     def handle(self, path, session=None):
