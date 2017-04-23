@@ -3,7 +3,7 @@ import argparse
 import os
 import tanner
 from tanner.config import TannerConfig
-from tanner import server
+from tanner import new_server
 from tanner.utils import logger
 
 
@@ -26,7 +26,8 @@ def main():
     print("App logs will be stored in", log_file_name)
     if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
         print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
-    tanner.server.run_server()
+    tanner = new_server.TannerServer()
+    tanner.start()
 
 
 if __name__ == "__main__":

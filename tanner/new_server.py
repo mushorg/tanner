@@ -106,8 +106,3 @@ class TannerServer:
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
         web.run_app(tanner_app, host=host, port=port)
-
-
-if __name__ == "__main__":
-    ts = TannerServer()
-    ts.start()
