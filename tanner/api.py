@@ -33,7 +33,7 @@ class Api:
     def return_uuid_stats(self, uuid, redis_client, count=-1):
         query_res = []
         try:
-            query_res = yield from redis_client.lrange_aslist(uuid[0], 0, count)
+            query_res = yield from redis_client.lrange_aslist(uuid, 0, count)
         except asyncio_redis.NotConnectedError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         else:
