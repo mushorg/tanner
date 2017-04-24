@@ -3,11 +3,11 @@ from unittest import mock
 
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
-from tanner import new_server
+from tanner import server
 from tanner.config import TannerConfig
 
 
-class TestNewServer(AioHTTPTestCase):
+class TestServer(AioHTTPTestCase):
     def setUp(self):
         d = dict(MONGO={'enabled': 'False', 'URI': 'mongodb://localhost'},
                  LOCALLOG={'enabled': 'False', 'PATH': '/tmp/tanner_report.json'})
@@ -19,7 +19,7 @@ class TestNewServer(AioHTTPTestCase):
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('tanner.emulators.base.BaseHandler', mock.Mock(), create=True):
                 with mock.patch('tanner.session_manager.SessionManager', mock.Mock(), create=True):
-                    self.serv = new_server.TannerServer()
+                    self.serv = server.TannerServer()
 
         self.test_uuid = uuid.uuid4()
 
@@ -41,7 +41,7 @@ class TestNewServer(AioHTTPTestCase):
 
         self.serv.dorks = dorks
 
-        super(TestNewServer, self).setUp()
+        super(TestServer, self).setUp()
 
     def _make_coroutine(self):
         async def coroutine(*args, **kwargs):
