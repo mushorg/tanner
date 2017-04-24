@@ -10,6 +10,8 @@ from tanner import config
 
 class TestServer(unittest.TestCase):
     def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
         d = dict(MONGO={'enabled': 'False', 'URI': 'mongodb://localhost'},
                  LOCALLOG={'enabled': 'False', 'PATH': '/tmp/tanner_report.json'})
         m = mock.MagicMock()
@@ -30,7 +32,7 @@ class TestServer(unittest.TestCase):
         self.MockedRequestHandler.redis_client = mock.Mock()
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('tanner.emulators.lfi.LfiEmulator', mock.Mock(), create=True):
-                self.handler = self.MockedRequestHandler(debug=False, keep_alive=75, base_dir='/tmp/', db_name='test.db')
+                self.handler = self.MockedRequestHandler(loop=self.loop, debug=False, keep_alive=75, base_dir='/tmp/', db_name='test.db')
 
         self.handler.dorks = dorks
         self.handler.writer = mock.Mock()
@@ -64,7 +66,7 @@ class TestServer(unittest.TestCase):
                 message.path = '/dorks'
                 message.version = (1, 1)
 
-                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, None))
+                self.loop.run_until_complete(self.handler.handle_request(message, None))
                 content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                 content = json.loads(content)
 
@@ -90,7 +92,7 @@ class TestServer(unittest.TestCase):
                 payload = mock.Mock()
                 payload.read = foobar
 
-                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, payload))
+                self.loop.run_until_complete(self.handler.handle_request(message, payload))
 
                 content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                 content = json.loads(content)
@@ -120,7 +122,7 @@ class TestServer(unittest.TestCase):
                 payload = mock.Mock()
                 payload.read = foobar
 
-                asyncio.get_event_loop().run_until_complete(self.handler.handle_request(message, payload))
+                self.loop.run_until_complete(self.handler.handle_request(message, payload))
 
                 content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
                 content = json.loads(content)

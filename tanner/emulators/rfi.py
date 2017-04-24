@@ -1,19 +1,21 @@
 import asyncio
+import ftplib
 import hashlib
 import logging
 import os
 import re
 import time
-import ftplib
 from concurrent.futures import ThreadPoolExecutor
 
 import aiohttp
 import yarl
+
 from tanner.utils import patterns
 
 
 class RfiEmulator:
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, loop=None):
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
@@ -32,13 +34,12 @@ class RfiEmulator:
 
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
-            loop = asyncio.get_event_loop()
-            ftp_future = loop.run_in_executor(pool, self.download_file_ftp, url)
+            ftp_future = self._loop.run_in_executor(pool, self.download_file_ftp, url)
             file_name = yield from ftp_future
 
         else:
             try:
-                with aiohttp.ClientSession() as client:
+                with aiohttp.ClientSession(loop=self._loop) as client:
                     resp = yield from client.get(url)
                     data = yield from resp.text()
             except aiohttp.ClientError as client_error:
@@ -73,14 +74,14 @@ class RfiEmulator:
     @asyncio.coroutine
     def get_rfi_result(self, path):
         rfi_result = None
-        yield from asyncio.sleep(1)
+        yield from asyncio.sleep(1, loop=self._loop)
         file_name = yield from self.download_file(path)
         if file_name is None:
             return rfi_result
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
         try:
-            with aiohttp.ClientSession() as session:
+            with aiohttp.ClientSession(loop=self._loop) as session:
                 resp = yield from session.post('http://127.0.0.1:8088/', data=script_data)
                 rfi_result = yield from resp.json()
         except aiohttp.ClientError as client_error:
