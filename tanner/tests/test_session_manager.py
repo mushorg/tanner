@@ -96,7 +96,8 @@ class TestSessions(unittest.TestCase):
             'uuid': None,
             'cookies': {'sess_uuid': None}
         }
-        sess = yield from self.handler.add_or_update_session(data)
+        redis_client = mock.Mock()
+        sess = self.loop.run_until_complete(self.handler.add_or_update_session(data))
         assertion_data = {
             'peer': {
                 'ip': None,

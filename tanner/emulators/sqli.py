@@ -1,9 +1,7 @@
-import asyncio
 import os
+import pylibinjection
 import sqlite3
 import urllib.parse
-import pylibinjection
-from asyncio.subprocess import PIPE
 
 from tanner.utils import sqlite_db_helper
 from tanner.config import TannerConfig

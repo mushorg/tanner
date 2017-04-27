@@ -23,21 +23,19 @@ class BaseHandler:
             'sqli': sqli.SqliEmulator(db_name, base_dir)
         }
 
-    @asyncio.coroutine
-    def handle_post(self, session, data):
+    async def handle_post(self, session, data):
         detection = dict(name='unknown', order=0)
-        xss_result = yield from self.emulators['xss'].handle(None, session, data)
+        xss_result = await self.emulators['xss'].handle(None, session, data)
         if xss_result:
             detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
         else:
-            sqli_data = self.emulators['sqli'].check_post_data(data)
+            sqli_data = await self.emulators['sqli'].check_post_data(data)
             if sqli_data:
-                sqli_result = yield from self.emulators['sqli'].handle(sqli_data, session, 1)
+                sqli_result = await self.emulators['sqli'].handle(sqli_data, session, 1)
                 detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
         return detection
 
-    @asyncio.coroutine
-    def handle_get(self, session, path):
+    async def handle_get(self, session, path):
         detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
@@ -62,21 +60,19 @@ class BaseHandler:
                 attack_value = path
 
         if detection['name'] in self.emulators:
-            emulation_result = yield from self.emulators[detection['name']].handle(attack_value, session)
+            emulation_result = await self.emulators[detection['name']].handle(attack_value, session)
             detection['payload'] = emulation_result
 
         return detection
 
-    @asyncio.coroutine
-    def emulate(self, data, session, path):
+    async def emulate(self, data, session, path):
         if data['method'] == 'POST':
-            detection = yield from self.handle_post(session, data)
+            detection = await self.handle_post(session, data)
         else:
-            detection = yield from self.handle_get(session, path)
+            detection = await self.handle_get(session, path)
 
         return detection
 
-    @asyncio.coroutine
-    def handle(self, data, session, path):
-        detection = yield from self.emulate(data, session, path)
+    async def handle(self, data, session, path):
+        detection = await self.emulate(data, session, path)
         return detection
