@@ -1,11 +1,6 @@
 import asyncio
-import elizabeth
 import json
 import logging
-import os
-import random
-import re
-import shutil
 import subprocess
 import aiomysql
 
@@ -14,7 +9,9 @@ from tanner.config import TannerConfig
 
 class MySQLDBHelper:
     def __init__(self):
-        self.logger = logging.getLogger('tanner.db_helper.mysqlDBHelper')
+        super(MySQLDBHelper, self).__init__()
+        self.logger = logging.getLogger('tanner.db_helper.MySQLDBHelper')
+        self.inserted_string_pattern = '%s'
 
     @asyncio.coroutine
     def connect_to_db(self):
@@ -23,62 +20,6 @@ class MySQLDBHelper:
                                            password = TannerConfig.get('MYSQLI', 'password')
                                            )
         return conn
-
-    @asyncio.coroutine
-    def read_config(self):
-        with open(TannerConfig.get('DATA', 'db_config')) as db_config:
-            try:
-                config = json.load(db_config)
-            except json.JSONDecodeError as json_error:
-                self.logger.info('Failed to load json: %s', json_error)
-            else:
-                return config
-
-    @staticmethod
-    @asyncio.coroutine
-    def insert_dummy_data(table_name, data_tokens, cursor):
-        """
-        Insert dummy data based on data tokens
-        I - integer id
-        L - login/username
-        E - email
-        P - password
-        T - piece of text
-        :return:
-        """
-
-        token_list = data_tokens.split(',')
-
-        samples_count = random.randint(100, 1000)
-        inserted_data = []
-        for i in range(samples_count):
-            values = []
-            for token in token_list:
-                if token == 'I':
-                    values.append(i)
-                if token == 'L':
-                    data = elizabeth.Personal().username()
-                    values.append(data)
-                if token == 'E':
-                    data = elizabeth.Personal().email()
-                    values.append(data)
-                if token == 'P':
-                    data = elizabeth.Personal().password()
-                    values.append(data)
-                if token == 'T':
-                    sample_length = random.randint(1,10)
-                    data = elizabeth.Text().text(quantity= sample_length)
-                    values.append(data)
-            inserted_data.append(tuple(values))
-
-        inserted_string_patt = '%s'
-        if len(token_list) > 1:
-            inserted_string_patt += ','
-            inserted_string_patt *= len(token_list)
-            inserted_string_patt = inserted_string_patt[:-1]
-
-        yield from cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
-                                       inserted_string_patt + ")", inserted_data)
 
     @asyncio.coroutine
     def check_db_exists(self, db_name, ):

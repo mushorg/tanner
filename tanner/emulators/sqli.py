@@ -5,7 +5,7 @@ import urllib.parse
 import pylibinjection
 from asyncio.subprocess import PIPE
 
-from tanner.utils import db_helper
+from tanner.utils import sqlite_db_helper
 from tanner import config
 
 
@@ -13,7 +13,7 @@ class SqliEmulator:
     def __init__(self, db_name, working_dir):
         self.db_name = db_name
         self.working_dir = os.path.join(working_dir, 'db/')
-        self.helper = db_helper.DBHelper()
+        self.helper = sqlite_db_helper.SQLITEDBHelper()
         self.query_map = None
 
     @asyncio.coroutine
