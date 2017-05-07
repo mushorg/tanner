@@ -17,7 +17,8 @@ class MySQLIEmulator:
 
 	@asyncio.coroutine
 	def setup_db(self):
-		if not self.helper.check_db_exists(self.db_name):
+		db_exists = yield from self.helper.check_db_exists(self.db_name)
+		if not db_exists:
 			yield from self.helper.setup_db_from_config(self.db_name)
 		if self.query_map is None:
 			self.query_map = yield from self.helper.create_query_map(self.db_name)

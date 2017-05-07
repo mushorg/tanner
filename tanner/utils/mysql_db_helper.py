@@ -7,7 +7,7 @@ import random
 import re
 import shutil
 import subprocess
-import pymysql
+import aiomysql
 
 from tanner.config import TannerConfig
 
@@ -18,10 +18,10 @@ class MySQLDBHelper:
 
     @asyncio.coroutine
     def connect_to_db(self):
-        conn = pymysql.connect(host = TannerConfig.get('MYSQLI', 'host'),
-                               user = TannerConfig.get('MYSQLI', 'user'),
-                               password = TannerConfig.get('MYSQLI', 'password')
-                               )
+        conn = yield from aiomysql.connect(host = TannerConfig.get('MYSQLI', 'host'),
+                                           user = TannerConfig.get('MYSQLI', 'user'),
+                                           password = TannerConfig.get('MYSQLI', 'password')
+                                           )
         return conn
 
     @asyncio.coroutine
@@ -77,16 +77,19 @@ class MySQLDBHelper:
             inserted_string_patt *= len(token_list)
             inserted_string_patt = inserted_string_patt[:-1]
 
-        cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
-                           inserted_string_patt + ")", inserted_data)
+        yield from cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
+                                       inserted_string_patt + ")", inserted_data)
 
-    @staticmethod
-    def check_db_exists(db_name):
+    @asyncio.coroutine
+    def check_db_exists(self, db_name, ):
         conn = yield from self.connect_to_db()
-        cursor = conn.cursor()
+        cursor = yield from conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
         check_DB_exists_query+= 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
-        return cursor.execute(check_DB_exists_query)
+        yield from cursor.execute(check_DB_exists_query)
+        result = yield from cursor.fetchall()
+        #return 0 if no such database exists else 1
+        return len(result)
         
     @asyncio.coroutine
     def setup_db_from_config(self, name=None):
@@ -97,28 +100,29 @@ class MySQLDBHelper:
             db_name = config['name']
                
         conn = yield from self.connect_to_db()
-        cursor = conn.cursor()
+        cursor = yield from conn.cursor()
         create_db_query = 'CREATE DATABASE {db_name}'
-        cursor.execute(create_db_query.format(db_name=db_name))
-        cursor.execute('USE {db_name}'.format(db_name=db_name))
+        yield from cursor.execute(create_db_query.format(db_name=db_name))
+        yield from cursor.execute('USE {db_name}'.format(db_name=db_name))
 
         for table in config['tables']:
             query = table['schema']
-            cursor.execute(query)
+            yield from cursor.execute(query)
             yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
-            conn.commit()
+            yield from conn.commit()
 
         conn.close()
 
     @asyncio.coroutine
     def copy_db(user_db, attacker_db):
+        db_exists = yield from check_db_exists(attacker_db)
         if check_db_exists(attacker_db):
             self.logger.info('Attacker db already exists')
         else:
             #create new attacker db
             conn = yield from self.connect_to_db()
-            cursor = conn.cursor()
-            cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
+            cursor = yield from conn.cursor()
+            yield from cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
             # copy user db to attacker db
             dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
@@ -142,12 +146,12 @@ class MySQLDBHelper:
         tables = []
 
         conn = yield from self.connect_to_db()
-        cursor = conn.cursor()
+        cursor = yield from conn.cursor()
 
         select_tables = 'SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema= \'{db_name}\''
 
         try:
-            cursor.execute(select_tables.format(db_name=db_name))
+            yield from cursor.execute(select_tables.format(db_name=db_name))
             for row in cursor.fetchall():
                 tables.append(row[0])
         except Exception as e:
@@ -158,7 +162,7 @@ class MySQLDBHelper:
                 query = 'SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema= \'{db_name}\''
                 columns = []
                 try:
-                    cursor.execute(query.format(db_name=db_name))
+                    yield from cursor.execute(query.format(db_name=db_name))
                     for row in cursor.fetchall():
                         columns.append(row[0])
                     query_map[table] = columns
