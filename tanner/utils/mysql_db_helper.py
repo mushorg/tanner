@@ -5,13 +5,12 @@ import subprocess
 import aiomysql
 
 from tanner.config import TannerConfig
+from tanner.utils.base_db_helper import BaseDBHelper
 
-
-class MySQLDBHelper:
+class MySQLDBHelper(BaseDBHelper):
     def __init__(self):
         super(MySQLDBHelper, self).__init__()
         self.logger = logging.getLogger('tanner.db_helper.MySQLDBHelper')
-        self.inserted_string_pattern = '%s'
 
     @asyncio.coroutine
     def connect_to_db(self):
@@ -55,9 +54,9 @@ class MySQLDBHelper:
         conn.close()
 
     @asyncio.coroutine
-    def copy_db(user_db, attacker_db):
-        db_exists = yield from check_db_exists(attacker_db)
-        if check_db_exists(attacker_db):
+    def copy_db(self, user_db, attacker_db):
+        db_exists = yield from self.check_db_exists(attacker_db)
+        if db_exists:
             self.logger.info('Attacker db already exists')
         else:
             #create new attacker db
@@ -68,24 +67,43 @@ class MySQLDBHelper:
             # copy user db to attacker db
             dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
             restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
-            copy_db_cmd = dump_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
+            dump_db_cmd = dump_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
                                              user = TannerConfig.get('MYSQLI', 'user'),
                                              password = TannerConfig.get('MYSQLI', 'password'),
                                              db_name=user_db
                                              )
-            copy_db_cmd+= ' | '
-            copy_db_cmd+= restore_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
+            restore_db_cmd = restore_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
                                                 user = TannerConfig.get('MYSQLI', 'user'),
                                                 password = TannerConfig.get('MYSQLI', 'password'),
                                                 db_name=attacker_db
                                                 )
-            subprocess.call(copy_db_cmd)
+            try:
+                dump_db_process = subprocess.Popen(dump_db_cmd, stdout = subprocess.PIPE, shell = True)
+                restore_db_process = subprocess.Popen(restore_db_cmd, stdin = dump_db_process.stdout, shell = True)
+                dump_db_process.stdout.close()
+                dump_db_process.wait()
+                restore_db_process.wait()
+            except subprocess.CalledProcessError as e:
+                self.logger.error('Error during copying sql database : %s' % e)
+        return attacker_db
 
     @asyncio.coroutine
-    def create_query_map(self,db_name, ):
+    def insert_dummy_data(self, table_name, data_tokens, cursor):
+        inserted_data, token_list = yield from self.generate_dummy_data(data_tokens)
+
+        inserted_string_patt = '%s'
+        if len(token_list) > 1:
+            inserted_string_patt += ','
+            inserted_string_patt *= len(token_list)
+            inserted_string_patt = inserted_string_patt[:-1]
+
+        yield from cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
+                                      inserted_string_patt + ")", inserted_data)
+
+    @asyncio.coroutine
+    def create_query_map(self, db_name):
         query_map = {}
         tables = []
-
         conn = yield from self.connect_to_db()
         cursor = yield from conn.cursor()
 
@@ -93,19 +111,24 @@ class MySQLDBHelper:
 
         try:
             yield from cursor.execute(select_tables.format(db_name=db_name))
-            for row in cursor.fetchall():
+            result = yield from cursor.fetchall()
+            for row in result:
                 tables.append(row[0])
         except Exception as e:
             self.logger.error('Error during query map creation')
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
-                query = 'SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema= \'{db_name}\''
+                query = 'SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name= \'{table_name}\' AND table_schema= \'{db_name}\''
                 columns = []
                 try:
-                    yield from cursor.execute(query.format(db_name=db_name))
-                    for row in cursor.fetchall():
-                        columns.append(row[0])
+                    yield from cursor.execute(query.format(table_name=table, db_name=db_name))
+                    result = yield from cursor.fetchall()
+                    for row in result:
+                        if (row[7] == 'int'):
+                            columns.append(dict(name=row[3], type='INTEGER'))
+                        else:
+                            columns.append(dict(name=row[3], type='TEXT'))
                     query_map[table] = columns
                 except :
                     self.logger.error('Error during query map creation')

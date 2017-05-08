@@ -13,11 +13,10 @@ class SQLITEDBHelper(BaseDBHelper):
     def __init__(self):
         super(SQLITEDBHelper, self).__init__()
         self.logger = logging.getLogger('tanner.sqlite_db_helper.SQLITEDBHelper')
-        self.inserted_string_pattern = '?'
 
     @asyncio.coroutine
     def setup_db_from_config(self, working_dir, name=None):
-        config = yield from self.read_config(working_dir)
+        config = yield from self.read_config()
         if name is not None:
             db_name = os.path.join(working_dir, name)
         else:
@@ -48,6 +47,20 @@ class SQLITEDBHelper(BaseDBHelper):
         else:
             shutil.copy(src, dst)
         return dst
+
+    @asyncio.coroutine
+    def insert_dummy_data(self, table_name, data_tokens, cursor):
+        inserted_data, token_list = yield from self.generate_dummy_data(data_tokens)
+
+        inserted_string_patt = '?'
+        if len(token_list) > 1:
+            inserted_string_patt += ','
+            inserted_string_patt *= len(token_list)
+            inserted_string_patt = inserted_string_patt[:-1]
+
+        cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
+                           inserted_string_patt + ")", inserted_data)
+
 
     @asyncio.coroutine
     def create_query_map(self, working_dir, db_name, ):

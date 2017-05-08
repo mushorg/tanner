@@ -12,7 +12,7 @@ class BaseDBHelper:
         self.logger = logging.getLogger('tanner.base_db_helper.BaseDBHelper')
 
     @asyncio.coroutine
-    def read_config(self, working_dir):
+    def read_config(self):
         with open(TannerConfig.get('DATA', 'db_config')) as db_config:
             try:
                 config = json.load(db_config)
@@ -21,9 +21,8 @@ class BaseDBHelper:
             else:
                 return config
 
-    @staticmethod
     @asyncio.coroutine
-    def insert_dummy_data(table_name, data_tokens, cursor):
+    def generate_dummy_data(self, data_tokens):
         """
         Insert dummy data based on data tokens
         I - integer id
@@ -58,11 +57,4 @@ class BaseDBHelper:
                     values.append(data)
             inserted_data.append(tuple(values))
 
-        inserted_string_patt = self.inserted_string_pattern
-        if len(token_list) > 1:
-            inserted_string_patt += ','
-            inserted_string_patt *= len(token_list)
-            inserted_string_patt = inserted_string_patt[:-1]
-
-        cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
-                           inserted_string_patt + ")", inserted_data)
+        return inserted_data, token_list
