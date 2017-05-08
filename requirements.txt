@@ -1,4 +1,5 @@
 aiohttp<2.0
+aiomysql
 elizabeth
 yarl
 redis
