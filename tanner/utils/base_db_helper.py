@@ -11,7 +11,6 @@ class BaseDBHelper:
     def __init__(self):
         self.logger = logging.getLogger('tanner.base_db_helper.BaseDBHelper')
 
-    @asyncio.coroutine
     def read_config(self):
         with open(TannerConfig.get('DATA', 'db_config')) as db_config:
             try:
@@ -21,7 +20,6 @@ class BaseDBHelper:
             else:
                 return config
 
-    @asyncio.coroutine
     def generate_dummy_data(self, data_tokens):
         """
         Insert dummy data based on data tokens

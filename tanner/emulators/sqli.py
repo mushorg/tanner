@@ -24,7 +24,6 @@ class SqliEmulator:
         sqli = pylibinjection.detect_sqli(payload)
         return int(sqli['sqli'])
 
-    @asyncio.coroutine
     def check_post_data(self, data):
         sqli_data = []
         for (param, value) in data['post_data'].items():
@@ -33,7 +32,6 @@ class SqliEmulator:
                 sqli_data.append((param, value))
         return sqli_data
 
-    @asyncio.coroutine
     def check_get_data(self, path):
         request_query = urllib.parse.urlparse(path).query
         parsed_queries = urllib.parse.parse_qsl(request_query)
@@ -47,7 +45,6 @@ class SqliEmulator:
         parsed_query = urllib.parse.parse_qsl(query)
         return parsed_query
 
-    @asyncio.coroutine
     def map_query(self, query):
         db_query = None
         param = query[0][0]
@@ -66,26 +63,24 @@ class SqliEmulator:
 
         return db_query
 
-    @asyncio.coroutine
-    def get_sqli_result(self, query, attacker_db):
-        db_query = yield from self.map_query(query)
+    async def get_sqli_result(self, query, attacker_db):
+        db_query = self.map_query(query)
         if db_query is None:
             result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
                         right syntax to use near {} at line 1'.format(query[0][0])
         else:
-            execute_result = yield from self.sqli_emulator.execute_query(db_query, attacker_db)
+            execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
                 execute_result = ' '.join([str(x) for x in execute_result])
             result = dict(value=execute_result, page='/index.html')
         return result
 
-    @asyncio.coroutine
-    def handle(self, path, session, post_request=0):
+    async def handle(self, path, session, post_request=0):
         if self.query_map is None:
-            self.query_map = yield from self.sqli_emulator.setup_db(self.query_map)
+            self.query_map = await self.sqli_emulator.setup_db(self.query_map)
         if not post_request:
             path = self.prepare_get_query(path)
-        attacker_db = yield from self.sqli_emulator.create_attacker_db(session)
-        result = yield from self.get_sqli_result(path, attacker_db)
+        attacker_db = await self.sqli_emulator.create_attacker_db(session)
+        result = await self.get_sqli_result(path, attacker_db)
         return result

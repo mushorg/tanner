@@ -62,10 +62,9 @@ class Session:
     def associate_db(self, db_name):
         self.associated_db = db_name
 
-    @asyncio.coroutine
-    def remove_associated_db(self):
+    async def remove_associated_db(self):
         if(TannerConfig.get('SQLI', 'type') == 'MySQL'):
-            yield from MySQLDBHelper().delete_db(self.associated_db)
+            await MySQLDBHelper().delete_db(self.associated_db)
         else:
             SQLITEDBHelper().delete_db(self.associated_db)
 

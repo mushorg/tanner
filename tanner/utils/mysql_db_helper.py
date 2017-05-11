@@ -12,66 +12,61 @@ class MySQLDBHelper(BaseDBHelper):
         super(MySQLDBHelper, self).__init__()
         self.logger = logging.getLogger('tanner.db_helper.MySQLDBHelper')
 
-    @asyncio.coroutine
-    def connect_to_db(self):
-        conn = yield from aiomysql.connect(host = TannerConfig.get('SQLI', 'host'),
-                                           user = TannerConfig.get('SQLI', 'user'),
-                                           password = TannerConfig.get('SQLI', 'password')
-                                           )
+    async def connect_to_db(self):
+        conn = await aiomysql.connect(host = TannerConfig.get('SQLI', 'host'),
+                                      user = TannerConfig.get('SQLI', 'user'),
+                                      password = TannerConfig.get('SQLI', 'password')
+                                      )
         return conn
 
-    @asyncio.coroutine
-    def check_db_exists(self, db_name, ):
-        conn = yield from self.connect_to_db()
-        cursor = yield from conn.cursor()
+    async def check_db_exists(self, db_name, ):
+        conn = await self.connect_to_db()
+        cursor = await conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
         check_DB_exists_query+= 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
-        yield from cursor.execute(check_DB_exists_query)
-        result = yield from cursor.fetchall()
+        await cursor.execute(check_DB_exists_query)
+        result = await cursor.fetchall()
         #return 0 if no such database exists else 1
         return len(result)
         
-    @asyncio.coroutine
-    def setup_db_from_config(self, name=None):
-        config = yield from self.read_config()
+    async def setup_db_from_config(self, name=None):
+        config = self.read_config()
         if name is not None:
             db_name = name
         else:
             db_name = config['name']
                
-        conn = yield from self.connect_to_db()
-        cursor = yield from conn.cursor()
+        conn = await self.connect_to_db()
+        cursor = await conn.cursor()
         create_db_query = 'CREATE DATABASE {db_name}'
-        yield from cursor.execute(create_db_query.format(db_name=db_name))
-        yield from cursor.execute('USE {db_name}'.format(db_name=db_name))
+        await cursor.execute(create_db_query.format(db_name=db_name))
+        await cursor.execute('USE {db_name}'.format(db_name=db_name))
 
         for table in config['tables']:
             query = table['schema']
-            yield from cursor.execute(query)
-            yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
-            yield from conn.commit()
+            await cursor.execute(query)
+            await self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
+            await conn.commit()
 
         conn.close()
 
-    @asyncio.coroutine
-    def delete_db(self, db):
-        conn = yield from self.connect_to_db()
-        cursor = yield from conn.cursor()
+    async def delete_db(self, db):
+        conn = await self.connect_to_db()
+        cursor = await conn.cursor()
         delete_db_query = 'DROP DATABASE {db_name}'
-        yield from cursor.execute(delete_db_query.format(db_name=db))
-        yield from conn.commit()
+        await cursor.execute(delete_db_query.format(db_name=db))
+        await conn.commit()
         conn.close()
 
-    @asyncio.coroutine
-    def copy_db(self, user_db, attacker_db):
-        db_exists = yield from self.check_db_exists(attacker_db)
+    async def copy_db(self, user_db, attacker_db):
+        db_exists = await self.check_db_exists(attacker_db)
         if db_exists:
             self.logger.info('Attacker db already exists')
         else:
             #create new attacker db
-            conn = yield from self.connect_to_db()
-            cursor = yield from conn.cursor()
-            yield from cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
+            conn = await self.connect_to_db()
+            cursor = await conn.cursor()
+            await cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
             # copy user db to attacker db
             dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
@@ -82,10 +77,10 @@ class MySQLDBHelper(BaseDBHelper):
                                              db_name=user_db
                                              )
             restore_db_cmd = restore_db_cmd.format(host = TannerConfig.get('SQLI', 'host'),
-                                                user = TannerConfig.get('SQLI', 'user'),
-                                                password = TannerConfig.get('SQLI', 'password'),
-                                                db_name=attacker_db
-                                                )
+                                                   user = TannerConfig.get('SQLI', 'user'),
+                                                   password = TannerConfig.get('SQLI', 'password'),
+                                                   db_name=attacker_db
+                                                   )
             try:
                 dump_db_process = subprocess.Popen(dump_db_cmd, stdout = subprocess.PIPE, shell = True)
                 restore_db_process = subprocess.Popen(restore_db_cmd, stdin = dump_db_process.stdout, shell = True)
@@ -96,9 +91,8 @@ class MySQLDBHelper(BaseDBHelper):
                 self.logger.error('Error during copying sql database : %s' % e)
         return attacker_db
 
-    @asyncio.coroutine
-    def insert_dummy_data(self, table_name, data_tokens, cursor):
-        inserted_data, token_list = yield from self.generate_dummy_data(data_tokens)
+    async def insert_dummy_data(self, table_name, data_tokens, cursor):
+        inserted_data, token_list = self.generate_dummy_data(data_tokens)
 
         inserted_string_patt = '%s'
         if len(token_list) > 1:
@@ -106,21 +100,20 @@ class MySQLDBHelper(BaseDBHelper):
             inserted_string_patt *= len(token_list)
             inserted_string_patt = inserted_string_patt[:-1]
 
-        yield from cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
+        await cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
                                       inserted_string_patt + ")", inserted_data)
 
-    @asyncio.coroutine
-    def create_query_map(self, db_name):
+    async def create_query_map(self, db_name):
         query_map = {}
         tables = []
-        conn = yield from self.connect_to_db()
-        cursor = yield from conn.cursor()
+        conn = await self.connect_to_db()
+        cursor = await conn.cursor()
 
         select_tables = 'SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema= \'{db_name}\''
 
         try:
-            yield from cursor.execute(select_tables.format(db_name=db_name))
-            result = yield from cursor.fetchall()
+            await cursor.execute(select_tables.format(db_name=db_name))
+            result = await cursor.fetchall()
             for row in result:
                 tables.append(row[0])
         except Exception as e:
@@ -131,8 +124,8 @@ class MySQLDBHelper(BaseDBHelper):
                 query = 'SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name= \'{table_name}\' AND table_schema= \'{db_name}\''
                 columns = []
                 try:
-                    yield from cursor.execute(query.format(table_name=table, db_name=db_name))
-                    result = yield from cursor.fetchall()
+                    await cursor.execute(query.format(table_name=table, db_name=db_name))
+                    result = await cursor.fetchall()
                     for row in result:
                         if (row[7] == 'int'):
                             columns.append(dict(name=row[3], type='INTEGER'))

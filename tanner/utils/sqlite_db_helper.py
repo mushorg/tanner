@@ -14,9 +14,8 @@ class SQLITEDBHelper(BaseDBHelper):
         super(SQLITEDBHelper, self).__init__()
         self.logger = logging.getLogger('tanner.sqlite_db_helper.SQLITEDBHelper')
 
-    @asyncio.coroutine
-    def setup_db_from_config(self, working_dir, name=None):
-        config = yield from self.read_config()
+    async def setup_db_from_config(self, working_dir, name=None):
+        config = self.read_config()
         if name is not None:
             db_name = os.path.join(working_dir, name)
         else:
@@ -27,7 +26,7 @@ class SQLITEDBHelper(BaseDBHelper):
         for table in config['tables']:
             query = table['schema']
             cursor.execute(query)
-            yield from self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
+            await self.insert_dummy_data(table['table_name'], table['data_tokens'], cursor)
             conn.commit()
 
         conn.close()
@@ -43,7 +42,6 @@ class SQLITEDBHelper(BaseDBHelper):
         if db is not None and os.path.exists(db):
             os.remove(db)
 
-    @asyncio.coroutine
     def copy_db(self, src, dst, working_dir):
         src = self.get_abs_path(src, working_dir)
         dst = self.get_abs_path(dst, working_dir)
@@ -53,9 +51,8 @@ class SQLITEDBHelper(BaseDBHelper):
             shutil.copy(src, dst)
         return dst
 
-    @asyncio.coroutine
-    def insert_dummy_data(self, table_name, data_tokens, cursor):
-        inserted_data, token_list = yield from self.generate_dummy_data(data_tokens)
+    async def insert_dummy_data(self, table_name, data_tokens, cursor):
+        inserted_data, token_list = self.generate_dummy_data(data_tokens)
 
         inserted_string_patt = '?'
         if len(token_list) > 1:
@@ -66,8 +63,6 @@ class SQLITEDBHelper(BaseDBHelper):
         cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
                            inserted_string_patt + ")", inserted_data)
 
-
-    @asyncio.coroutine
     def create_query_map(self, working_dir, db_name, ):
         query_map = {}
         tables = []
