@@ -54,6 +54,15 @@ class MySQLDBHelper(BaseDBHelper):
         conn.close()
 
     @asyncio.coroutine
+    def delete_db(self, db):
+        conn = yield from self.connect_to_db()
+        cursor = yield from conn.cursor()
+        delete_db_query = 'DROP DATABASE {db_name}'
+        yield from cursor.execute(delete_db_query.format(db_name=db))
+        yield from conn.commit()
+        conn.close()
+
+    @asyncio.coroutine
     def copy_db(self, user_db, attacker_db):
         db_exists = yield from self.check_db_exists(attacker_db)
         if db_exists:

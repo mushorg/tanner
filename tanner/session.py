@@ -1,8 +1,11 @@
 import json
 import time
-import os
+import asyncio
 import uuid
 
+from tanner.config import TannerConfig
+from tanner.utils.mysql_db_helper import MySQLDBHelper
+from tanner.utils.sqlite_db_helper import SQLITEDBHelper
 
 class Session:
     KEEP_ALIVE_TIME = 75
@@ -59,9 +62,12 @@ class Session:
     def associate_db(self, db_name):
         self.associated_db = db_name
 
+    @asyncio.coroutine
     def remove_associated_db(self):
-        if self.associated_db is not None and os.path.exists(self.associated_db):
-            os.remove(self.associated_db)
+        if(TannerConfig.get('SQLI', 'type') == 'MySQL'):
+            yield from MySQLDBHelper().delete_db(self.associated_db)
+        else:
+            SQLITEDBHelper().delete_db(self.associated_db)
 
     def get_uuid(self):
         return str(self.sess_uuid)

@@ -38,6 +38,11 @@ class SQLITEDBHelper(BaseDBHelper):
             path = os.path.normpath(os.path.join(working_dir, path))
         return path
 
+    @staticmethod
+    def delete_db(db):
+        if db is not None and os.path.exists(db):
+            os.remove(db)
+
     @asyncio.coroutine
     def copy_db(self, src, dst, working_dir):
         src = self.get_abs_path(src, working_dir)
