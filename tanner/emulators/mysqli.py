@@ -5,7 +5,7 @@ from tanner import config
 
 
 class MySQLIEmulator:
-	def __init__(self, working_dir, db_name):
+	def __init__(self, db_name):
 		self.db_name = db_name
 		self.helper = mysql_db_helper.MySQLDBHelper()
 
