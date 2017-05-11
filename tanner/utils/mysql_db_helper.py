@@ -14,9 +14,9 @@ class MySQLDBHelper(BaseDBHelper):
 
     @asyncio.coroutine
     def connect_to_db(self):
-        conn = yield from aiomysql.connect(host = TannerConfig.get('MYSQLI', 'host'),
-                                           user = TannerConfig.get('MYSQLI', 'user'),
-                                           password = TannerConfig.get('MYSQLI', 'password')
+        conn = yield from aiomysql.connect(host = TannerConfig.get('SQLI', 'host'),
+                                           user = TannerConfig.get('SQLI', 'user'),
+                                           password = TannerConfig.get('SQLI', 'password')
                                            )
         return conn
 
@@ -67,14 +67,14 @@ class MySQLDBHelper(BaseDBHelper):
             # copy user db to attacker db
             dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
             restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
-            dump_db_cmd = dump_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
-                                             user = TannerConfig.get('MYSQLI', 'user'),
-                                             password = TannerConfig.get('MYSQLI', 'password'),
+            dump_db_cmd = dump_db_cmd.format(host = TannerConfig.get('SQLI', 'host'),
+                                             user = TannerConfig.get('SQLI', 'user'),
+                                             password = TannerConfig.get('SQLI', 'password'),
                                              db_name=user_db
                                              )
-            restore_db_cmd = restore_db_cmd.format(host = TannerConfig.get('MYSQLI', 'host'),
-                                                user = TannerConfig.get('MYSQLI', 'user'),
-                                                password = TannerConfig.get('MYSQLI', 'password'),
+            restore_db_cmd = restore_db_cmd.format(host = TannerConfig.get('SQLI', 'host'),
+                                                user = TannerConfig.get('SQLI', 'user'),
+                                                password = TannerConfig.get('SQLI', 'password'),
                                                 db_name=attacker_db
                                                 )
             try:

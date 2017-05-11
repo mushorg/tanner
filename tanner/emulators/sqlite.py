@@ -24,7 +24,7 @@ class SQLITEEmulator:
 
     @asyncio.coroutine
     def create_attacker_db(self, session):
-        attacker_db_name = 'attacker_' session.sess_uuid.hex
+        attacker_db_name = 'attacker_' + session.sess_uuid.hex
         attacker_db = yield from self.helper.copy_db(self.db_name,
                                                      attacker_db_name,
                                                      self.working_dir

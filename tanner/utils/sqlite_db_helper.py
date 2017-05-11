@@ -20,7 +20,7 @@ class SQLITEDBHelper(BaseDBHelper):
         if name is not None:
             db_name = os.path.join(working_dir, name)
         else:
-            db_name = os.path.join(working_dir, config['name'] + '.db')
+            db_name = os.path.join(working_dir, config['name'])
 
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()
