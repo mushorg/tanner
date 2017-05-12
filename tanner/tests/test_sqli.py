@@ -27,13 +27,13 @@ class SqliTest(unittest.TestCase):
     def test_map_query_id(self):
         query = [('id', '1\'UNION SELECT 1,2,3,4')]
         assert_result = 'SELECT * from users WHERE id=1 UNION SELECT 1,2,3,4;'
-        result = self.loop.run_until_complete(self.handler.map_query(query))
+        result = self.handler.map_query(query)
         self.assertEqual(assert_result, result)
 
     def test_map_query_comments(self):
         query = [('comment', 'some_comment" UNION SELECT 1,2 AND "1"="1')]
         assert_result = 'SELECT * from comments WHERE comment="some_comment" UNION SELECT 1,2 AND "1"="1";'
-        result = self.loop.run_until_complete(self.handler.map_query(query))
+        result = self.handler.map_query(query)
         self.assertEqual(assert_result, result)
 
     def test_map_query_error(self):
