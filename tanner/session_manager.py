@@ -72,7 +72,7 @@ class SessionManager:
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
-            sess.remove_associated_db()
+            yield from sess.remove_associated_db()
             self.sessions.remove(sess)
             try:
                 yield from redis_client.set(sess.get_uuid(), sess.to_json())
