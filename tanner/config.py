@@ -10,7 +10,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': '/opt/tanner'},
-                   'SQLI': {'db_name': 'tanner.db'},
+                   'SQLI': {'type':'MySQL', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
                    'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
                    'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
                    'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}

@@ -24,22 +24,16 @@ class SqliTest(unittest.TestCase):
         self.handler = sqli.SqliEmulator('test.db', '/tmp/')
         self.handler.query_map = query_map
 
-    def test_db_copy(self):
-        session = mock.Mock()
-        session.sess_uuid.hex = 'ad16014d-9b4a-451d-a6d1-fc8681566458'
-        self.loop.run_until_complete(self.handler.create_attacker_db(session))
-        self.assertTrue(os.path.exists('/tmp/db/ad16014d-9b4a-451d-a6d1-fc8681566458.db'))
-
     def test_map_query_id(self):
         query = [('id', '1\'UNION SELECT 1,2,3,4')]
         assert_result = 'SELECT * from users WHERE id=1 UNION SELECT 1,2,3,4;'
-        result = self.loop.run_until_complete(self.handler.map_query(query))
+        result = self.handler.map_query(query)
         self.assertEqual(assert_result, result)
 
     def test_map_query_comments(self):
         query = [('comment', 'some_comment" UNION SELECT 1,2 AND "1"="1')]
         assert_result = 'SELECT * from comments WHERE comment="some_comment" UNION SELECT 1,2 AND "1"="1";'
-        result = self.loop.run_until_complete(self.handler.map_query(query))
+        result = self.handler.map_query(query)
         self.assertEqual(assert_result, result)
 
     def test_map_query_error(self):
