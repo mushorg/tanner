@@ -11,9 +11,10 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': '/opt/tanner'},
                    'SQLI': {'db_name': 'tanner.db'},
-                   'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
+                   'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
                    'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-                   'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+                   'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
+                   'CLEANLOG': {'enabled': 'False'}
                    }
 
 
