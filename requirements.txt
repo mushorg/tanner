@@ -1,7 +1,7 @@
 aiohttp>=2.0
 aiomysql
 docker
-elizabeth
+elizabeth==0.3.27
 yarl
 redis
 asyncio_redis
