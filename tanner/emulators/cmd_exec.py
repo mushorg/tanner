@@ -35,7 +35,7 @@ class CmdExecEmulator:
 		container.kill()
 		if 'error' in execute_result:
 			execute_result = 'bash: command not found: {}'.format(cmd)
-		result = dict(value=str(execute_result), page='/index.html')
+		result = dict(value=execute_result, page='/index.html')
 		return result
 
 	async def delete_env(self, container_name):

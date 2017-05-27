@@ -1,5 +1,6 @@
 aiohttp>=2.0
 aiomysql
+docker
 elizabeth
 yarl
 redis
