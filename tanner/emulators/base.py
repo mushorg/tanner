@@ -3,7 +3,7 @@ import re
 import urllib.parse
 import yarl
 
-from tanner.emulators import lfi, rfi, sqli, xss
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
 from tanner.utils import patterns
 
 
@@ -12,7 +12,8 @@ class BaseHandler:
     patterns = {
         patterns.RFI_ATTACK: dict(name='rfi', order=2),
         patterns.LFI_ATTACK: dict(name='lfi', order=2),
-        patterns.XSS_ATTACK: dict(name='xss', order=3)
+        patterns.XSS_ATTACK: dict(name='xss', order=3),
+        patterns.CMD_ATTACK: dict(name='cmd_exec', order=3)
     }
 
     def __init__(self, base_dir, db_name, loop=None):
@@ -20,7 +21,8 @@ class BaseHandler:
             'rfi': rfi.RfiEmulator(base_dir, loop),
             'lfi': lfi.LfiEmulator(base_dir),
             'xss': xss.XssEmulator(),
-            'sqli': sqli.SqliEmulator(db_name, base_dir)
+            'sqli': sqli.SqliEmulator(db_name, base_dir),
+            'cmd_exec': cmd_exec.CmdExecEmulator()
         }
 
     async def handle_post(self, session, data):
