@@ -90,30 +90,27 @@ class TestSessions(unittest.TestCase):
     def test_adding_new_session(self):
         data = {
             'peer': {
+                'ip': None,
+                'port': None
             },
             'headers': {},
             'path': '/foo',
             'uuid': None,
             'cookies': {'sess_uuid': None}
         }
-        sess = yield from self.handler.add_or_update_session(data)
-        assertion_data = {
-            'peer': {
-                'ip': None,
-                'port': None
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
-        }
-        assertion_session = session.Session(assertion_data)
-        self.assertEquals(session, assertion_session)
+
+        async def sess_sadd(key, value):
+            return None
+
+        redis_mock = mock.Mock()
+        redis_mock.sadd = sess_sadd
+        sess = self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
+
+        self.assertEquals([sess], self.handler.sessions)
 
     def test_updating_session(self):
-        @asyncio.coroutine
-        def sess_sadd(key, value):
+
+        async  def sess_sadd(key, value):
             return None
 
         data = {
@@ -136,12 +133,11 @@ class TestSessions(unittest.TestCase):
         self.assertEqual(self.handler.sessions[0].count, 2)
 
     def test_deleting_sessions(self):
-        @asyncio.coroutine
-        def analyze(session_key, redis_client):
+
+        async def analyze(session_key, redis_client):
             return None
 
-        @asyncio.coroutine
-        def sess_set(key, val):
+        async def sess_set(key, val):
             return None
 
         self.handler.analyzer.analyze = analyze

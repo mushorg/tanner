@@ -28,7 +28,8 @@ def main():
     print("Error logs will be stored in", error_log_file_name)
     if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
         print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
-    tanner.server.run_server()
+    tanner = server.TannerServer()
+    tanner.start()
 
 
 if __name__ == "__main__":

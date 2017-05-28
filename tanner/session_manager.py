@@ -11,16 +11,15 @@ class SessionManager:
     def __init__(self, loop=None):
         self.sessions = []
         self.analyzer = SessionAnalyzer(loop=loop)
-        self.logger = logging.getLogger('tanner.session_manager.SessionManager')
+        self.logger = logging.getLogger(__name__)
 
-    @asyncio.coroutine
-    def add_or_update_session(self, raw_data, redis_client):
+    async def add_or_update_session(self, raw_data, redis_client):
         # prepare the list of sessions
-        yield from self.delete_old_sessions(redis_client)
+        await self.delete_old_sessions(redis_client)
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
-        yield from redis_client.sadd('snare_ids', [valid_data['uuid']])
+        await redis_client.sadd('snare_ids', [valid_data['uuid']])
         session = self.get_session(valid_data)
         if session is None:
             try:
@@ -67,16 +66,15 @@ class SessionManager:
                 break
         return session
 
-    @asyncio.coroutine
-    def delete_old_sessions(self, redis_client):
+    async def delete_old_sessions(self, redis_client):
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
-            yield from sess.remove_associated_db()
+            await sess.remove_associated_db()
             self.sessions.remove(sess)
             try:
-                yield from redis_client.set(sess.get_uuid(), sess.to_json())
-                yield from self.analyzer.analyze(sess.get_uuid(), redis_client)
+                await redis_client.set(sess.get_uuid(), sess.to_json())
+                await self.analyzer.analyze(sess.get_uuid(), redis_client)
             except asyncio_redis.NotConnectedError as redis_error:
                 self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
                 self.sessions.append(sess)
