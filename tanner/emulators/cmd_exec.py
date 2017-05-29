@@ -10,6 +10,11 @@ class CmdExecEmulator:
 	def __init__(self):
 		self.docker_client = docker.from_env(version='auto')
 		self.host_image = TannerConfig.get('CMD_EXEC', 'host_image')
+		self.setup_host_image()
+
+	def setup_host_image(self):
+		if not self.docker_client.images.list(self.host_image):
+			self.docker_client.images.pull(self.host_image)
 
 	async def get_container(self, container_name):
 		container_if_exists = self.docker_client.containers.list(all = True,
