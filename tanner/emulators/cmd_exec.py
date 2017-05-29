@@ -3,11 +3,13 @@ import docker
 import re
 import urllib.parse
 
+from tanner.config import TannerConfig
 from tanner.utils import patterns
 
 class CmdExecEmulator:
 	def __init__(self):
 		self.docker_client = docker.from_env(version='auto')
+		self.host_image = TannerConfig.get('CMD_EXEC', 'host_image')
 
 	async def get_container(self, container_name):
 		container_if_exists = self.docker_client.containers.list(all = True,
@@ -22,7 +24,7 @@ class CmdExecEmulator:
 		container_name = 'attacker_' + session.sess_uuid.hex
 		container = await self.get_container(container_name)
 		if not container:
-			container = self.docker_client.containers.create(image = 'ubuntu:latest',
+			container = self.docker_client.containers.create(image = self.host_image,
 															 stdin_open = True, 
 															 name = container_name
 															 )
