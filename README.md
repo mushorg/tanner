@@ -32,6 +32,12 @@ Getting Started
 2. In PHP Sandbox directory, run sandbox: ``sudo python3 sandbox.py``
 
 
+### Setup Libinjection
+
+1. Install swig ``sudo apt-get install swig``
+2. Clone Libinjection from [git] (https://github.com/client9/libinjection)
+3. Install libinjection for Python ``cd libinjection/python && make && make install``
+
 
 ### Setup and run TANNER
 
