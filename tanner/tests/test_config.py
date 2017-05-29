@@ -4,7 +4,6 @@ import unittest
 
 from tanner import config
 
-
 class TestCongif(unittest.TestCase):
     def setUp(self):
         config.TannerConfig.config = None
@@ -16,6 +15,7 @@ class TestCongif(unittest.TestCase):
             'REDIS': {'host': 'localhost', 'port': '1337', 'poolsize': '40', 'timeout': '5'},
             'EMULATORS': {'root_dir': '/tmp/user_tanner'},
             'SQLI': {'type':'SQLITE', 'db_name': 'user_tanner_db', 'host':'localhost', 'user':'user_name', 'password':'user_pass'},
+            'CMD_EXEC': {'host_image': 'test_image'},
 			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'}
@@ -60,6 +60,7 @@ class TestCongif(unittest.TestCase):
             'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
+            'CMD_EXEC': {'host_image': 'busybox:latest'},
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
