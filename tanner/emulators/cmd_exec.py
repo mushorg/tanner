@@ -10,16 +10,14 @@ class CmdExecEmulator:
 		self.docker_client = docker.from_env(version='auto')
 		self.host_image = TannerConfig.get('CMD_EXEC', 'host_image')
 		self.logger = logging.getLogger('tanner.cmd_exec_emulator.CmdExecEmulator')
-		self.setup_host_image()
 
-	def setup_host_image(self):
+	async def setup_host_image(self):
 		try:
 			if not self.docker_client.images.list(self.host_image):
 				self.docker_client.images.pull(self.host_image)
 		except docker.errors as docker_error:
 			self.logger.error('Error while pulling %s image %s', self.host_image, docker_error)
 		
-
 	async def get_container(self, container_name):
 		container = None
 		try:
@@ -33,6 +31,7 @@ class CmdExecEmulator:
 		return container
 	
 	async def create_attacker_env(self, session):
+		await self.setup_host_image()
 		container_name = 'attacker_' + session.sess_uuid.hex
 		container = await self.get_container(container_name)
 		if not container:
