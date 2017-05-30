@@ -1,5 +1,6 @@
 import asyncio
 import docker
+# TODO : Replace docker with aiodocker
 import logging
 
 from tanner.config import TannerConfig
