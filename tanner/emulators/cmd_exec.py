@@ -7,7 +7,10 @@ from tanner.utils import patterns
 
 class CmdExecEmulator:
 	def __init__(self):
-		self.docker_client = docker.from_env(version='auto')
+		try:
+			self.docker_client = docker.from_env(version='auto')
+		except docker.errors as docker_error:
+			self.logger.error('Error while connecting to docker service %s', docker_error)
 		self.host_image = TannerConfig.get('CMD_EXEC', 'host_image')
 		self.logger = logging.getLogger('tanner.cmd_exec_emulator.CmdExecEmulator')
 
