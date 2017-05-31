@@ -53,12 +53,10 @@ class CmdExecEmulator:
 		execute_result = None
 		try:
 			container.start()
-			execute_result = container.exec_run(cmd).decode('utf-8')
+			execute_result = container.exec_run(['sh', '-c', cmd]).decode('utf-8')
 			container.kill()
 		except docker.errors.APIError as server_error:
 			self.logger.error('Error while executing command %s in container %s', cmd, server_error)
-		if execute_result is not None and 'error' in execute_result:
-			execute_result = 'bash: command not found: {}'.format(cmd)
 		result = dict(value= execute_result, page= '/index.html')
 		return result
 
