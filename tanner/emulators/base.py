@@ -12,8 +12,7 @@ class BaseHandler:
     patterns = {
         patterns.RFI_ATTACK: dict(name='rfi', order=2),
         patterns.LFI_ATTACK: dict(name='lfi', order=2),
-        patterns.XSS_ATTACK: dict(name='xss', order=3),
-        patterns.CMD_ATTACK: dict(name='cmd_exec', order=3)
+        patterns.XSS_ATTACK: dict(name='xss', order=3)
     }
 
     def __init__(self, base_dir, db_name, loop=None):
@@ -35,6 +34,12 @@ class BaseHandler:
             if sqli_data:
                 sqli_result = await self.emulators['sqli'].handle(sqli_data, session, 1)
                 detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
+            else:
+                cmd_exec_data = await self.emulators['cmd_exec'].check_post_data(data)
+                if cmd_exec_data:
+                    cmd_exec_results = await self.emulators['cmd_exec'].handle(cmd_exec_data[0][1], session)
+                    detection = {'name': 'cmd_exec', 'order': 3, 'payload': cmd_exec_results}
+
         return detection
 
     async def handle_get(self, session, path):
@@ -56,10 +61,15 @@ class BaseHandler:
                         attack_value = value
 
         if detection['order'] <= 1:
-            sqli = self.emulators['sqli'].check_get_data(path)
-            if sqli:
-                detection = {'name': 'sqli', 'order': 2}
-                attack_value = path
+            cmd_exec = await self.emulators['cmd_exec'].check_get_data(path)
+            if cmd_exec:
+                detection = {'name': 'cmd_exec', 'order': 3}
+                attack_value = cmd_exec[0][1]
+            else:
+                sqli = await self.emulators['sqli'].check_get_data(path)
+                if sqli:
+                    detection = {'name': 'sqli', 'order': 2}
+                    attack_value = path
 
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_value, session)

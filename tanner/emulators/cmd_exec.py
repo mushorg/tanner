@@ -1,5 +1,6 @@
 import asyncio
 import docker
+import yarl
 # TODO : Replace docker with aiodocker
 import logging
 
@@ -67,7 +68,24 @@ class CmdExecEmulator:
 				container.remove(force = True)
 		except docker.errors.APIError as server_error:
 			self.logger.error('Error while removing container %s', server_error)
+
+	async def check_post_data(self, data):
+		cmd_data = []
+		for (param_id, param_value) in data['post_data'].items():
+			if patterns.CMD_ATTACK.match(param_value):
+				cmd_data.append((param_id, param_value))
+		return cmd_data
 		
+	async def check_get_data(self, path):
+		cmd_data = []
+		query = yarl.URL(path).query_string
+		params = query.split('&')
+		for param in params:
+			if len(param.split('=')) == 2:
+				param_id, param_value = param.split('=')
+				if patterns.CMD_ATTACK.match(param_value):
+					cmd_data.append((param_id, param_value))
+		return cmd_data
 
 	async def handle(self, value, session= None):
 		container = await self.create_attacker_env(session)
