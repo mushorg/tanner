@@ -25,6 +25,9 @@ There are 8 different sections :
   * **SQLI**
 
     :db_name: THe name of database used in SQLI emulator
+  * **CMD_EXEC**
+
+    :host_image: The image which emulates commands in Command Execution Emulator
   * **LOGGER**
 
     :log_file: Location of tanner log file
@@ -48,6 +51,7 @@ If no file is specified, following json will be used as default:
      'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
      'EMULATORS': {'root_dir': '/opt/tanner'},
      'SQLI': {'db_name': 'tanner.db'},
+     'CMD_EXEC': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
      'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
      'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}

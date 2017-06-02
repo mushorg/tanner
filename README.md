@@ -31,7 +31,11 @@ Getting Started
 1. For PHP Sandbox setup, see sandbox [manual] (https://github.com/mushorg/phpox)
 2. In PHP Sandbox directory, run sandbox: ``sudo python3 sandbox.py``
 
+### Setup Docker
 
+
+1. Install [docker](https://docs.docker.com/engine/installation/linux/ubuntu/)
+2. Pull the required image to use [default : ``busybox:latest``]
 
 ### Setup and run TANNER
 

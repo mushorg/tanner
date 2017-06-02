@@ -82,6 +82,19 @@ The emulator copies the original database (see :doc:`db_setup` for more info abo
 It uses UUID of the session for the attacker's db name. Every query is executed on the attacker's db.
 The emulator returns the result of the execution and the page where SNARE should show the result.
 
+Command Execution Emulator
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It emulates `Command Execution`_ vulnerability. This attack is detected with pattern.
+
+::
+
+.*(alias|cat|cd|cp|echo|exec|find|for|grep|ifconfig|ls|man|mkdir|netstat|ping|ps|pwd|uname|wget|touch|while).*
+
+* Each param value is checked against the pattern and ``command`` is extracted.
+* The ``command`` is executed in a docker container safely.
+* Results from container is injected into the index page.
+
 
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
