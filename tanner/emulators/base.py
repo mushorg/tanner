@@ -66,7 +66,7 @@ class BaseHandler:
                 detection = {'name': 'cmd_exec', 'order': 3}
                 attack_value = cmd_exec[0][1]
             else:
-                sqli = await self.emulators['sqli'].check_get_data(path)
+                sqli = self.emulators['sqli'].check_get_data(path)
                 if sqli:
                     detection = {'name': 'sqli', 'order': 2}
                     attack_value = path
