@@ -29,7 +29,7 @@ class BaseHandler:
         if xss_result:
             detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
         else:
-            sqli_data = await self.emulators['sqli'].check_post_data(data)
+            sqli_data = self.emulators['sqli'].check_post_data(data)
             if sqli_data:
                 sqli_result = await self.emulators['sqli'].handle(sqli_data, session, 1)
                 detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
