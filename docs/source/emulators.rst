@@ -87,10 +87,24 @@ It supports two types of DBs.
 * **MySQL**
   To enable it, set SQLI type to MySQL in config and set other necessary fields - Host, User and Password
 
+Command Execution Emulator
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It emulates `Command Execution`_ vulnerability. This attack is detected with pattern.
+
+::
+
+.*(alias|cat|cd|cp|echo|exec|find|for|grep|ifconfig|ls|man|mkdir|netstat|ping|ps|pwd|uname|wget|touch|while).*
+
+* Each param value is checked against the pattern and ``command`` is extracted.
+* The ``command`` is executed in a docker container safely.
+* Results from container is injected into the index page.
+
 
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
 .. _LFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Local_File_Inclusion
 .. _XSS: https://en.wikipedia.org/wiki/Cross-site_scripting
 .. _SQL injection: https://en.wikipedia.org/wiki/SQL_injection
+.. _Command Execution: https://www.owasp.org/index.php/Command_Injection
 .. _manual: https://github.com/client9/libinjection/wiki/doc-sqli-python

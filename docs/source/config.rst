@@ -23,12 +23,16 @@ There are 8 different sections :
 
     :root_dir: The root directory for emulators that need data storing such as SQLI and LFI. Data will be stored in this directory
   * **SQLI**
-
+  
+    :db_name: THe name of database used in SQLI emulator
     :type: Supports two types MySQL/SQLITE
     :db_name: The name of database used in SQLI emulator
     :host: This will be used for MySQL to get the host address
     :user: This is the MySQL user which perform DB queries
     :password: The password corresponding to the above user
+  * **CMD_EXEC**
+
+    :host_image: The image which emulates commands in Command Execution Emulator
   * **LOGGER**
 
     :log_file: Location of tanner log file
@@ -52,6 +56,7 @@ If no file is specified, following json will be used as default:
      'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
      'EMULATORS': {'root_dir': '/opt/tanner'},
      'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
+     'CMD_EXEC': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
      'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
      'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
