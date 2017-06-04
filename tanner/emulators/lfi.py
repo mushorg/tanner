@@ -13,13 +13,11 @@ class LfiEmulator:
         self.whitelist = []
         self.setup_or_update_vdocs()
 
-    @asyncio.coroutine
     def available_files(self):
         for root, dirs, files in os.walk(self.vdoc_path):
             for filename in files:
                 self.whitelist.append(os.path.join(root, filename))
 
-    @asyncio.coroutine
     def get_lfi_result(self, file_path):
         result = None
         if file_path in self.whitelist:
@@ -27,7 +25,6 @@ class LfiEmulator:
                 result = lfile.read()
         return result
 
-    @asyncio.coroutine
     def get_file_path(self, path):
         file_match = re.match(patterns.LFI_FILEPATH, path)
         if file_match:
@@ -43,20 +40,20 @@ class LfiEmulator:
             os.makedirs(self.vdoc_path)
 
         with open(config.TannerConfig.get('DATA', 'vdocs')) as vdf:
-        	vdocs = json.load(vdf)
+            vdocs = json.load(vdf)
 
         if vdocs:
             for key, value in vdocs.items():
                 filename = os.path.join(self.vdoc_path, key)
                 if not os.path.exists(filename):
-	                os.makedirs(os.path.dirname(filename), exist_ok=True)
-	                with open(filename, 'w') as vd:
-	                	vd.write(value)
+                    os.makedirs(os.path.dirname(filename), exist_ok=True)
+                    with open(filename, 'w') as vd:
+                        vd.write(value)
 
-    @asyncio.coroutine
-    def handle(self, path, session=None):
+
+    async def handle(self, path, session=None):
         if not self.whitelist:
-            yield from self.available_files()
-        file_path = yield from self.get_file_path(path)
-        result = yield from self.get_lfi_result(file_path)
+            self.available_files()
+        file_path = self.get_file_path(path)
+        result = self.get_lfi_result(file_path)
         return result

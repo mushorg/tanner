@@ -1,24 +1,25 @@
 import asyncio
+import ftplib
 import hashlib
 import logging
 import os
 import re
 import time
-import ftplib
 from concurrent.futures import ThreadPoolExecutor
 
 import aiohttp
 import yarl
+
 from tanner.utils import patterns
 
 
 class RfiEmulator:
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, loop=None):
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
 
-    @asyncio.coroutine
-    def download_file(self, path):
+    async def download_file(self, path):
         file_name = None
         url = re.match(patterns.REMOTE_FILE_URL, path)
 
@@ -32,20 +33,19 @@ class RfiEmulator:
 
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
-            loop = asyncio.get_event_loop()
-            ftp_future = loop.run_in_executor(pool, self.download_file_ftp, url)
-            file_name = yield from ftp_future
+            ftp_future = self._loop.run_in_executor(pool, self.download_file_ftp, url)
+            file_name = await ftp_future
 
         else:
             try:
-                with aiohttp.ClientSession() as client:
-                    resp = yield from client.get(url)
-                    data = yield from resp.text()
+                with aiohttp.ClientSession(loop=self._loop) as client:
+                    resp = await client.get(url)
+                    data = await resp.text()
             except aiohttp.ClientError as client_error:
                 self.logger.error('Error during downloading the rfi script %s', client_error)
             else:
-                yield from resp.release()
-                yield from client.close()
+                await resp.release()
+                await client.close()
                 tmp_filename = url.name + str(time.time())
                 file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
                 with open(os.path.join(self.script_dir, file_name), 'bw') as rfile:
@@ -70,29 +70,28 @@ class RfiEmulator:
         else:
             return file_name
 
-    @asyncio.coroutine
-    def get_rfi_result(self, path):
+    async def get_rfi_result(self, path):
         rfi_result = None
-        yield from asyncio.sleep(1)
-        file_name = yield from self.download_file(path)
+        await asyncio.sleep(1, loop=self._loop)
+        file_name = await self.download_file(path)
         if file_name is None:
             return rfi_result
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
         try:
-            with aiohttp.ClientSession() as session:
-                resp = yield from session.post('http://127.0.0.1:8088/', data=script_data)
-                rfi_result = yield from resp.json()
+            with aiohttp.ClientSession(loop=self._loop) as session:
+                
+                resp = await session.post('http://127.0.0.1:8088/', data=script_data)
+                rfi_result = await resp.json()
         except aiohttp.ClientError as client_error:
             self.logger.error('Error during connection to php sandbox %s', client_error)
         else:
-            yield from resp.release()
-            yield from session.close()
+            await resp.release()
+            await session.close()
         return rfi_result
 
-    @asyncio.coroutine
-    def handle(self, path, session=None):
-        result = yield from self.get_rfi_result(path)
+    async def handle(self, path, session=None):
+        result = await self.get_rfi_result(path)
         if not result or 'stdout' not in result:
             return ''
         else:

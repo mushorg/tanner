@@ -1,141 +1,108 @@
-#!/usr/bin/python3
-
 import asyncio
 import json
 import logging
-from urllib.parse import unquote
 
-import aiohttp
-import aiohttp.server
-import asyncio_redis
 import uvloop
+import yarl
+from aiohttp import web
 
-from tanner import api, dorks_manager, session_manager, config
+from tanner import api, dorks_manager, session_manager, redis_client
+from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
 from tanner.reporting.log_mongodb import Reporting as mongo_report
 
-LOGGER = logging.getLogger(__name__)
-
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-class HttpRequestHandler(aiohttp.server.ServerHttpProtocol):
-    redis_client = None
-    session_manager = session_manager.SessionManager()
-    dorks = dorks_manager.DorksManager()
+class TannerServer:
+    def __init__(self):
+        base_dir = TannerConfig.get('EMULATORS', 'root_dir')
+        db_name = TannerConfig.get('SQLI', 'db_name')
 
-    def __init__(self, *args, **kwargs):
-        super(HttpRequestHandler, self).__init__()
+        self.session_manager = session_manager.SessionManager()
+        self.dorks = dorks_manager.DorksManager()
         self.api = api.Api()
-        self.base_handler = base.BaseHandler(kwargs['base_dir'], kwargs['db_name'])
-        self.logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
+        self.base_handler = base.BaseHandler(base_dir, db_name)
+        self.logger = logging.getLogger(__name__)
+        self.redis_client = None
 
     @staticmethod
     def _make_response(msg):
-        response_message = json.dumps(dict(
+        response_message = dict(
             version=1,
             response=dict(message=msg)
-        )).encode('utf-8')
+        )
         return response_message
 
-    @asyncio.coroutine
-    def handle_event(self, data, redis_client):
+    @staticmethod
+    async def default_handler(request):
+        return web.Response(text="Tanner server")
+
+    async def handle_event(self, request):
+        data = await request.read()
         try:
             data = json.loads(data.decode('utf-8'))
-            path = unquote(data['path'])
+            path = yarl.unquote(data['path'])
         except (TypeError, ValueError, KeyError) as error:
             self.logger.error('error parsing request: %s', data)
             response_msg = self._make_response(msg=type(error).__name__)
         else:
-            session = yield from HttpRequestHandler.session_manager.add_or_update_session(
+            session = await self.session_manager.add_or_update_session(
                 data, self.redis_client
             )
             self.logger.info('Requested path %s', path)
-            yield from self.dorks.extract_path(path, redis_client)
-            detection = yield from self.base_handler.handle(data, session, path)
-            session.set_attack_type(path, detection['name'])
+            await self.dorks.extract_path(path, self.redis_client)
+            detection = await self.base_handler.handle(data, session, path)
+            session.set_attack_type(path, detection["name"])
+
             response_msg = self._make_response(msg=dict(detection=detection, sess_uuid=session.get_uuid()))
             self.logger.info('TANNER response %s', response_msg)
 
             session_data = data
-            session_data['response_msg'] = json.loads(response_msg.decode('utf-8'))
+            session_data['response_msg'] = response_msg
 
             # Log to Mongo
-            if config.TannerConfig.get('MONGO', 'enabled') == 'True':
+            if TannerConfig.get('MONGO', 'enabled') == 'True':
                 db = mongo_report()
                 session_id = db.create_session(session_data)
                 self.logger.info("Writing session to DB: {}".format(session_id))
 
-            if config.TannerConfig.get('LOCALLOG', 'enabled') == 'True':
+            if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
                 lr = local_report()
                 lr.create_session(session_data)
+        return web.json_response(response_msg)
 
-            return response_msg
-
-    @asyncio.coroutine
-    def handle_request(self, message, payload):
-        response = aiohttp.Response(
-            self.writer, 200, http_version=message.version
-        )
-        if message.path == '/dorks':
-            dorks = yield from self.dorks.choose_dorks(self.redis_client)
-            response_msg = json.dumps(
-                dict(version=1, response=dict(dorks=dorks)),
-                sort_keys=True, indent=2
-            ).encode('utf-8')
-        elif message.path == '/event':
-            data = yield from payload.read()
-            response_msg = yield from self.handle_event(data, self.redis_client)
-        elif message.path.startswith('/api'):
-            data = yield from self.api.handle_api_request(message.path, self.redis_client)
-            response_msg = self._make_response(data)
+    async def handle_api(self, request):
+        api_query = request.match_info.get("api_query")
+        if api_query is None:
+            data = "tanner api"
         else:
-            response_msg = self._make_response(msg='')
+            data = await self.api.handle_api_request(api_query, request.url.query, self.redis_client)
+        response_msg = self._make_response(data)
+        return web.json_response(response_msg)
 
-        response.add_header('Content-Type', 'application/json')
-        response.add_header('Content-Length', str(len(response_msg)))
-        response.send_headers()
-        response.write(response_msg)
-        yield from response.write_eof()
+    async def handle_dorks(self, request):
+        dorks = await self.dorks.choose_dorks(self.redis_client)
+        response_msg = dict(version=1, response=dict(dorks=dorks))
+        return web.json_response(response_msg)
 
+    def setup_routes(self, app):
+        app.router.add_route('*', '/', self.default_handler)
+        app.router.add_post('/event', self.handle_event)
+        app.router.add_get('/api', self.handle_api)
+        app.router.add_get('/api/{api_query}', self.handle_api)
+        app.router.add_get('/dorks', self.handle_dorks)
 
-@asyncio.coroutine
-def get_redis_client():
-    try:
-        host = config.TannerConfig.get('REDIS', 'host')
-        port = config.TannerConfig.get('REDIS', 'port')
-        poolsize = config.TannerConfig.get('REDIS', 'poolsize')
-        timeout = config.TannerConfig.get('REDIS', 'timeout')
-        redis_client = yield from asyncio.wait_for(asyncio_redis.Pool.create(
-            host=host, port=int(port), poolsize=int(poolsize)), timeout=int(timeout))
-    except asyncio.TimeoutError as timeout_error:
-        LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout_error)
-        exit()
-    else:
-        HttpRequestHandler.redis_client = redis_client
+    def create_app(self, loop):
+        app = web.Application(loop=loop)
+        self.setup_routes(app)
+        return app
 
-
-def run_server():
-    loop = asyncio.get_event_loop()
-    srv = None
-    try:
-        if HttpRequestHandler.redis_client is None:
-            loop.run_until_complete(get_redis_client())
-        f = loop.create_server(
-            lambda: HttpRequestHandler(debug=False, keep_alive=75,
-                                       base_dir=config.TannerConfig.get('EMULATORS', 'root_dir'),
-                                       db_name=config.TannerConfig.get('SQLI', 'db_name')),
-            config.TannerConfig.get('TANNER', 'host'), int(config.TannerConfig.get('TANNER', 'port')))
-        srv = loop.run_until_complete(f)
-        LOGGER.info('serving on %s', srv.sockets[0].getsockname())
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        if HttpRequestHandler.redis_client is not None:
-            HttpRequestHandler.redis_client.close()
-        if srv:
-            srv.close()
-            loop.run_until_complete(srv.wait_closed())
-        loop.close()
+    def start(self):
+        loop = asyncio.get_event_loop()
+        tanner_app = self.create_app(loop)
+        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        host = TannerConfig.get('TANNER', 'host')
+        port = TannerConfig.get('TANNER', 'port')
+        web.run_app(tanner_app, host=host, port=port)
