@@ -3,7 +3,7 @@ import re
 import urllib.parse
 import yarl
 
-from tanner.emulators import lfi, rfi, sqli, xss
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
 from tanner.utils import patterns
 
 
@@ -20,7 +20,8 @@ class BaseHandler:
             'rfi': rfi.RfiEmulator(base_dir, loop),
             'lfi': lfi.LfiEmulator(base_dir),
             'xss': xss.XssEmulator(),
-            'sqli': sqli.SqliEmulator(db_name, base_dir)
+            'sqli': sqli.SqliEmulator(db_name, base_dir),
+            'cmd_exec': cmd_exec.CmdExecEmulator()
         }
 
     async def handle_post(self, session, data):
@@ -33,6 +34,12 @@ class BaseHandler:
             if sqli_data:
                 sqli_result = await self.emulators['sqli'].handle(sqli_data, session, 1)
                 detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
+            else:
+                cmd_exec_data = await self.emulators['cmd_exec'].check_post_data(data)
+                if cmd_exec_data:
+                    cmd_exec_results = await self.emulators['cmd_exec'].handle(cmd_exec_data[0][1], session)
+                    detection = {'name': 'cmd_exec', 'order': 3, 'payload': cmd_exec_results}
+
         return detection
 
     async def handle_get(self, session, path):
@@ -54,10 +61,15 @@ class BaseHandler:
                         attack_value = value
 
         if detection['order'] <= 1:
-            sqli = self.emulators['sqli'].check_get_data(path)
-            if sqli:
-                detection = {'name': 'sqli', 'order': 2}
-                attack_value = path
+            cmd_exec = await self.emulators['cmd_exec'].check_get_data(path)
+            if cmd_exec:
+                detection = {'name': 'cmd_exec', 'order': 3}
+                attack_value = cmd_exec[0][1]
+            else:
+                sqli = self.emulators['sqli'].check_get_data(path)
+                if sqli:
+                    detection = {'name': 'sqli', 'order': 2}
+                    attack_value = path
 
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_value, session)
