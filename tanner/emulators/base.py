@@ -18,7 +18,9 @@ class BaseHandler:
 
     def extract_get_data(self, path):
         path = urllib.parse.unquote(path)
-        path = path.replace('&&', '%26%26').replace(';', '%3B')
+        encodings = [('&&', '%26%26'), (';', '%3B')] 
+        for value, encoded_value in encodings:
+            path = path.replace(value, encoded_value)
         get_data = yarl.URL(path).query
         return get_data
 
