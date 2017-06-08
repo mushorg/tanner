@@ -56,9 +56,9 @@ class LfiEmulator:
             detection = dict(name= 'lfi', order= 2)
         return detection
 
-    async def handle(self, path, session=None):
+    async def handle(self, attack_value, session=None):
         if not self.whitelist:
             self.available_files()
-        file_path = self.get_file_path(path)
+        file_path = self.get_file_path(attack_value['value'])
         result = self.get_lfi_result(file_path)
         return result
