@@ -48,7 +48,7 @@ class SqliEmulator:
         if db_query is None:
             result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
-                        right syntax to use near {} at line 1'.format(query[0][0])
+                        right syntax to use near {} at line 1'.format(attack_value['id'])
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
