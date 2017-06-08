@@ -50,6 +50,11 @@ class LfiEmulator:
                     with open(filename, 'w') as vd:
                         vd.write(value)
 
+    def scan(self, value):
+        detection = None
+        if patterns.LFI_ATTACK.match(value):
+            detection = dict(name= 'lfi', order= 2)
+        return detection
 
     async def handle(self, path, session=None):
         if not self.whitelist:
