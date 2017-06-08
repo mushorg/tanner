@@ -3,7 +3,7 @@ from setuptools import find_packages
 from distutils.core import setup
 
 setup(name='Tanner',
-      version='0.1.0',
+      version='0.2.0',
       description='He who flays the hide',
       author='MushMush Foundation',
       author_email='glastopf@public.honeynet.org',
