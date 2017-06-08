@@ -1,41 +1,45 @@
 import asyncio
+import ftplib
 import unittest
-
-import aiohttp
 
 from tanner.emulators import rfi
 
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
-        self.handler = rfi.RfiEmulator('/tmp/')
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+        self.handler = rfi.RfiEmulator('/tmp/', loop=self.loop)
 
     def test_http_download(self):
         path = 'http://example.com'
-        data = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNotNone(data)
 
     def test_http_download_fail(self):
         path = 'http://foobarfvfd'
-        filename = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        filename = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(filename)
 
     def test_ftp_download(self):
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
-        data = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNotNone(data)
 
     def test_ftp_download_fail(self):
         path = 'ftp://mirror.yandex.ru/archlinux/foobar'
-        with self.assertRaises(aiohttp.errors.ClientOSError):
-            yield from self.handler.download_file(path)
+
+        with self.assertLogs():
+            self.loop.run_until_complete(self.handler.download_file(path))
+
 
     def test_get_result_fail(self):
         data = "test data"
-        with self.assertRaises(aiohttp.errors.ClientOSError):
-            yield from self.handler.get_rfi_result(data)
+        result = self.loop.run_until_complete(self.handler.get_rfi_result(data))
+        self.assertIsNone(result)
+
 
     def test_invalid_scheme(self):
         path = 'file://mirror.yandex.ru/archlinux/foobar'
-        data = asyncio.get_event_loop().run_until_complete(self.handler.download_file(path))
+        data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(data)

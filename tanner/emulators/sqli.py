@@ -1,30 +1,20 @@
-import asyncio
 import os
+import pylibinjection
 import sqlite3
 import urllib.parse
-import pylibinjection
-from asyncio.subprocess import PIPE
 
-from tanner.utils import db_helper
-from tanner import config
-
+from tanner.utils import sqlite_db_helper
+from tanner.config import TannerConfig
+from tanner.emulators import mysqli, sqlite
 
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
-        self.db_name = db_name
-        self.working_dir = os.path.join(working_dir, 'db/')
-        self.helper = db_helper.DBHelper()
-        self.query_map = None
+        if (TannerConfig.get('SQLI', 'type') == 'MySQL'):
+            self.sqli_emulator = mysqli.MySQLIEmulator(db_name)
+        else:
+            self.sqli_emulator = sqlite.SQLITEEmulator(db_name, working_dir)
 
-    @asyncio.coroutine
-    def setup_db(self):
-        if not os.path.exists(self.working_dir):
-            os.makedirs(self.working_dir)
-        db = os.path.join(self.working_dir, self.db_name)
-        if not os.path.exists(db):
-            yield from self.helper.setup_db_from_config(self.working_dir, self.db_name)
-        if self.query_map is None:
-            self.query_map = yield from self.helper.create_query_map(self.working_dir, self.db_name)
+        self.query_map = None
 
     @staticmethod
     def check_sqli(path):
@@ -32,7 +22,6 @@ class SqliEmulator:
         sqli = pylibinjection.detect_sqli(payload)
         return int(sqli['sqli'])
 
-    @asyncio.coroutine
     def check_post_data(self, data):
         sqli_data = []
         for (param, value) in data['post_data'].items():
@@ -41,7 +30,6 @@ class SqliEmulator:
                 sqli_data.append((param, value))
         return sqli_data
 
-    @asyncio.coroutine
     def check_get_data(self, path):
         request_query = urllib.parse.urlparse(path).query
         parsed_queries = urllib.parse.parse_qsl(request_query)
@@ -49,23 +37,12 @@ class SqliEmulator:
             sqli = self.check_sqli(query[1])
             return sqli
 
-    @asyncio.coroutine
-    def create_attacker_db(self, session):
-        attacker_db_name = session.sess_uuid.hex + '.db'
-        attacker_db = yield from self.helper.copy_db(self.db_name,
-                                                     attacker_db_name,
-                                                     self.working_dir
-                                                     )
-        session.associate_db(attacker_db)
-        return attacker_db
-
     @staticmethod
     def prepare_get_query(path):
         query = urllib.parse.urlparse(path).query
         parsed_query = urllib.parse.parse_qsl(query)
         return parsed_query
 
-    @asyncio.coroutine
     def map_query(self, query):
         db_query = None
         param = query[0][0]
@@ -84,37 +61,24 @@ class SqliEmulator:
 
         return db_query
 
-    @staticmethod
-    def execute_query(query, db):
-        result = []
-        conn = sqlite3.connect(db)
-        cursor = conn.cursor()
-        try:
-            for row in cursor.execute(query):
-                result.append(list(row))
-        except sqlite3.OperationalError as sqlite_error:
-            result = str(sqlite_error)
-        return result
-
-    @asyncio.coroutine
-    def get_sqli_result(self, query, attacker_db):
-        db_query = yield from self.map_query(query)
+    async def get_sqli_result(self, query, attacker_db):
+        db_query = self.map_query(query)
         if db_query is None:
             result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
                         right syntax to use near {} at line 1'.format(query[0][0])
         else:
-            execute_result = self.execute_query(db_query, attacker_db)
+            execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
                 execute_result = ' '.join([str(x) for x in execute_result])
             result = dict(value=execute_result, page='/index.html')
         return result
 
-    @asyncio.coroutine
-    def handle(self, path, session, post_request=0):
-        yield from self.setup_db()
+    async def handle(self, path, session, post_request=0):
+        if self.query_map is None:
+            self.query_map = await self.sqli_emulator.setup_db(self.query_map)
         if not post_request:
             path = self.prepare_get_query(path)
-        attacker_db = yield from self.create_attacker_db(session)
-        result = yield from self.get_sqli_result(path, attacker_db)
+        attacker_db = await self.sqli_emulator.create_attacker_db(session)
+        result = await self.get_sqli_result(path, attacker_db)
         return result

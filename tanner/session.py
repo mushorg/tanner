@@ -1,8 +1,13 @@
+import asyncio
 import json
 import time
-import os
+import asyncio
 import uuid
 
+from tanner.config import TannerConfig
+from tanner.emulators import cmd_exec
+from tanner.utils.mysql_db_helper import MySQLDBHelper
+from tanner.utils.sqlite_db_helper import SQLITEDBHelper
 
 class Session:
     KEEP_ALIVE_TIME = 75
@@ -17,6 +22,7 @@ class Session:
                            'response_status': data['status']}]
             self.cookies = data['cookies']
             self.associated_db = None
+            self.associated_env = None
         except KeyError:
             raise
 
@@ -59,9 +65,17 @@ class Session:
     def associate_db(self, db_name):
         self.associated_db = db_name
 
-    def remove_associated_db(self):
-        if self.associated_db is not None and os.path.exists(self.associated_db):
-            os.remove(self.associated_db)
+    async def remove_associated_db(self):
+        if(TannerConfig.get('SQLI', 'type') == 'MySQL'):
+            await MySQLDBHelper().delete_db(self.associated_db)
+        else:
+            SQLITEDBHelper().delete_db(self.associated_db)
+
+    def associate_env(self, env):
+        self.associated_env = env
+
+    async def remove_associated_env(self):
+        await cmd_exec.CmdExecEmulator().delete_env(self.associated_env)
 
     def get_uuid(self):
         return str(self.sess_uuid)
