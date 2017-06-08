@@ -6,7 +6,6 @@ import yarl
 from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
 from tanner.utils import patterns
 
-
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
         self.emulators = {
@@ -22,14 +21,6 @@ class BaseHandler:
         path = path.replace('&&', '%26%26').replace(';', '%3B')
         get_data = yarl.URL(path).query
         return get_data
-        # get_data = {}
-        # query = yarl.URL(path).query_string
-        # params = query.split('&')
-        # for param in params:
-        #     if len(param.split('=')) == 2:
-        #         param_id, param_value = param.split('=')
-        #         get_data[param_id] = param_value
-        # return get_data
 
     async def get_emulation_result(self, session, data, target_emulators):
         detection = dict(name='unknown', order=0)
@@ -37,7 +28,6 @@ class BaseHandler:
         for param_id, param_value in data.items():
             for emulator in target_emulators:
                 possible_detection = self.emulators[emulator].scan(param_value)
-                print(emulator, possible_detection)
                 if possible_detection:
                     if detection['order'] < possible_detection['order']:
                         detection = possible_detection
@@ -50,15 +40,14 @@ class BaseHandler:
         return detection
 
     async def handle_post(self, session, data):
-        #post_emulators = ['rfi', 'lfi', 'xss', 'sqli', 'cmd_exec']
-        post_emulators = ['rfi', 'lfi', 'cmd_exec']
+        post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         post_data = data['post_data']
 
         detection = await self.get_emulation_result(session, post_data, post_emulators)
         return detection
 
     async def handle_get(self, session, path):
-        get_emulators = ['sqli', 'rfi', 'lfi', 'cmd_exec']
+        get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         
         get_data = self.extract_get_data(path)
         detection = dict(name='unknown', order=0)
