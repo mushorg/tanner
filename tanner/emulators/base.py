@@ -15,6 +15,8 @@ class BaseHandler:
             'sqli': sqli.SqliEmulator(db_name, base_dir),
             'cmd_exec': cmd_exec.CmdExecEmulator()
         }
+        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
+        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
 
     def extract_get_data(self, path):
         path = urllib.parse.unquote(path)
@@ -44,15 +46,12 @@ class BaseHandler:
         return detection
 
     async def handle_post(self, session, data):
-        post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         post_data = data['post_data']
 
-        detection = await self.get_emulation_result(session, post_data, post_emulators)
+        detection = await self.get_emulation_result(session, post_data, self.post_emulators)
         return detection
 
     async def handle_get(self, session, path):
-        get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
-        
         get_data = self.extract_get_data(path)
         detection = dict(name='unknown', order=0)
         # dummy for wp-content
@@ -61,7 +60,7 @@ class BaseHandler:
         if re.match(patterns.INDEX, path):
             detection = {'name': 'index', 'order': 1}
 
-        possible_detection = await self.get_emulation_result(session, get_data, get_emulators)
+        possible_detection = await self.get_emulation_result(session, get_data, self.get_emulators)
         if possible_detection and detection['order'] < possible_detection['order'] :
             detection = possible_detection
 
