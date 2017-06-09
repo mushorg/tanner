@@ -13,16 +13,18 @@ class XssEmulator:
             detection = dict(name= 'xss', order= 3)
         return detection
 
-    def get_xss_result(self, session, val):
+    def get_xss_result(self, session, attack_params):
         result = None
         injectable_page = None
+        value = ''
         if session:
             injectable_page = self.set_xss_page(session)
         if injectable_page is None:
             injectable_page = '/index.html'
-        if val:
-            result = dict(value=val,
-                          page=injectable_page)
+        for param in attack_params:
+            value += param['value'] if not value else '\n' + param['value']
+        result = dict(value=value,
+                      page=injectable_page)
         return result
 
     @staticmethod
@@ -33,7 +35,7 @@ class XssEmulator:
                 injectable_page = page['path']
         return injectable_page
 
-    async def handle(self, attack_value, session):
+    async def handle(self, attack_params, session):
         xss_result = None
-        xss_result = self.get_xss_result(session, attack_value['value'])
+        xss_result = self.get_xss_result(session, attack_params)
         return xss_result

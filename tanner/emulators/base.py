@@ -26,17 +26,19 @@ class BaseHandler:
 
     async def get_emulation_result(self, session, data, target_emulators):
         detection = dict(name='unknown', order=0)
-
+        attack_params = {}
         for param_id, param_value in data.items():
             for emulator in target_emulators:
                 possible_detection = self.emulators[emulator].scan(param_value)
                 if possible_detection:
                     if detection['order'] < possible_detection['order']:
                         detection = possible_detection
-                        attack_param = dict(id= param_id, value= param_value)
-
+                    if emulator not in attack_params:
+                        attack_params[emulator] = []
+                    attack_params[emulator].append(dict(id= param_id, value= param_value))
+                    
         if detection['name'] in self.emulators:
-            emulation_result = await self.emulators[detection['name']].handle(attack_param, session)
+            emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
             detection['payload'] = emulation_result
 
         return detection

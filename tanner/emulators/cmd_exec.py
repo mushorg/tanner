@@ -75,7 +75,7 @@ class CmdExecEmulator:
             detection = dict(name= 'cmd_exec', order= 3)
         return detection
 
-    async def handle(self, attack_param, session= None):
+    async def handle(self, attack_params, session= None):
         container = await self.create_attacker_env(session)
-        result = await self.get_cmd_exec_results(container, attack_param['value'])
+        result = await self.get_cmd_exec_results(container, attack_params[0]['value'])
         return result

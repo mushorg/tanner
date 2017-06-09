@@ -96,8 +96,8 @@ class RfiEmulator:
             detection = dict(name= 'rfi', order= 2)
         return detection
 
-    async def handle(self, attack_value, session=None):
-        result = await self.get_rfi_result(attack_value['value'])
+    async def handle(self, attack_params, session=None):
+        result = await self.get_rfi_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
             return ''
         else:
