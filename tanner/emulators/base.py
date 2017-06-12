@@ -21,7 +21,7 @@ class BaseHandler:
     def extract_get_data(self, path):
         """
         Return all the GET parameter
-        :param path: The URL path from which GET parameters are to be extracted
+        :param path (str): The URL path from which GET parameters are to be extracted
         :return: A MultiDictProxy object containg name and value of parameters
         """
         path = urllib.parse.unquote(path)
@@ -34,9 +34,9 @@ class BaseHandler:
     async def get_emulation_result(self, session, data, target_emulators):
         """
         Return emulation result for the vulnerabilty of highest order
-        :param session: Current active session
-        :param data: Data to be checked
-        :param target_emulator: Emulators against which data is to be checked
+        :param session (Session object): Current active session
+        :param data (MultiDictProxy object): Data to be checked
+        :param target_emulator (list): Emulators against which data is to be checked
         :return: A dict object containing name, order and paylod to be injected for vulnerability  
         """
         detection = dict(name='unknown', order=0)
