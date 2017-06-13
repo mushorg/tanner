@@ -6,15 +6,7 @@ import yarl
 from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
 from tanner.utils import patterns
 
-
 class BaseHandler:
-    # Reference patterns
-    patterns = {
-        patterns.RFI_ATTACK: dict(name='rfi', order=2),
-        patterns.LFI_ATTACK: dict(name='lfi', order=2),
-        patterns.XSS_ATTACK: dict(name='xss', order=3)
-    }
-
     def __init__(self, base_dir, db_name, loop=None):
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop),
@@ -23,26 +15,56 @@ class BaseHandler:
             'sqli': sqli.SqliEmulator(db_name, base_dir),
             'cmd_exec': cmd_exec.CmdExecEmulator()
         }
+        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
+        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
 
-    async def handle_post(self, session, data):
+    def extract_get_data(self, path):
+        """
+        Return all the GET parameter
+        :param path (str): The URL path from which GET parameters are to be extracted
+        :return: A MultiDictProxy object containg name and value of parameters
+        """
+        path = urllib.parse.unquote(path)
+        encodings = [('&&', '%26%26'), (';', '%3B')] 
+        for value, encoded_value in encodings:
+            path = path.replace(value, encoded_value)
+        get_data = yarl.URL(path).query
+        return get_data
+
+    async def get_emulation_result(self, session, data, target_emulators):
+        """
+        Return emulation result for the vulnerabilty of highest order
+        :param session (Session object): Current active session
+        :param data (MultiDictProxy object): Data to be checked
+        :param target_emulator (list): Emulators against which data is to be checked
+        :return: A dict object containing name, order and paylod to be injected for vulnerability  
+        """
         detection = dict(name='unknown', order=0)
-        xss_result = await self.emulators['xss'].handle(None, session, data)
-        if xss_result:
-            detection = {'name': 'xss', 'order': 2, 'payload': xss_result}
-        else:
-            sqli_data = self.emulators['sqli'].check_post_data(data)
-            if sqli_data:
-                sqli_result = await self.emulators['sqli'].handle(sqli_data, session, 1)
-                detection = {'name': 'sqli', 'order': 2, 'payload': sqli_result}
-            else:
-                cmd_exec_data = await self.emulators['cmd_exec'].check_post_data(data)
-                if cmd_exec_data:
-                    cmd_exec_results = await self.emulators['cmd_exec'].handle(cmd_exec_data[0][1], session)
-                    detection = {'name': 'cmd_exec', 'order': 3, 'payload': cmd_exec_results}
+        attack_params = {}
+        for param_id, param_value in data.items():
+            for emulator in target_emulators:
+                possible_detection = self.emulators[emulator].scan(param_value)
+                if possible_detection:
+                    if detection['order'] < possible_detection['order']:
+                        detection = possible_detection
+                    if emulator not in attack_params:
+                        attack_params[emulator] = []
+                    attack_params[emulator].append(dict(id= param_id, value= param_value))
+                    
+        if detection['name'] in self.emulators:
+            emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
+            detection['payload'] = emulation_result
 
         return detection
 
+    async def handle_post(self, session, data):
+        post_data = data['post_data']
+
+        detection = await self.get_emulation_result(session, post_data, self.post_emulators)
+        return detection
+
     async def handle_get(self, session, path):
+        get_data = self.extract_get_data(path)
         detection = dict(name='unknown', order=0)
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
@@ -50,30 +72,9 @@ class BaseHandler:
         if re.match(patterns.INDEX, path):
             detection = {'name': 'index', 'order': 1}
 
-        path = urllib.parse.unquote(path)
-        query = yarl.URL(path).query
-
-        for name, value in query.items():
-            for pattern, patter_details in self.patterns.items():
-                if pattern.match(value):
-                    if detection['order'] < patter_details['order']:
-                        detection = patter_details
-                        attack_value = value
-
-        if detection['order'] <= 1:
-            cmd_exec = await self.emulators['cmd_exec'].check_get_data(path)
-            if cmd_exec:
-                detection = {'name': 'cmd_exec', 'order': 3}
-                attack_value = cmd_exec[0][1]
-            else:
-                sqli = self.emulators['sqli'].check_get_data(path)
-                if sqli:
-                    detection = {'name': 'sqli', 'order': 2}
-                    attack_value = path
-
-        if detection['name'] in self.emulators:
-            emulation_result = await self.emulators[detection['name']].handle(attack_value, session)
-            detection['payload'] = emulation_result
+        possible_detection = await self.get_emulation_result(session, get_data, self.get_emulators)
+        if possible_detection and detection['order'] < possible_detection['order'] :
+            detection = possible_detection
 
         return detection
 
