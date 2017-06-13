@@ -15,19 +15,16 @@ class TestLfiEmulator(unittest.TestCase):
         self.handler = lfi.LfiEmulator('/tmp/')
 
     def test_handle_abspath_lfi(self):
-        path = '/?foo=/etc/passwd'
-        query = yarl.URL(path).query
-        result = self.loop.run_until_complete(self.handler.handle(query['foo']))
+        attack_params = [dict(id= 'foo', value= '/etc/passwd')]
+        result = self.loop.run_until_complete(self.handler.handle(attack_params))
         self.assertIn('root:x:0:0:root:/root:/bin/bash', result)
 
     def test_handle_relative_path_lfi(self):
-        path = '/?foo=../../../../../etc/passwd'
-        query = yarl.URL(path).query
-        result = self.loop.run_until_complete(self.handler.handle(query['foo']))
+        attack_params = [dict(id= 'foo', value= '../../../../../etc/passwd')]
+        result = self.loop.run_until_complete(self.handler.handle(attack_params))
         self.assertIn('root:x:0:0:root:/root:/bin/bash', result)
 
     def test_handle_missing_lfi(self):
-        path = '/?foo=../../../../../etc/bar'
-        query = yarl.URL(path).query
-        result = self.loop.run_until_complete(self.handler.handle(query['foo']))
+        attack_params = [dict(id= 'foo', value= '../../../../../etc/bar')]
+        result = self.loop.run_until_complete(self.handler.handle(attack_params))
         self.assertIsNone(result)

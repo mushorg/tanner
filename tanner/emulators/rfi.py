@@ -90,8 +90,14 @@ class RfiEmulator:
             await session.close()
         return rfi_result
 
-    async def handle(self, path, session=None):
-        result = await self.get_rfi_result(path)
+    def scan(self, value):
+        detection = None
+        if patterns.RFI_ATTACK.match(value):
+            detection = dict(name= 'rfi', order= 2)
+        return detection
+
+    async def handle(self, attack_params, session=None):
+        result = await self.get_rfi_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
             return ''
         else:
