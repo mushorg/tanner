@@ -16,41 +16,23 @@ class SqliEmulator:
 
         self.query_map = None
 
-    @staticmethod
-    def check_sqli(path):
-        payload = bytes(path, 'utf-8')
+    def scan(self, value):
+        print(value)
+        detection = None
+        payload = bytes(value, 'utf-8')
         sqli = pylibinjection.detect_sqli(payload)
-        return int(sqli['sqli'])
+        if int(sqli['sqli']):
+            detection = dict(name= 'sqli', order= 2)
+        return detection
 
-    def check_post_data(self, data):
-        sqli_data = []
-        for (param, value) in data['post_data'].items():
-            sqli = self.check_sqli(value)
-            if sqli:
-                sqli_data.append((param, value))
-        return sqli_data
-
-    def check_get_data(self, path):
-        request_query = urllib.parse.urlparse(path).query
-        parsed_queries = urllib.parse.parse_qsl(request_query)
-        for query in parsed_queries:
-            sqli = self.check_sqli(query[1])
-            return sqli
-
-    @staticmethod
-    def prepare_get_query(path):
-        query = urllib.parse.urlparse(path).query
-        parsed_query = urllib.parse.parse_qsl(query)
-        return parsed_query
-
-    def map_query(self, query):
+    def map_query(self, attack_value):
         db_query = None
-        param = query[0][0]
-        param_value = query[0][1].replace('\'', ' ')
+        param = attack_value['id']
+        param_value = attack_value['value'].replace('\'', ' ')
         tables = []
         for table, columns in self.query_map.items():
             for column in columns: 
-                if query[0][0] == column['name']:
+                if param == column['name']:
                     tables.append(dict(table_name=table, column=column))
 
         if tables:
@@ -61,12 +43,12 @@ class SqliEmulator:
 
         return db_query
 
-    async def get_sqli_result(self, query, attacker_db):
-        db_query = self.map_query(query)
+    async def get_sqli_result(self, attack_value, attacker_db):
+        db_query = self.map_query(attack_value)
         if db_query is None:
             result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
-                        right syntax to use near {} at line 1'.format(query[0][0])
+                        right syntax to use near {} at line 1'.format(attack_value['id'])
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
@@ -74,11 +56,9 @@ class SqliEmulator:
             result = dict(value=execute_result, page='/index.html')
         return result
 
-    async def handle(self, path, session, post_request=0):
+    async def handle(self, attack_params, session):
         if self.query_map is None:
             self.query_map = await self.sqli_emulator.setup_db(self.query_map)
-        if not post_request:
-            path = self.prepare_get_query(path)
         attacker_db = await self.sqli_emulator.create_attacker_db(session)
-        result = await self.get_sqli_result(path, attacker_db)
+        result = await self.get_sqli_result(attack_params[0], attacker_db)
         return result
