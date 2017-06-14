@@ -17,7 +17,6 @@ class SqliEmulator:
         self.query_map = None
 
     def scan(self, value):
-        print(value)
         detection = None
         payload = bytes(value, 'utf-8')
         sqli = pylibinjection.detect_sqli(payload)

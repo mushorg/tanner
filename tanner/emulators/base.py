@@ -17,6 +17,7 @@ class BaseHandler:
         }
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
+        self.cookie_emulators = ['sqli']
 
     def extract_get_data(self, path):
         """
@@ -43,7 +44,7 @@ class BaseHandler:
         attack_params = {}
         for param_id, param_value in data.items():
             for emulator in target_emulators:
-                possible_detection = self.emulators[emulator].scan(param_value)
+                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
                 if possible_detection:
                     if detection['order'] < possible_detection['order']:
                         detection = possible_detection
@@ -63,7 +64,14 @@ class BaseHandler:
         detection = await self.get_emulation_result(session, post_data, self.post_emulators)
         return detection
 
-    async def handle_get(self, session, path):
+    async def handle_cookies(self, session, data):
+        cookies = data['cookies']
+
+        detection = await self.get_emulation_result(session, cookies, self.cookie_emulators)
+        return detection
+
+    async def handle_get(self, session, data):
+        path = data['path']
         get_data = self.extract_get_data(path)
         detection = dict(name='unknown', order=0)
         # dummy for wp-content
@@ -71,10 +79,14 @@ class BaseHandler:
             detection = {'name': 'wp-content', 'order': 1}
         if re.match(patterns.INDEX, path):
             detection = {'name': 'index', 'order': 1}
-
-        possible_detection = await self.get_emulation_result(session, get_data, self.get_emulators)
-        if possible_detection and detection['order'] < possible_detection['order'] :
-            detection = possible_detection
+        # check attacks against get parameters
+        possible_get_detection = await self.get_emulation_result(session, get_data, self.get_emulators)
+        if possible_get_detection and detection['order'] < possible_get_detection['order'] :
+            detection = possible_get_detection
+        # check attacks against cookie values
+        possible_cookie_detection = await self.handle_cookies(session, data)
+        if possible_cookie_detection and detection['order'] < possible_cookie_detection['order'] :
+            detection = possible_cookie_detection
 
         return detection
 
@@ -82,7 +94,7 @@ class BaseHandler:
         if data['method'] == 'POST':
             detection = await self.handle_post(session, data)
         else:
-            detection = await self.handle_get(session, path)
+            detection = await self.handle_get(session, data)
 
         return detection
 
