@@ -90,7 +90,7 @@ class BaseHandler:
 
         return detection
 
-    async def emulate(self, data, session, path):
+    async def emulate(self, data, session):
         if data['method'] == 'POST':
             detection = await self.handle_post(session, data)
         else:
@@ -98,6 +98,6 @@ class BaseHandler:
 
         return detection
 
-    async def handle(self, data, session, path):
-        detection = await self.emulate(data, session, path)
+    async def handle(self, data, session):
+        detection = await self.emulate(data, session)
         return detection
