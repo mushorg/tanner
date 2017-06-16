@@ -1,7 +1,7 @@
 import asyncio
 import docker
 import yarl
-from concurrent.futures import ThreadPoolExecutor
+import concurrent
 import time
 # TODO : Replace docker with aiodocker
 import logging
@@ -56,11 +56,12 @@ class CmdExecEmulator:
         execute_result = ''
         try:
             container.start()
-            executor = ThreadPoolExecutor(max_workers=1)
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
             cmd_future = executor.submit(container.exec_run, ['sh', '-c', cmd])
-            time.sleep(1)
-            if(cmd_future.done()):
-                execute_result = cmd_future.result().decode('utf-8')
+            try:
+            	execute_result = cmd_future.result(timeout= 1).decode('utf-8')
+            except concurrent.futures.TimeoutError as timeout_error:
+            	self.logger.error('Error while executing %s in container %s', cmd, timeout_error)
             container.kill()
         except docker.errors.APIError as server_error:
             self.logger.error('Error while executing command %s in container %s', cmd, server_error)
