@@ -2,7 +2,6 @@ import asyncio
 import docker
 import yarl
 import concurrent
-import time
 # TODO : Replace docker with aiodocker
 import logging
 
