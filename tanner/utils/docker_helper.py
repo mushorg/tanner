@@ -1,15 +1,17 @@
 import asyncio
 import docker
+import logging
 # TODO : Replace docker with aiodocker
 from tanner.config import TannerConfig
 
 class DockerHelper:
-	def __init__():
-		try:
+    def __init__(self):
+        try:
             self.docker_client = docker.from_env(version='auto')
         except docker.errors as docker_error:
             self.logger.error('Error while connecting to docker service %s', docker_error)
         self.host_image = TannerConfig.get('DOCKER', 'host_image')
+        self.logger = logging.getLogger('tanner.docker_helper.DockerHelper')
 
     async def setup_host_image(self):
         try:
@@ -40,7 +42,7 @@ class DockerHelper:
                                                                  name= container_name
                                                                  )
                 session.associate_env(container_name)
-            except docker.errors as docker_error:
+            except Exception as docker_error:
                 self.logger.error('Error while creating a container %s', docker_error)
         return container
 
