@@ -11,7 +11,6 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': '/opt/tanner'},
                    'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
-                   'CMD_EXEC': {'host_image': 'busybox:latest'},
                    'DOCKER': {'host_image': 'busybox:latest'},
                    'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
                    'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},

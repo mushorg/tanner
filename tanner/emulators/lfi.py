@@ -7,7 +7,7 @@ from tanner.utils import patterns
 
 
 class LfiEmulator:
-    def __init__(self, root_path):
+    def __init__(self):
         self.helper = docker_helper.DockerHelper()
 
     async def get_lfi_result(self, container, file_path):

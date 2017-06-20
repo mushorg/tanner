@@ -10,6 +10,5 @@ setup(name='Tanner',
       url='https://github.com/mushorg/tanner',
       packages=find_packages(exclude=['*.pyc']),
       scripts=['bin/tanner'],
-      data_files=[('/opt/tanner/db/',['tanner/data/db_config.json']),
-                  ('/opt/tanner/data/',['tanner/data/dorks.pickle','tanner/data/vdocs.json'])]
+      data_files=[('/opt/tanner/data/',['tanner/data/dorks.pickle'])]
       )
