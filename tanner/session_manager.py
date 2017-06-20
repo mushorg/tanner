@@ -71,7 +71,6 @@ class SessionManager:
             if not sess.is_expired():
                 continue
             await sess.remove_associated_db()
-            sess.remove_associated_db()
             await sess.remove_associated_env()
             self.sessions.remove(sess)
             try:
