@@ -38,14 +38,12 @@ class RfiEmulator:
 
         else:
             try:
-                with aiohttp.ClientSession(loop=self._loop) as client:
-                    resp = await client.get(url)
-                    data = await resp.text()
+                async with aiohttp.ClientSession(loop=self._loop) as client:
+                    async with client.get(url) as resp:
+                        data = await resp.text()
             except aiohttp.ClientError as client_error:
                 self.logger.error('Error during downloading the rfi script %s', client_error)
             else:
-                await resp.release()
-                await client.close()
                 tmp_filename = url.name + str(time.time())
                 file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
                 with open(os.path.join(self.script_dir, file_name), 'bw') as rfile:
@@ -79,10 +77,9 @@ class RfiEmulator:
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
         try:
-            with aiohttp.ClientSession(loop=self._loop) as session:
-                
-                resp = await session.post('http://127.0.0.1:8088/', data=script_data)
-                rfi_result = await resp.json()
+            async with aiohttp.ClientSession(loop=self._loop) as session:
+                async with session.post('http://127.0.0.1:8088/', data=script_data) as resp:
+                    rfi_result = await resp.json()
         except aiohttp.ClientError as client_error:
             self.logger.error('Error during connection to php sandbox %s', client_error)
         else:
