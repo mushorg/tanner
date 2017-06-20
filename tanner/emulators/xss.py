@@ -15,25 +15,11 @@ class XssEmulator:
 
     def get_xss_result(self, session, attack_params):
         result = None
-        injectable_page = None
         value = ''
-        if session:
-            injectable_page = self.set_xss_page(session)
-        if injectable_page is None:
-            injectable_page = '/index.html'
         for param in attack_params:
             value += param['value'] if not value else '\n' + param['value']
-        result = dict(value=value,
-                      page=injectable_page)
+        result = dict(value=value)
         return result
-
-    @staticmethod
-    def set_xss_page(session):
-        injectable_page = None
-        for page in reversed(session.paths):
-            if mimetypes.guess_type(page['path'])[0] == 'text/html':
-                injectable_page = page['path']
-        return injectable_page
 
     async def handle(self, attack_params, session):
         xss_result = None

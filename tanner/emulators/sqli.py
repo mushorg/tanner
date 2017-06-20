@@ -52,7 +52,7 @@ class SqliEmulator:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
                 execute_result = ' '.join([str(x) for x in execute_result])
-            result = dict(value=execute_result, page='/index.html')
+            result = dict(value=execute_result)
         return result
 
     async def handle(self, attack_params, session):

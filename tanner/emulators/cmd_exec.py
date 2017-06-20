@@ -64,7 +64,7 @@ class CmdExecEmulator:
             container.kill()
         except docker.errors.APIError as server_error:
             self.logger.error('Error while executing command %s in container %s', cmd, server_error)
-        result = dict(value= execute_result, page= '/index.html')
+        result = dict(value= execute_result)
         return result
 
     async def delete_env(self, container_name):

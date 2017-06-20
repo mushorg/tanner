@@ -47,9 +47,7 @@ class SqliTest(unittest.TestCase):
         self.handler.sqli_emulator = mock.Mock()
         self.handler.sqli_emulator.execute_query = mock_execute_query
 
-        assert_result = dict(value="[1, 'name', 'email@mail.com', 'password'] [1, '2', '3', '4']",
-                             page='/index.html'
-                             )
+        assert_result = dict(value="[1, 'name', 'email@mail.com', 'password'] [1, '2', '3', '4']")
         result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
         self.assertEqual(assert_result, result)
 
