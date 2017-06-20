@@ -1,4 +1,5 @@
 import asyncio
+import mimetypes
 import re
 import urllib.parse
 import yarl
@@ -90,11 +91,27 @@ class BaseHandler:
 
         return detection
 
+    @staticmethod
+    def set_injectable_page(session):
+        injectable_page = None
+        if session:
+            for page in reversed(session.paths):
+                if mimetypes.guess_type(page['path'])[0] == 'text/html':
+                    injectable_page = page['path']
+
+        return injectable_page
+
     async def emulate(self, data, session):
         if data['method'] == 'POST':
             detection = await self.handle_post(session, data)
         else:
             detection = await self.handle_get(session, data)
+        
+        if 'payload' in detection and type(detection['payload']) is dict:
+            injectable_page = self.set_injectable_page(session)
+            if injectable_page is None:
+                injectable_page = '/index.html'
+            detection['payload']['page'] = injectable_page
 
         return detection
 
