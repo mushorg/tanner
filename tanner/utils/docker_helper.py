@@ -41,8 +41,7 @@ class DockerHelper:
                                                                  stdin_open= True, 
                                                                  name= container_name
                                                                  )
-                session.associate_env(container_name)
-            except Exception as docker_error:
+            except docker.errors as docker_error:
                 self.logger.error('Error while creating a container %s', docker_error)
         return container
 
