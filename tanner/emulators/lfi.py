@@ -13,6 +13,8 @@ class LfiEmulator:
     async def get_lfi_result(self, container, file_path):
         cmd = 'cat {file}'.format(file= shlex.quote(file_path))
         execute_result = await self.helper.execute_cmd(container, cmd)
+        #Nulls are not printable, so replace it with another line-ender
+        execute_result = execute_result.replace('\x00', '\n')
         return execute_result
 
     async def setup_virtual_env(self):
