@@ -1,7 +1,6 @@
 import asyncio
 import shlex
 
-from tanner import config
 from tanner.utils import docker_helper
 from tanner.utils import patterns
 
@@ -33,6 +32,8 @@ class LfiEmulator:
         return detection
 
     async def handle(self, attack_params, session=None):
+        result = None
         container = await self.setup_virtual_env()
-        result = await self.get_lfi_result(container, attack_params[0]['value'])
+        if container:
+            result = await self.get_lfi_result(container, attack_params[0]['value'])
         return result

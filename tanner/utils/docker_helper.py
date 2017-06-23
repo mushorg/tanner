@@ -8,7 +8,7 @@ class DockerHelper:
     def __init__(self):
         try:
             self.docker_client = docker.from_env(version='auto')
-        except docker.errors as docker_error:
+        except docker.errors.APIError as docker_error:
             self.logger.error('Error while connecting to docker service %s', docker_error)
         self.host_image = TannerConfig.get('DOCKER', 'host_image')
         self.logger = logging.getLogger('tanner.docker_helper.DockerHelper')
@@ -17,7 +17,7 @@ class DockerHelper:
         try:
             if not self.docker_client.images.list(self.host_image):
                 self.docker_client.images.pull(self.host_image)
-        except docker.errors as docker_error:
+        except docker.errors.APIError as docker_error:
             self.logger.error('Error while pulling %s image %s', self.host_image, docker_error)
         
     async def get_container(self, container_name):
@@ -41,7 +41,7 @@ class DockerHelper:
                                                                  stdin_open= True, 
                                                                  name= container_name
                                                                  )
-            except docker.errors as docker_error:
+            except (docker.errors.APIError, docker.errors.ImageNotFound) as docker_error:
                 self.logger.error('Error while creating a container %s', docker_error)
         return container
 
