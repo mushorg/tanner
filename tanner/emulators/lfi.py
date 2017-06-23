@@ -11,6 +11,10 @@ class LfiEmulator:
         self.helper = docker_helper.DockerHelper()
 
     async def get_lfi_result(self, container, file_path):
+        #Terminate the string with NULL byte
+        if '\x00' in file_path:
+            file_path = file_path[:file_path.find('\x00')]
+
         cmd = 'cat {file}'.format(file= shlex.quote(file_path))
         execute_result = await self.helper.execute_cmd(container, cmd)
         #Nulls are not printable, so replace it with another line-ender
