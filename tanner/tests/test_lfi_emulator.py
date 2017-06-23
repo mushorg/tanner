@@ -1,16 +1,14 @@
-import os
 import unittest
 from unittest import mock
 import asyncio
-from tanner import config
 from tanner.emulators import lfi
-import yarl
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
         self.handler = lfi.LfiEmulator()
+        self.handler.helper.host_image = 'busybox:latest'
 
     def test_handle_abspath_lfi(self):
         attack_params = [dict(id= 'foo', value= '/etc/passwd')]
