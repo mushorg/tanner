@@ -11,7 +11,7 @@ class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop),
-            'lfi': lfi.LfiEmulator(base_dir),
+            'lfi': lfi.LfiEmulator(),
             'xss': xss.XssEmulator(),
             'sqli': sqli.SqliEmulator(db_name, base_dir),
             'cmd_exec': cmd_exec.CmdExecEmulator()
