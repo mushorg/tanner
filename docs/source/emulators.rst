@@ -1,5 +1,11 @@
 Emulators
 ---------
+Base emulator
+~~~~~~~~~~~~~
+This is the heart of emulation. Current emulators follow ``find and emulate`` approach where each emulator has a ``scan`` method
+which is called by base emulator against each ``GET``, ``POST`` parameter and ``cookie value``. The parameter which is affected, gets
+emulated by calling the corresponding emulator's ``handle`` method. It returns the ``payload`` along with ``injection page`` which is most recently visited ``text/html`` type page.
+
 RFI emulator
 ~~~~~~~~~~~~
 It emulates RFI_ vulnerability. This attack type is detected with pattern:
