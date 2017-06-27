@@ -1,5 +1,11 @@
 Emulators
 ---------
+Base emulator
+~~~~~~~~~~~~~
+This is the heart of emulation. Current emulators follow ``find and emulate`` approach where each emulator has a ``scan`` method
+which is called by base emulator against each ``GET``, ``POST`` parameter and ``cookie value``. The parameter which is affected, gets
+emulated by calling the corresponding emulator's ``handle`` method. It returns the ``payload`` along with ``injection page`` which is most recently visited ``text/html`` type page.
+
 RFI emulator
 ~~~~~~~~~~~~
 It emulates RFI_ vulnerability. This attack type is detected with pattern:
@@ -28,34 +34,10 @@ It emulates LFI_ vulnerability. This attack type is detected with pattern:
 
 .*(\/\.\.)*(home|proc|usr|etc)\/.*
 
-During initialization LFI emulator creates the virtualdocs environment in ``/opt/tanner/virtualdocs`` folder from ``vdocs.json``, which in  ``data`` folder of the project.
+It is emualted using a docker container with Linux filesystem (default: ``busybox:latest``).
 
-Linux system files are stored in subdirectory ``linux``
-
-This json has next structure:
-
-.. code-block:: javascript
-
-    {
-        "directory/filename":"content"
-    }
-
-
-For example, if we want to add passwd file into the virtualdocs, we should add JSON object into ``vdocs.json``:
-
-.. code-block:: javascript
-
-    {
-        "etc/passwd":"root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n<...>"
-    }
-
-When LFI attack is detected, LFI emulator:
-
-* Get available files from the ``linux`` directory
-* Extract the ``filename`` from requested path
-* Looking for the ``filename`` in available files
-* If the ``filename`` was found, return the content of the file
-
+When LFI attack is detected, LFI emulator executes a command ``cat **file_to_be_read**`` within the docker and it returns the contents
+of file if found else return ``No such file or directory``.
 
 XSS emulator
 ~~~~~~~~~~~~

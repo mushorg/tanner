@@ -6,40 +6,22 @@ from tanner.utils import patterns
 
 
 class XssEmulator:
-    @staticmethod
-    def extract_xss_data(data):
-        value = ''
-        if 'post_data' in data:
-            for field, val in data['post_data'].items():
-                val = urllib.parse.unquote(val)
-                xss = re.match(patterns.HTML_TAGS, val)
-                if xss:
-                    value += val if not value else '\n' + val
-        return value
+    
+    def scan(self, value):
+        detection = None
+        if patterns.XSS_ATTACK.match(value):
+            detection = dict(name= 'xss', order= 3)
+        return detection
 
-    def get_xss_result(self, session, val):
+    def get_xss_result(self, session, attack_params):
         result = None
-        injectable_page = None
-        if session:
-            injectable_page = self.set_xss_page(session)
-        if injectable_page is None:
-            injectable_page = '/index.html'
-        if val:
-            result = dict(value=val,
-                          page=injectable_page)
+        value = ''
+        for param in attack_params:
+            value += param['value'] if not value else '\n' + param['value']
+        result = dict(value=value)
         return result
 
-    @staticmethod
-    def set_xss_page(session):
-        injectable_page = None
-        for page in reversed(session.paths):
-            if mimetypes.guess_type(page['path'])[0] == 'text/html':
-                injectable_page = page['path']
-        return injectable_page
-
-    async def handle(self, value, session, raw_data=None):
+    async def handle(self, attack_params, session):
         xss_result = None
-        if not value:
-            value = self.extract_xss_data(raw_data)
-        xss_result = self.get_xss_result(session, value)
+        xss_result = self.get_xss_result(session, attack_params)
         return xss_result

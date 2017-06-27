@@ -5,7 +5,7 @@ import asyncio
 import uuid
 
 from tanner.config import TannerConfig
-from tanner.emulators import cmd_exec
+from tanner.utils import docker_helper
 from tanner.utils.mysql_db_helper import MySQLDBHelper
 from tanner.utils.sqlite_db_helper import SQLITEDBHelper
 
@@ -75,7 +75,7 @@ class Session:
         self.associated_env = env
 
     async def remove_associated_env(self):
-        await cmd_exec.CmdExecEmulator().delete_env(self.associated_env)
+        await docker_helper.DockerHelper().delete_env(self.associated_env)
 
     def get_uuid(self):
         return str(self.sess_uuid)

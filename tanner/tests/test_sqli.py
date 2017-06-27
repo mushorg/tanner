@@ -22,24 +22,24 @@ class SqliTest(unittest.TestCase):
         self.handler.query_map = query_map
 
     def test_map_query_id(self):
-        query = [('id', '1\'UNION SELECT 1,2,3,4')]
+        attack_value = dict(id= 'id', value= '1\'UNION SELECT 1,2,3,4')
         assert_result = 'SELECT * from users WHERE id=1 UNION SELECT 1,2,3,4;'
-        result = self.handler.map_query(query)
+        result = self.handler.map_query(attack_value)
         self.assertEqual(assert_result, result)
 
     def test_map_query_comments(self):
-        query = [('comment', 'some_comment" UNION SELECT 1,2 AND "1"="1')]
+        attack_value = dict(id= 'comment', value= 'some_comment" UNION SELECT 1,2 AND "1"="1')
         assert_result = 'SELECT * from comments WHERE comment="some_comment" UNION SELECT 1,2 AND "1"="1";'
-        result = self.handler.map_query(query)
+        result = self.handler.map_query(attack_value)
         self.assertEqual(assert_result, result)
 
     def test_map_query_error(self):
-        query = [('foo', 'bar\'UNION SELECT 1,2')]
-        result = self.handler.map_query(query)
+        attack_value = dict(id= 'foo', value= 'bar\'UNION SELECT 1,2')
+        result = self.handler.map_query(attack_value)
         self.assertIsNone(result)
 
     def test_get_sqli_result(self):
-        query = [('id', '1 UNION SELECT 1,2,3,4')]
+        attack_value = dict(id= 'id', value= '1 UNION SELECT 1,2,3,4')
 
         async def mock_execute_query(query, db_name):
             return [[1, 'name', 'email@mail.com', 'password'], [1, '2', '3', '4']]
@@ -47,16 +47,14 @@ class SqliTest(unittest.TestCase):
         self.handler.sqli_emulator = mock.Mock()
         self.handler.sqli_emulator.execute_query = mock_execute_query
 
-        assert_result = dict(value="[1, 'name', 'email@mail.com', 'password'] [1, '2', '3', '4']",
-                             page='/index.html'
-                             )
-        result = self.loop.run_until_complete(self.handler.get_sqli_result(query, 'foo.db'))
+        assert_result = dict(value="[1, 'name', 'email@mail.com', 'password'] [1, '2', '3', '4']")
+        result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
         self.assertEqual(assert_result, result)
 
     def test_get_sqli_result_error(self):
-        query = [('foo', 'bar\'UNION SELECT 1,2')]
+        attack_value = dict(id= 'foo', value= 'bar\'UNION SELECT 1,2')
         assert_result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
                         right syntax to use near foo at line 1'
-        result = self.loop.run_until_complete(self.handler.get_sqli_result(query, 'foo.db'))
+        result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
         self.assertEqual(assert_result, result)
