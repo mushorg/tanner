@@ -87,6 +87,9 @@ class TannerServer:
         response_msg = dict(version=1, response=dict(dorks=dorks))
         return web.json_response(response_msg)
 
+    async def on_shutdown(self, app):
+        self.redis_client.close()
+        
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)
@@ -96,6 +99,7 @@ class TannerServer:
 
     def create_app(self, loop):
         app = web.Application(loop=loop)
+        app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
 

@@ -24,6 +24,7 @@ class TestServer(AioHTTPTestCase):
 
         self.test_uuid = uuid.uuid4()
 
+
         async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
@@ -40,7 +41,10 @@ class TestServer(AioHTTPTestCase):
         dorks.choose_dorks = choosed
         dorks.extract_path = self._make_coroutine()
 
+        redis = mock.Mock()
+        redis.close = mock.Mock()
         self.serv.dorks = dorks
+        self.serv.redis_client = redis
 
         super(TestServer, self).setUp()
 
