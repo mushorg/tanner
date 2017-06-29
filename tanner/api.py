@@ -52,7 +52,10 @@ class Api:
                 if sess['sess_uuid'] == sess_uuid:
                     return sess
 
-    async def return_sessions_by_ip(self, redis_client, peer_ip, snare_uuid= None):
+    async def return_sessions(self, redis_client, filters, snare_uuid= None):
+        valid_filters = self.validate_filters(filters)
+        if validate_filters is not dict:
+            return 'Invalid filters'
         query_res = []
         if snare_uuid:
             snare_uuids = [snare_uuid]
@@ -63,21 +66,36 @@ class Api:
         for snare_id in snare_uuids:
             sessions = await self.return_uuid_stats(snare_id, redis_client)
             for sess in sessions:
-                if sess['peer_ip'] == peer_ip:
+                is_matching_sesssion = True
+                if 'user_agent' in valid_filters:
+                    if valid_filters['user_agent'] not in sess['user_agent']:
+                        is_matching_sesssion = False
+                if 'peer_ip' in valid_filters:
+                    if valid_filters['peer_ip'] != sess['peer_ip']:
+                        is_matching_sesssion = False
+                if 'attack_type' in valid_filters:
+                    if valid_filters['attack_type'] not in sess['attack_types']:
+                        is_matching_sesssion = False
+                if 'time_interval' in valid_filters:
+                    if valid_filters['time_interval']['end_time'] > sess['start_time'] or valid_filters['time_interval']['start_time'] < sess['end_time']:
+                        is_matching_sesssion = False
+                if 'owner_type' in valid_filters:
+                    if valid_filters['owner_type'] not in sess['owner_types']:
+                        is_matching_sesssion = False
+
+                if is_matching_sesssion:
                     matching_sessions.append(sess['sess_uuid'])
         return matching_sessions
 
-    async def return_sessions_by_time(self, redis_client, time_interval, snare_uuid= None):
-        query_res = []
-        if snare_uuid:
-            snare_uuids = [snare_uuid]
+    @staticmethod
+    def validate_filters(filters):
+        possible_filters = ['user-agent', 'peer_ip', 'attack_type', 'time_interval', 'owner_type']
+        valid_filters = {}
+        for key, val in filters.items():
+            if key in possible_filters:
+                valid_filters[key] = val
+
+        if 'time_interval' in valid_filters and valid_filters['time_interval'] is dict and 'start_time' in valid_filters['time_interval'] and 'start_time' in valid_filters['time_interval']:
+            return 'Invalid time filter'
         else:
-            snare_uuids = await self.return_stats(redis_client)
-
-        matching_sessions = []
-        for snare_id in snare_uuids:
-            sessions = await self.return_uuid_stats(snare_id, redis_client)
-            for sess in sessions:
-                if time_interval['start_time'] <= sess['start_time'] <= time_interval['end_time'] or time_interval['start_time'] <= sess['end_time'] <= time_interval['end_time']:
-                    matching_sessions.append(sess['sess_uuid'])
-        return matching_sessions
+            return valid_filters
