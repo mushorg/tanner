@@ -38,3 +38,46 @@ class Api:
             for (i, val) in enumerate(query_res):
                 query_res[i] = json.loads(val)
         return query_res
+
+    async def return_session_info(self, redis_client, sess_uuid, snare_uuid= None):
+        query_res = []
+        if snare_uuid:
+            snare_uuids = [snare_uuid]
+        else:
+            snare_uuids = await self.return_stats(redis_client)
+
+        for snare_id in snare_uuids:
+            sessions = await self.return_uuid_stats(snare_id, redis_client)
+            for sess in sessions:
+                if sess['sess_uuid'] == sess_uuid:
+                    return sess
+
+    async def return_sessions_by_ip(self, redis_client, peer_ip, snare_uuid= None):
+        query_res = []
+        if snare_uuid:
+            snare_uuids = [snare_uuid]
+        else:
+            snare_uuids = await self.return_stats(redis_client)
+
+        matching_sessions = []
+        for snare_id in snare_uuids:
+            sessions = await self.return_uuid_stats(snare_id, redis_client)
+            for sess in sessions:
+                if sess['peer_ip'] == peer_ip:
+                    matching_sessions.append(sess['sess_uuid'])
+        return matching_sessions
+
+    async def return_sessions_by_time(self, redis_client, time_interval, snare_uuid= None):
+        query_res = []
+        if snare_uuid:
+            snare_uuids = [snare_uuid]
+        else:
+            snare_uuids = await self.return_stats(redis_client)
+
+        matching_sessions = []
+        for snare_id in snare_uuids:
+            sessions = await self.return_uuid_stats(snare_id, redis_client)
+            for sess in sessions:
+                if time_interval['start_time'] <= sess['start_time'] <= time_interval['end_time'] or time_interval['start_time'] <= sess['end_time'] <= time_interval['end_time']:
+                    matching_sessions.append(sess['sess_uuid'])
+        return matching_sessions
