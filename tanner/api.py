@@ -13,8 +13,15 @@ class Api:
 
         if query == 'stats' and not params:
             result = await self.return_stats(redis_client)
-        elif query == 'stats' and 'uuid' in params:
+        elif query == 'snare-stats' and 'uuid' in params:
             result = await self.return_uuid_stats(params['uuid'], redis_client, 50)
+        elif query == 'session-stats':
+            snare_uuid_param = params['snare-uuid'] if 'snare-uuid' in params else None
+            if 'sess-uuid' in params:
+                result = await self.return_session_info(redis_client, params['sess-uuid'], snare_uuid_param)
+            elif 'filters' in params:
+                applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
+                result = await self.return_sessions(redis_client, applied_filters, snare_uuid_param)
         return result
 
     async def return_stats(self, redis_client):
