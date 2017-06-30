@@ -21,6 +21,10 @@ class Api:
                 result = await self.return_session_info(redis_client, params['sess-uuid'], snare_uuid_param)
             elif 'filters' in params:
                 applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
+                if 'time_interval' in applied_filters:
+                    time_interval = applied_filters['time_interval']
+                    applied_filters['time_interval'] = {'start_time' : float(time_interval.split('-')[0]),
+                                                        'end_time': float(time_interval.split('-')[1]) }
                 result = await self.return_sessions(redis_client, applied_filters, snare_uuid_param)
         return result
 
@@ -61,7 +65,7 @@ class Api:
 
     async def return_sessions(self, redis_client, filters, snare_uuid= None):
         valid_filters = self.validate_filters(filters)
-        if validate_filters is not dict:
+        if type(valid_filters) is not dict:
             return 'Invalid filters'
         query_res = []
         if snare_uuid:
@@ -74,8 +78,8 @@ class Api:
             sessions = await self.return_uuid_stats(snare_id, redis_client)
             for sess in sessions:
                 is_matching_sesssion = True
-                if 'user_agent' in valid_filters:
-                    if valid_filters['user_agent'] not in sess['user_agent']:
+                if 'user-agent' in valid_filters:
+                    if valid_filters['user-agent'] not in sess['user-agent']:
                         is_matching_sesssion = False
                 if 'peer_ip' in valid_filters:
                     if valid_filters['peer_ip'] != sess['peer_ip']:
@@ -84,7 +88,7 @@ class Api:
                     if valid_filters['attack_type'] not in sess['attack_types']:
                         is_matching_sesssion = False
                 if 'time_interval' in valid_filters:
-                    if valid_filters['time_interval']['end_time'] > sess['start_time'] or valid_filters['time_interval']['start_time'] < sess['end_time']:
+                    if valid_filters['time_interval']['end_time'] < sess['start_time'] or valid_filters['time_interval']['start_time'] > sess['end_time']:
                         is_matching_sesssion = False
                 if 'owner_type' in valid_filters:
                     if valid_filters['owner_type'] not in sess['owner_types']:
@@ -97,6 +101,7 @@ class Api:
     @staticmethod
     def validate_filters(filters):
         possible_filters = ['user-agent', 'peer_ip', 'attack_type', 'time_interval', 'owner_type']
+
         valid_filters = {}
         for key, val in filters.items():
             if key in possible_filters:
