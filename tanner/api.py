@@ -26,9 +26,15 @@ class Api:
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
-    async def handle_snare_stats(self, request):
+    async def handle_snare_info(self, request):
         snare_uuid = request.match_info['snare_uuid']
         result = await self.return_snare_info(snare_uuid, 50)
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
+
+    async def handle_snare_stats(self, request):
+        snare_uuid = request.match_info['snare_uuid']
+        result = await self.return_snare_stats(snare_uuid)
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
@@ -59,6 +65,25 @@ class Api:
         except asyncio_redis.NotConnectedError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         return list(query_res)
+
+    async def return_snare_stats(self, snare_uuid):
+        result = {}
+        sessions = await self.return_snare_info(snare_uuid)
+
+        result['total_sessions'] = len(sessions)
+        result['total_duration'] = 0
+        result['attack_frequency'] = {'sqli' : 0,
+                                      'lfi' : 0,
+                                      'xss' : 0,
+                                      'rfi' : 0,
+                                      'cmd_exec' : 0}
+
+        for sess in sessions:
+            result['total_duration'] += sess['end_time'] - sess['start_time']
+            for attack in sess['attack_types']:
+                result['attack_frequency'][attack] += 1
+
+        return result
 
     async def return_snare_info(self, uuid, count=-1):
         query_res = []

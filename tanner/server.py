@@ -89,7 +89,8 @@ class TannerServer:
     def setup_api_routes(self, app):
         app.router.add_get('/', self.api.handle_index)
         app.router.add_get('/snares', self.api.handle_stats)
-        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.api.handle_snare_stats)
+        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.api.handle_snare_info)
+        app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.api.handle_snare_stats)
         app.router.add_resource('/sessions').add_route('GET', self.api.handle_session_stats)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.api.handle_session_info)
 
