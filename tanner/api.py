@@ -21,7 +21,7 @@ class Api:
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
-    async def handle_stats(self, request):
+    async def handle_snares(self, request):
         result = await self.return_snares()
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
@@ -38,7 +38,7 @@ class Api:
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
-    async def handle_session_stats(self, request):
+    async def handle_sessions(self, request):
         params = request.url.query
         applied_filters = {}
         if 'filters' in params:
