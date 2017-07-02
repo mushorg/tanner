@@ -33,7 +33,7 @@ It supports 5 filters:
 	* **peer_ip** -- Sessions with given ip. E.g ``?filters=peer_ip:127.0.0.1``
 	* **user-agent** -- Sessions with given user-agent. E.g ``?filters=user-agent:Chrome``
 	* **attack_type** -- Sessions with given attack type such as lfi, rfi, xss, cmd_exec, sqli. E.g ``?filters=attack_type:lfi``
-	* **owner_type** -- Sessions with given owner type such as user, tool, crawler, attacker. E.g ``?filters=owner_type:attacker``
+	* **possible_owner** -- Sessions with given owner type such as user, tool, crawler, attacker. E.g ``?filters=possible_owner:attacker``
 	* **time_interval** -- Sessions which are active during a given time-interval. E.g ``?filters=time_interval:1480560-1480580``
 
 /api/session/<sess-uuid>
