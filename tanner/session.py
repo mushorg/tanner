@@ -59,7 +59,7 @@ class Session:
 
     def set_attack_type(self, path, attack_type):
         for sess_path in self.paths:
-            if sess_path == path:
+            if sess_path['path'] == path:
                 sess_path.update({'attack_type': attack_type})
 
     def associate_db(self, db_name):
