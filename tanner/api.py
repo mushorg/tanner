@@ -69,6 +69,8 @@ class Api:
     async def return_snare_stats(self, snare_uuid):
         result = {}
         sessions = await self.return_snare_info(snare_uuid)
+        if sessions == 'Invalid SNARE UUID':
+            return result
 
         result['total_sessions'] = len(sessions)
         result['total_duration'] = 0
@@ -108,6 +110,8 @@ class Api:
 
         for snare_id in snare_uuids:
             sessions = await self.return_snare_info(snare_id)
+            if sessions == 'Invalid SNARE UUID':
+                continue
             for sess in sessions:
                 if sess['sess_uuid'] == sess_uuid:
                     return sess
@@ -123,6 +127,8 @@ class Api:
         for snare_id in snare_uuids:
             sessions = await self.return_snare_info(snare_id)
             for sess in sessions:
+                if sessions == 'Invalid SNARE UUID':
+                    continue
                 is_matching_sesssion = True
                 if 'user-agent' in filters:
                     if filters['user-agent'] not in sess['user-agent']:
