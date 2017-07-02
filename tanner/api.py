@@ -81,7 +81,8 @@ class Api:
         for sess in sessions:
             result['total_duration'] += sess['end_time'] - sess['start_time']
             for attack in sess['attack_types']:
-                result['attack_frequency'][attack] += 1
+                if attack in result['attack_frequency']:
+                    result['attack_frequency'][attack] += 1
 
         return result
 
