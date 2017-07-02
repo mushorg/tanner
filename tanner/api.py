@@ -112,10 +112,10 @@ class Api:
                 if sess['sess_uuid'] == sess_uuid:
                     return sess
 
-    async def return_sessions(self, filters, snare_uuid= None):
+    async def return_sessions(self, filters):
         query_res = []
-        if snare_uuid:
-            snare_uuids = [snare_uuid]
+        if 'snare_uuid' in filters:
+            snare_uuids = [filters['snare_uuid']]
         else:
             snare_uuids = await self.return_snares()
 
