@@ -142,8 +142,8 @@ class Api:
                 if 'time_interval' in filters:
                     if filters['time_interval']['end_time'] < sess['start_time'] or filters['time_interval']['start_time'] > sess['end_time']:
                         is_matching_sesssion = False
-                if 'owner_type' in filters:
-                    if filters['owner_type'] not in sess['owner_types']:
+                if 'possible_owner' in filters:
+                    if filters['possible_owner'] not in sess['possible_owners']:
                         is_matching_sesssion = False
 
                 if is_matching_sesssion:
