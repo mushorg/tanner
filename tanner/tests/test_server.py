@@ -105,7 +105,7 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_snares_request(self):
-        async def mock_return_snares(*args, **kwargs):
+        async def mock_return_snares():
             return ["8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4"]
 
         assert_content = {"version": 1, "response": {"message": ["8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4"]}}
@@ -117,8 +117,9 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_snare_info_request(self):
-        async def mock_return_snare_info(*args, **kwargs):
-            return [{"test_sess1": "sess1_info"}, {"test_sess1": "sess2_info"}]
+        async def mock_return_snare_info(snare_uuid, count):
+            if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4" and count == 50:
+                return [{"test_sess1": "sess1_info"}, {"test_sess1": "sess2_info"}]
 
         assert_content = {"version": 1, "response": {"message": [{"test_sess1": "sess1_info"}, {"test_sess1": "sess2_info"}]}}
         self.serv.api.return_snare_info = mock_return_snare_info
@@ -129,8 +130,9 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_snare_stats_request(self):
-        async def mock_return_snare_stats(*args, **kwargs):
-            return {"total_sessions": 605, "total_duration": 865.560286283493, "attack_frequency": {"sqli": 0, "lfi": 0, "xss": 0, "rfi": 0, "cmd_exec": 0}}
+        async def mock_return_snare_stats(snare_uuid):
+            if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4":
+                return {"total_sessions": 605, "total_duration": 865.560286283493, "attack_frequency": {"sqli": 0, "lfi": 0, "xss": 0, "rfi": 0, "cmd_exec": 0}}
 
         assert_content = {"version": 1, "response": {"message": {"total_sessions": 605, "total_duration": 865.560286283493, "attack_frequency": {"sqli": 0, "lfi": 0, "xss": 0, "rfi": 0, "cmd_exec": 0}}}}
         self.serv.api.return_snare_stats = mock_return_snare_stats
@@ -141,8 +143,10 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_sessions_request(self):
-        async def mock_return_sessions(*args, **kwargs):
-            return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
+        async def mock_return_sessions(filters):
+            if type(filters) is dict and filters['peer_ip'] == "127.0.0.1" and \
+            filters['time_interval']['start_time'] == 1497890400 and filters['time_interval']['end_time'] == 1497890450:
+                return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
 
         assert_content = {"version": 1, "response": {"message": ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]}}
         self.serv.api.return_sessions = mock_return_sessions
@@ -153,8 +157,9 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_sessions_info_request(self):
-        async def mock_return_session_info(*args, **kwargs):
-            return {"test_sess1": "sess1_info"}
+        async def mock_return_session_info(sess_uuid):
+            if sess_uuid == "4afd45d61b994d9eb3ba20faa81a45e1":
+                return {"test_sess1": "sess1_info"}
 
         assert_content = {"version": 1, "response": {"message": {"test_sess1": "sess1_info"}}}
         self.serv.api.return_session_info = mock_return_session_info
