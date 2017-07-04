@@ -129,23 +129,23 @@ class Api:
             for sess in sessions:
                 if sessions == 'Invalid SNARE UUID':
                     continue
-                is_matching_sesssion = True
+                match_count = 0
                 if 'user-agent' in filters:
-                    if filters['user-agent'] not in sess['user-agent']:
-                        is_matching_sesssion = False
+                    if filters['user-agent'] in sess['user-agent']:
+                        match_count += 1
                 if 'peer_ip' in filters:
-                    if filters['peer_ip'] != sess['peer_ip']:
-                        is_matching_sesssion = False
+                    if filters['peer_ip'] == sess['peer_ip']:
+                        match_count += 1
                 if 'attack_type' in filters:
-                    if filters['attack_type'] not in sess['attack_types']:
-                        is_matching_sesssion = False
+                    if filters['attack_type'] in sess['attack_types']:
+                        match_count += 1
                 if 'time_interval' in filters:
-                    if filters['time_interval']['end_time'] < sess['start_time'] or filters['time_interval']['start_time'] > sess['end_time']:
-                        is_matching_sesssion = False
+                    if not (filters['time_interval']['end_time'] < sess['start_time'] or filters['time_interval']['start_time'] > sess['end_time']):
+                        match_count += 1
                 if 'possible_owner' in filters:
-                    if filters['possible_owner'] not in sess['possible_owners']:
-                        is_matching_sesssion = False
+                    if filters['possible_owner'] in sess['possible_owners']:
+                        match_count += 1
 
-                if is_matching_sesssion:
+                if match_count == len(filters):
                     matching_sessions.append(sess['sess_uuid'])
         return matching_sessions
