@@ -145,12 +145,12 @@ class TestServer(AioHTTPTestCase):
     async def test_api_sessions_request(self):
         async def mock_return_sessions(filters):
             if type(filters) is dict and filters['peer_ip'] == "127.0.0.1" and \
-            filters['time_interval']['start_time'] == 1497890400 and filters['time_interval']['end_time'] == 1497890450:
+            filters['start_time'] == 1497890400 and filters['user_agent'] == 'ngnix':
                 return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
 
         assert_content = {"version": 1, "response": {"message": ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]}}
         self.serv.api.return_sessions = mock_return_sessions
-        request = await self.client.request("GET", "/api/sessions?filters=peer_ip:127.0.0.1 time_interval:1497890400-1497890450")
+        request = await self.client.request("GET", "/api/sessions?filters=peer_ip:127.0.0.1 start_time:1497890400 user_agent:ngnix")
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
