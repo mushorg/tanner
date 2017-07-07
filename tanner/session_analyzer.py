@@ -31,7 +31,7 @@ class SessionAnalyzer:
     async def save_session(self, redis_client):
         while not self.queue.empty():
             session = await self.queue.get()
-            s_key = session['sensor_uuid']
+            s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
                 await redis_client.lpush(s_key, [json.dumps(session)])
@@ -52,7 +52,7 @@ class SessionAnalyzer:
             peer_ip=session['peer']['ip'],
             peer_port=session['peer']['port'],
             user_agent=session['user_agent'],
-            sensor_uuid=session['sensor'],
+            snare_uuid=session['snare_uuid'],
             start_time=session['start_time'],
             end_time=session['end_time'],
             requests_in_second=rps,
