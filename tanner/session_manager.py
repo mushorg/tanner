@@ -70,13 +70,25 @@ class SessionManager:
         for sess in self.sessions:
             if not sess.is_expired():
                 continue
-            await sess.remove_associated_db()
-            if sess.associated_env is not None:
-                await sess.remove_associated_env()
-            self.sessions.remove(sess)
-            try:
-                await redis_client.set(sess.get_uuid(), sess.to_json())
-                await self.analyzer.analyze(sess.get_uuid(), redis_client)
-            except asyncio_redis.NotConnectedError as redis_error:
-                self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
-                self.sessions.append(sess)
+            is_deleted = await self.delete_session(sess, redis_client)
+            if is_deleted:
+                self.sessions.remove(sess)
+
+    async def delete_sessions_on_shutdown(self, redis_client):
+        for sess in self.sessions:
+            is_deleted = await self.delete_session(sess, redis_client)
+            if is_deleted:
+                self.sessions.remove(sess)
+
+    async def delete_session(self, sess, redis_client):
+        await sess.remove_associated_db()
+        if sess.associated_env is not None:
+            await sess.remove_associated_env()
+        try:
+            await redis_client.set(sess.get_uuid(), sess.to_json())
+            await self.analyzer.analyze(sess.get_uuid(), redis_client)
+        except asyncio_redis.NotConnectedError as redis_error:
+            self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
+            return False
+        else:
+            return True
