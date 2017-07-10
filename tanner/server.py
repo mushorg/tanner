@@ -79,8 +79,9 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
+        await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
         self.redis_client.close()
-        
+
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)

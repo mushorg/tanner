@@ -32,8 +32,12 @@ class TestServer(AioHTTPTestCase):
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
             return sess
 
-        self.serv.session_manager.add_or_update_session = _add_or_update_mock
+        async def _delete_sessions_mock(client):
+            pass
 
+        self.serv.session_manager.add_or_update_session = _add_or_update_mock
+        self.serv.session_manager.delete_sessions_on_shutdown = _delete_sessions_mock
+        
         async def choosed(client):
             return [x for x in range(10)]
 
