@@ -25,7 +25,7 @@ Getting Started
 1. Install the Redis: ``sudo apt-get install redis-server``
 2. Start it on ``localhost`` with default ``port``: ``redis-server``
 
-### Setup PHP Sanbox
+### Setup PHP Sandbox
 
 
 1. For PHP Sandbox setup, see sandbox [manual] (https://github.com/mushorg/phpox)
