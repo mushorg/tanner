@@ -32,6 +32,31 @@ class TannerWebServer:
         'sessions' : sessions
         }
 
+    @aiohttp_jinja2.template('sessions.html')
+    async def handle_sessions(self, request):
+        snare_uuid = request.match_info['snare_uuid']
+        params = request.url.query
+        applied_filters = {'snare_uuid': snare_uuid}
+        try:
+            if 'filters' in params:
+                applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
+                if 'start_time' in applied_filters:
+                    applied_filters['start_time'] = float(applied_filters['start_time'])
+                if 'end_time' in applied_filters:
+                    applied_filters['end_time'] = float(applied_filters['end_time'])
+        except Exception as e:
+            self.logger.error('Filter error : %s' % e)
+            result = 'Invalid filter definition'
+        else:
+            sess_uuids = await self.api.return_sessions(applied_filters)
+            sessions = []
+            for sess_uuid in sess_uuids:
+                sess = await self.api.return_session_info(sess_uuid)
+                sessions.append(sess)
+        return {
+        'sessions' : sessions
+        }
+
     @aiohttp_jinja2.template('session.html')
     async def handle_session_info(self, request):
         sess_uuid = request.match_info['sess_uuid']
@@ -45,6 +70,7 @@ class TannerWebServer:
         app.router.add_get('/snares', self.handle_snares)
         app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare_info)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
+        app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
 
     def create_app(self, loop):
         app = web.Application(loop= loop)
