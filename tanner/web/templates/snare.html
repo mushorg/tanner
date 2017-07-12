@@ -19,20 +19,16 @@ tr:hover{
 </style>
 </head>
 <body>
-<h3 align="center">SNARE-SESSIONS</h3>
+<h3 align="center">SNARE-STATS</h3>
 <table align="center">
   <tr>
-    <th style="width: 20%">No</th>
-    <th>Session-uuid</th>
-    <th>IP</th>
-    <th>Owner</th>
+    <th style="width: 20%">Key</th>
+    <th>Value</th>
   </tr>
-  {% for sess in sessions %}
+  {% for key, value in snare.items() %}
   <tr>
-    <td>{{loop.index}}</td>
-    <td><a href="/session/{{sess.sess_uuid}}">{{sess.sess_uuid}}</a></td>
-    <td>{{sess.peer_ip}}</td>
-    <td>{{sess.possible_owners}}</td>
+    <td><b>{{key}}</b></td>
+    <td>{{value}}</td>
   </tr>
   {% endfor %}
 </table>
