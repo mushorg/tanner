@@ -24,9 +24,27 @@ class TannerWebServer:
         'snares' : snares
         }
 
+    @aiohttp_jinja2.template('snare.html')
+    async def handle_snare_info(self, request):
+        snare_uuid = request.match_info['snare_uuid']
+        sessions = await self.api.return_snare_info(snare_uuid)
+        return {
+        'sessions' : sessions
+        }
+
+    @aiohttp_jinja2.template('session.html')
+    async def handle_session_info(self, request):
+        sess_uuid = request.match_info['sess_uuid']
+        session = await self.api.return_session_info(sess_uuid)
+        return {
+        'session' : session
+        }
+
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
+        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare_info)
+        app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
 
     def create_app(self, loop):
         app = web.Application(loop= loop)
