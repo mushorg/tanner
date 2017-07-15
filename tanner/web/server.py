@@ -21,14 +21,14 @@ class TannerWebServer:
     async def handle_snares(self, request):
         snares = await self.api.return_snares()
         return {
-        'snares' : snares
+            'snares' : snares
         }
 
     @aiohttp_jinja2.template('snare.html')
     async def handle_snare(self, request):
         snare_uuid = request.match_info['snare_uuid']
         return{
-        'snare' : snare_uuid
+            'snare' : snare_uuid
         }
 
     @aiohttp_jinja2.template('snare-stats.html')
@@ -36,7 +36,7 @@ class TannerWebServer:
         snare_uuid = request.match_info['snare_uuid']
         snare_stats = await self.api.return_snare_stats(snare_uuid)
         return {
-        'snare_stats' : snare_stats
+            'snare_stats' : snare_stats
         }
 
     @aiohttp_jinja2.template('sessions.html')
@@ -60,8 +60,9 @@ class TannerWebServer:
             for sess_uuid in sess_uuids:
                 sess = await self.api.return_session_info(sess_uuid)
                 sessions.append(sess)
+            result = sessions
         return {
-        'sessions' : sessions
+            'sessions' : result
         }
 
     @aiohttp_jinja2.template('session.html')
@@ -69,7 +70,7 @@ class TannerWebServer:
         sess_uuid = request.match_info['sess_uuid']
         session = await self.api.return_session_info(sess_uuid)
         return {
-        'session' : session
+            'session' : session
         }
 
     def setup_routes(self, app):
@@ -93,6 +94,6 @@ class TannerWebServer:
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
-        web.run_app(app, host= '0.0.0.0', port= 8091)
+        web.run_app(app, host='0.0.0.0', port=8091)
 
 TannerWebServer().start()
