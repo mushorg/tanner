@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Snares{% endblock %}
+{% block content %}
 <h3 align="center">SNARE-UUIDS</h3>
 <table align="center">
   <tr>
@@ -16,7 +13,4 @@
     <td><a href="/snare/{{snare}}">{{snare}}</a></td>
   </tr>
   {% endfor %}
-</table>
-
-</body>
-</html>
+{% endblock %}

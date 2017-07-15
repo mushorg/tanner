@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" type="text/css" href="/static/css/styles.css">
-</head>
+{% extends "base.html" %}
+{% block title %}Session({{session.sess_uuid}}){% endblock %}
+{% block content %}
 <body>
 <h3 align="center">SESSION INFO</h3>
 <table align="center">
@@ -91,6 +89,4 @@
     </td>
   </tr>
 </table>
-
-</body>
-</html>
+{% endblock %}
