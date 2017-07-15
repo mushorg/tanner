@@ -31,7 +31,7 @@ tr:hover{
   </tr>
   <tr>
     <td><b>IP</b></td>
-    <td>{{session.peer_ip}}</td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=peer_ip:{{session.peer_ip}}">{{session.peer_ip}}</a></td>
   </tr>
   <tr>
     <td><b>Port</b></td>
@@ -47,11 +47,11 @@ tr:hover{
   </tr>
   <tr>
     <td><b>Start time</b></td>
-    <td>{{session.start_time}}</td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=start_time:{{session.start_time}}">{{session.start_time}}</a></td>
   </tr>
   <tr>
     <td><b>End time</b></td>
-    <td>{{session.end_time}}</td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=end_time:{{session.end_time}}">{{session.end_time}}</a></td>
   </tr>
   <tr>
     <td><b>Requests/sec</b></td>
@@ -75,7 +75,11 @@ tr:hover{
   </tr>
   <tr>
     <td><b>Attack types</b></td>
-    <td>{{session.attack_types|join(', ')}}</td>
+    <td>
+    {% for attack in session.attack_types %}
+      <a href="/{{session.snare_uuid}}/sessions?filters=attack_types:{{attack}}">{{attack}}</a><br>
+    {% endfor %}
+    </td>
   </tr>
   <tr>
     <td><b>Paths</b></td>
@@ -95,7 +99,11 @@ tr:hover{
   </tr>
   <tr>
     <td><b>Possible Owners</b></td>
-    <td>{{session.possible_owners|join(', ')}}</td>
+    <td>
+    {% for owner in session.possible_owners %}
+      <a href="/{{session.snare_uuid}}/sessions?filters=possible_owners:{{owner}}">{{owner}}</a><br>
+    {% endfor %}
+    </td>
   </tr>
 </table>
 
