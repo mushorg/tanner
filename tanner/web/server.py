@@ -79,6 +79,7 @@ class TannerWebServer:
         app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
         app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
+        app.router.add_static('/static/', path='./static')
 
     def create_app(self, loop):
         app = web.Application(loop= loop)
