@@ -19,19 +19,8 @@ tr:hover{
 </style>
 </head>
 <body>
-<h3 align="center">SNARE-STATS</h3>
-<table align="center">
-  <tr>
-    <th style="width: 20%">Key</th>
-    <th>Value</th>
-  </tr>
-  {% for key, value in snare.items() %}
-  <tr>
-    <td><b>{{key}}</b></td>
-    <td>{{value}}</td>
-  </tr>
-  {% endfor %}
-</table>
-
+<h3 align="center">{{snare}}</h3>
+<h4 align="center"><a href="/snare-stats/{{snare}}">Snare-Stats</a></h4>
+<h4 align="center"><a href="/{{snare}}/sessions">Sessions</a></h4>
 </body>
 </html>

@@ -25,11 +25,18 @@ class TannerWebServer:
         }
 
     @aiohttp_jinja2.template('snare.html')
+    async def handle_snare(self, request):
+        snare_uuid = request.match_info['snare_uuid']
+        return{
+        'snare' : snare_uuid
+        }
+
+    @aiohttp_jinja2.template('snare-stats.html')
     async def handle_snare_stats(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        sanre_info = await self.api.return_snare_stats(snare_uuid)
+        snare_stats = await self.api.return_snare_stats(snare_uuid)
         return {
-        'snare' : sanre_info
+        'snare_stats' : snare_stats
         }
 
     @aiohttp_jinja2.template('sessions.html')
@@ -68,7 +75,8 @@ class TannerWebServer:
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
-        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare_stats)
+        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare)
+        app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
         app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
 
