@@ -94,6 +94,8 @@ class TannerWebServer:
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
-        web.run_app(app, host='0.0.0.0', port=8091)
+        host = TannerConfig.get('WEB', 'host')
+        port = TannerConfig.get('WEB', 'port')
+        web.run_app(app, host=host, port=port)
 
 TannerWebServer().start()
