@@ -25,12 +25,22 @@ tr:hover{
     <th style="width: 20%">Key</th>
     <th>Value</th>
   </tr>
-  {% for key, value in snare_stats.items() %}
   <tr>
-    <td><b>{{key}}</b></td>
-    <td>{{value}}</td>
+    <td><b>No of Sessions</b></td>
+    <td>{{snare_stats.total_sessions}}</td>
   </tr>
-  {% endfor %}
+  <tr>
+    <td><b>Total Duration</b></td>
+    <td>{{snare_stats.total_duration}}</td>
+  </tr>
+  <tr>
+    <td><b>Attack Frequency</b></td>
+    <td>
+    {% for key, val in snare_stats.attack_frequency.items() %}
+      {{key}} : {{val}} <br>
+    {% endfor %}
+    </td>
+  </tr>  
 </table>
 
 </body>

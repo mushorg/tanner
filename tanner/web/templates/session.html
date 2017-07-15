@@ -25,12 +25,78 @@ tr:hover{
     <th style="width: 20%">Key</th>
     <th>Value</th>
   </tr>
-  {% for key, value in session.items() %}
   <tr>
-    <td><b>{{key}}</b></td>
-    <td>{{value}}</td>
+    <td><b>UUID</b></td>
+    <td>{{session.sess_uuid}}</td>
   </tr>
-  {% endfor %}
+  <tr>
+    <td><b>IP</b></td>
+    <td>{{session.peer_ip}}</td>
+  </tr>
+  <tr>
+    <td><b>Port</b></td>
+    <td>{{session.peer_port}}</td>
+  </tr>
+  <tr>
+    <td><b>User Agents</b></td>
+    <td>{{session.user_agent}}</td>
+  </tr>
+  <tr>
+    <td><b>Snare UUID</b></td>
+    <td>{{session.snare_uuid}}</td>
+  </tr>
+  <tr>
+    <td><b>Start time</b></td>
+    <td>{{session.start_time}}</td>
+  </tr>
+  <tr>
+    <td><b>End time</b></td>
+    <td>{{session.end_time}}</td>
+  </tr>
+  <tr>
+    <td><b>Requests/sec</b></td>
+    <td>{{session.requests_in_second}}</td>
+  </tr>
+  <tr>
+    <td><b>Time between requests</b></td>
+    <td>{{session.approx_time_between_requests}}</td>
+  </tr>
+  <tr>
+    <td><b>Paths</b></td>
+    <td>{{session.accepted_paths}}</td>
+  </tr>
+  <tr>
+    <td><b>Errors</b></td>
+    <td>{{session.errors}}</td>
+  </tr>
+  <tr>
+    <td><b>Hidden Links</b></td>
+    <td>{{session.hidden_links}}</td>
+  </tr>
+  <tr>
+    <td><b>Attack types</b></td>
+    <td>{{session.attack_types|join(', ')}}</td>
+  </tr>
+  <tr>
+    <td><b>Paths</b></td>
+    <td>
+    {% for path in session.paths %}
+      {{path}} <br>
+    {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <td><b>Cookies</b></td>
+    <td>
+    {% for key, val in session.cookies.items() %}
+      {{key}} : {{val}} <br>
+    {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <td><b>Possible Owners</b></td>
+    <td>{{session.possible_owners|join(', ')}}</td>
+  </tr>
 </table>
 
 </body>
