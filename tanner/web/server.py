@@ -80,12 +80,12 @@ class TannerWebServer:
         app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
         app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
-        app.router.add_static('/static/', path='./static')
+        app.router.add_static('/static/', path='tanner/web/static')
 
     def create_app(self, loop):
         app = web.Application(loop= loop)
         aiohttp_jinja2.setup(app,
-            loader= jinja2.FileSystemLoader('templates'))
+            loader= jinja2.FileSystemLoader('tanner/web/templates'))
         self.setup_routes(app)
         return app
 
@@ -97,5 +97,3 @@ class TannerWebServer:
         host = TannerConfig.get('WEB', 'host')
         port = TannerConfig.get('WEB', 'port')
         web.run_app(app, host=host, port=port)
-
-TannerWebServer().start()
