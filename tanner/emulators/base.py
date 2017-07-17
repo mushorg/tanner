@@ -4,17 +4,19 @@ import re
 import urllib.parse
 import yarl
 
+from tanner.config import TannerConfig
 from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
 from tanner.utils import patterns
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
+        self.emulator_enabled = TannerConfig.get('EMULATORS', 'emulator_enabled')
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop),
-            'lfi': lfi.LfiEmulator(),
-            'xss': xss.XssEmulator(),
-            'sqli': sqli.SqliEmulator(db_name, base_dir),
-            'cmd_exec': cmd_exec.CmdExecEmulator()
+            'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
+            'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
+            'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
+            'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
+            'cmd_exec': cmd_exec.CmdExecEmulator() if self.emulator_enabled['cmd_exec'] else None
         }
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
@@ -45,13 +47,14 @@ class BaseHandler:
         attack_params = {}
         for param_id, param_value in data.items():
             for emulator in target_emulators:
-                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
-                if possible_detection:
-                    if detection['order'] < possible_detection['order']:
-                        detection = possible_detection
-                    if emulator not in attack_params:
-                        attack_params[emulator] = []
-                    attack_params[emulator].append(dict(id= param_id, value= param_value))
+            	if self.emulator_enabled[emulator]:
+	                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
+	                if possible_detection:
+	                    if detection['order'] < possible_detection['order']:
+	                        detection = possible_detection
+	                    if emulator not in attack_params:
+	                        attack_params[emulator] = []
+	                    attack_params[emulator].append(dict(id= param_id, value= param_value))
                     
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
