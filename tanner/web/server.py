@@ -46,7 +46,8 @@ class TannerWebServer:
         applied_filters = {'snare_uuid': snare_uuid}
         try:
             if 'filters' in params:
-                applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
+                for filt in params['filters'].split():
+                    applied_filters[filt.split(':')[0]] = filt.split(':')[1]
                 if 'start_time' in applied_filters:
                     applied_filters['start_time'] = float(applied_filters['start_time'])
                 if 'end_time' in applied_filters:
