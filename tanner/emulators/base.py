@@ -54,7 +54,7 @@ class BaseHandler:
 	                        detection = possible_detection
 	                    if emulator not in attack_params:
 	                        attack_params[emulator] = []
-	                    attack_params[emulator].append(dict(id= param_id, value= param_value))
+	                    attack_params[emulator].append(dict(id=param_id, value=param_value))
                     
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
