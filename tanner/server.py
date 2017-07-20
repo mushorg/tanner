@@ -22,7 +22,6 @@ class TannerServer:
 
         self.session_manager = session_manager.SessionManager()
         self.dorks = dorks_manager.DorksManager()
-        self.api = None
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.redis_client = None
@@ -87,19 +86,6 @@ class TannerServer:
         app.router.add_post('/event', self.handle_event)
         app.router.add_get('/dorks', self.handle_dorks)
 
-    def setup_api_routes(self, app):
-        app.router.add_get('/', self.api.handle_index)
-        app.router.add_get('/snares', self.api.handle_snares)
-        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.api.handle_snare_info)
-        app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.api.handle_snare_stats)
-        app.router.add_resource('/sessions').add_route('GET', self.api.handle_sessions)
-        app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.api.handle_session_info)
-
-    def create_api_app(self, loop):
-        api_app = web.Application(loop=loop)
-        self.setup_api_routes(api_app)
-        return api_app
-
     def create_app(self, loop):
         app = web.Application(loop=loop)
         app.on_shutdown.append(self.on_shutdown)
@@ -109,10 +95,7 @@ class TannerServer:
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
-        self.api = api.Api(self.redis_client)
-        tanner_app = self.create_app(loop)
-        api_app = self.create_api_app(loop)
-        tanner_app.add_subapp('/api/', api_app)
+        app = self.create_app(loop)
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
-        web.run_app(tanner_app, host=host, port=port)
+        web.run_app(app, host=host, port=port)

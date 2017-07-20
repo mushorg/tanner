@@ -4,7 +4,8 @@ import jinja2
 import logging
 
 from aiohttp import web
-from tanner import api, redis_client
+from tanner.api import api
+from tanner import redis_client
 from tanner.config import TannerConfig
 
 class TannerWebServer:
