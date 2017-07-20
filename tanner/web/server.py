@@ -92,7 +92,7 @@ class TannerWebServer:
 
     def start(self):
         loop = asyncio.get_event_loop()
-        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
         host = TannerConfig.get('WEB', 'host')
