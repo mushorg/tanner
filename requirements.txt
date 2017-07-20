@@ -1,5 +1,6 @@
 aiohttp>=2.0
 aiomysql
+aiohttp_jinja2
 docker
 elizabeth==0.3.27
 yarl
@@ -8,3 +9,4 @@ asyncio_redis
 uvloop
 pymongo
 pylibinjection
+jinja2

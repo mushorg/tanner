@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Session({{session.sess_uuid}}){% endblock %}
+{% block content %}
+<body>
+<h3 align="center">SESSION INFO</h3>
+<table align="center">
+  <tr>
+    <th style="width: 20%">Key</th>
+    <th>Value</th>
+  </tr>
+  <tr>
+    <td><b>UUID</b></td>
+    <td>{{session.sess_uuid}}</td>
+  </tr>
+  <tr>
+    <td><b>IP</b></td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=peer_ip:{{session.peer_ip}}">{{session.peer_ip}}</a></td>
+  </tr>
+  <tr>
+    <td><b>Port</b></td>
+    <td>{{session.peer_port}}</td>
+  </tr>
+  <tr>
+    <td><b>User Agents</b></td>
+    <td>{{session.user_agent}}</td>
+  </tr>
+  <tr>
+    <td><b>Snare UUID</b></td>
+    <td>{{session.snare_uuid}}</td>
+  </tr>
+  <tr>
+    <td><b>Start time</b></td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=start_time:{{session.start_time}}">{{session.start_time}}</a></td>
+  </tr>
+  <tr>
+    <td><b>End time</b></td>
+    <td><a href="/{{session.snare_uuid}}/sessions?filters=end_time:{{session.end_time}}">{{session.end_time}}</a></td>
+  </tr>
+  <tr>
+    <td><b>Requests/sec</b></td>
+    <td>{{session.requests_in_second}}</td>
+  </tr>
+  <tr>
+    <td><b>Time between requests</b></td>
+    <td>{{session.approx_time_between_requests}}</td>
+  </tr>
+  <tr>
+    <td><b>Paths</b></td>
+    <td>{{session.accepted_paths}}</td>
+  </tr>
+  <tr>
+    <td><b>Errors</b></td>
+    <td>{{session.errors}}</td>
+  </tr>
+  <tr>
+    <td><b>Hidden Links</b></td>
+    <td>{{session.hidden_links}}</td>
+  </tr>
+  <tr>
+    <td><b>Attack types</b></td>
+    <td>
+    {% for attack in session.attack_types %}
+      <a href="/{{session.snare_uuid}}/sessions?filters=attack_types:{{attack}}">{{attack}}</a><br>
+    {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <td><b>Paths</b></td>
+    <td>
+    {% for path in session.paths %}
+      {{path}} <br>
+    {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <td><b>Cookies</b></td>
+    <td>
+    {% for key, val in session.cookies.items() %}
+      {{key}} : {{val}} <br>
+    {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <td><b>Possible Owners</b></td>
+    <td>
+    {% for owner in session.possible_owners %}
+      <a href="/{{session.snare_uuid}}/sessions?filters=possible_owners:{{owner}}">{{owner}}</a><br>
+    {% endfor %}
+    </td>
+  </tr>
+</table>
+{% endblock %}

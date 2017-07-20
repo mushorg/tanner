@@ -1,6 +1,7 @@
 import json
 import logging
 import operator
+import asyncio_redis
 
 from aiohttp import web
 
