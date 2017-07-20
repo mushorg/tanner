@@ -1,14 +1,17 @@
 import json
 import logging
 import operator
+import asyncio
 import asyncio_redis
 
 from aiohttp import web
+from tanner import redis_client
+from tanner.config import TannerConfig
 
 class Api:
-    def __init__(self, redis_client):
+    def __init__(self):
         self.logger = logging.getLogger('tanner.api.Api')
-        self.redis_client = redis_client
+        self.redis_client = None
 
     @staticmethod
     def _make_response(msg):
@@ -41,11 +44,13 @@ class Api:
         return web.json_response(response_msg)
 
     async def handle_sessions(self, request):
+        snare_uuid = request.match_info['snare_uuid']
         params = request.url.query
-        applied_filters = {}
+        applied_filters = {'snare_uuid': snare_uuid}
         try:
             if 'filters' in params:
-                applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
+                for filt in params['filters'].split():
+                    applied_filters[filt.split(':')[0]] = filt.split(':')[1]
                 if 'start_time' in applied_filters:
                     applied_filters['start_time'] = float(applied_filters['start_time'])
                 if 'end_time' in applied_filters:
@@ -55,7 +60,6 @@ class Api:
             result = 'Invalid filter definition'
         else:
             result = await self.return_sessions(applied_filters)
-        
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
@@ -165,3 +169,27 @@ class Api:
                 return available_filters[filter_name](filter_value, sess[filter_name])
         except KeyError:
             raise
+
+    async def on_shutdown(self, app):
+        self.redis_client.close()
+
+    def setup_routes(self, app):
+        app.router.add_get('/', self.handle_index)
+        app.router.add_get('/snares', self.handle_snares)
+        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare_info)
+        app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
+        app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
+        app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
+
+    def create_app(self, loop):
+        app = web.Application(loop=loop)
+        self.setup_routes(app)
+        return app
+
+    def start(self):
+        loop = asyncio.get_event_loop()
+        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        app = self.create_app(loop)
+        host = '127.0.0.1' #TannerConfig.get('API', 'host')
+        port = 8092 #TannerConfig.get('API', 'port')
+        web.run_app(app, host=host, port=port)
