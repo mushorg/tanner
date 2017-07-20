@@ -9,6 +9,6 @@ setup(name='Tanner',
       author_email='glastopf@public.honeynet.org',
       url='https://github.com/mushorg/tanner',
       packages=find_packages(exclude=['*.pyc']),
-      scripts=['bin/tanner', 'bin/tannerweb'],
+      scripts=['bin/tanner', 'bin/tannerweb', 'bin/api'],
       data_files=[('/opt/tanner/data/',['tanner/data/dorks.pickle'])]
       )
