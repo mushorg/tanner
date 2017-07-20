@@ -89,6 +89,6 @@ class ApiServer:
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
-        host = '127.0.0.1' #TannerConfig.get('API', 'host')
-        port = 8092 #TannerConfig.get('API', 'port')
+        host = TannerConfig.get('API', 'host')
+        port = TannerConfig.get('API', 'port')
         web.run_app(app, host=host, port=port)
