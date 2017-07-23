@@ -1,0 +1,9 @@
+#!/usr/bin/python3.5
+from tanner.api import server
+
+def main():
+    api = server.ApiServer()
+    api.start()
+
+if __name__ == "__main__":
+    main()

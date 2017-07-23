@@ -1,69 +1,13 @@
 import json
 import logging
 import operator
+import asyncio
 import asyncio_redis
-
-from aiohttp import web
 
 class Api:
     def __init__(self, redis_client):
         self.logger = logging.getLogger('tanner.api.Api')
         self.redis_client = redis_client
-
-    @staticmethod
-    def _make_response(msg):
-        response_message = dict(
-            version=1,
-            response=dict(message=msg)
-        )
-        return response_message
-
-    async def handle_index(self, request):
-        result = 'tanner api'
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
-
-    async def handle_snares(self, request):
-        result = await self.return_snares()
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
-
-    async def handle_snare_info(self, request):
-        snare_uuid = request.match_info['snare_uuid']
-        result = await self.return_snare_info(snare_uuid, 50)
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
-
-    async def handle_snare_stats(self, request):
-        snare_uuid = request.match_info['snare_uuid']
-        result = await self.return_snare_stats(snare_uuid)
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
-
-    async def handle_sessions(self, request):
-        params = request.url.query
-        applied_filters = {}
-        try:
-            if 'filters' in params:
-                applied_filters = {filt.split(':')[0] : filt.split(':')[1] for filt in params['filters'].split()}
-                if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = float(applied_filters['start_time'])
-                if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = float(applied_filters['end_time'])
-        except Exception as e:
-            self.logger.error('Filter error : %s' % e)
-            result = 'Invalid filter definition'
-        else:
-            result = await self.return_sessions(applied_filters)
-        
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
-
-    async def handle_session_info(self, request):
-        sess_uuid = request.match_info['sess_uuid']
-        result = await self.return_session_info(sess_uuid)
-        response_msg = self._make_response(result)
-        return web.json_response(response_msg)
 
     async def return_snares(self):
         query_res = []

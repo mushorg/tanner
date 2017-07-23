@@ -1,46 +1,46 @@
 import asyncio
-import aiohttp_jinja2
-import jinja2
 import logging
 
-from aiohttp import web
 from tanner.api import api
+from aiohttp import web
 from tanner import redis_client
 from tanner.config import TannerConfig
 
-class TannerWebServer:
+class ApiServer:
     def __init__(self):
-        self.logger = logging.getLogger('tanner.web.tannerwebserver')
+        self.logger = logging.getLogger('tanner.api.ApiServer')
         self.api = None
-        self.redis_client = None
 
-    @aiohttp_jinja2.template('index.html')
+    @staticmethod
+    def _make_response(msg):
+        response_message = dict(
+            version=1,
+            response=dict(message=msg)
+        )
+        return response_message
+
     async def handle_index(self, request):
-        return
+        result = 'tanner api'
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
 
-    @aiohttp_jinja2.template('snares.html')
     async def handle_snares(self, request):
-        snares = await self.api.return_snares()
-        return {
-            'snares' : snares
-        }
+        result = await self.api.return_snares()
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
 
-    @aiohttp_jinja2.template('snare.html')
-    async def handle_snare(self, request):
+    async def handle_snare_info(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        return{
-            'snare' : snare_uuid
-        }
+        result = await self.api.return_snare_info(snare_uuid, 50)
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
 
-    @aiohttp_jinja2.template('snare-stats.html')
     async def handle_snare_stats(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        snare_stats = await self.api.return_snare_stats(snare_uuid)
-        return {
-            'snare_stats' : snare_stats
-        }
+        result = await self.api.return_snare_stats(snare_uuid)
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
 
-    @aiohttp_jinja2.template('sessions.html')
     async def handle_sessions(self, request):
         snare_uuid = request.match_info['snare_uuid']
         params = request.url.query
@@ -57,37 +57,30 @@ class TannerWebServer:
             self.logger.error('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
-            sess_uuids = await self.api.return_sessions(applied_filters)
-            sessions = []
-            for sess_uuid in sess_uuids:
-                sess = await self.api.return_session_info(sess_uuid)
-                sessions.append(sess)
-            result = sessions
-        return {
-            'sessions' : result
-        }
+            result = await self.api.return_sessions(applied_filters)
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
 
-    @aiohttp_jinja2.template('session.html')
     async def handle_session_info(self, request):
         sess_uuid = request.match_info['sess_uuid']
-        session = await self.api.return_session_info(sess_uuid)
-        return {
-            'session' : session
-        }
+        result = await self.api.return_session_info(sess_uuid)
+        response_msg = self._make_response(result)
+        return web.json_response(response_msg)
+
+    async def on_shutdown(self, app):
+        self.redis_client.close()
 
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
-        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare)
+        app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare_info)
         app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
-        app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
         app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
-        app.router.add_static('/static/', path='tanner/web/static')
+        app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
 
     def create_app(self, loop):
-        app = web.Application(loop= loop)
-        aiohttp_jinja2.setup(app,
-            loader= jinja2.FileSystemLoader('tanner/web/templates'))
+        app = web.Application(loop=loop)
+        app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
 
@@ -96,6 +89,6 @@ class TannerWebServer:
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
-        host = TannerConfig.get('WEB', 'host')
-        port = TannerConfig.get('WEB', 'port')
+        host = TannerConfig.get('API', 'host')
+        port = TannerConfig.get('API', 'port')
         web.run_app(app, host=host, port=port)
