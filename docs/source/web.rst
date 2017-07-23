@@ -27,11 +27,10 @@ This page shows some general stats about the snare
 /<snare-uuid>/sessions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This shows all the sessions' uuid. Each is clickable. Clicking displays **/session/<sess-uuid>**
-Filters can be on the sessions using the input box and clicking the `Apply` button.
+Filters can be on the sessions using the input box and clicking the ``Apply`` button.
 Filters are sepatated by ``white-space`` and name-value pair are separated by ``:``. E.g ``filter1:value1 filter2:value2``.
 
 It supports 5 filters:
-
 	* **peer_ip** -- Sessions with given ip. E.g ``peer_ip:127.0.0.1 ``
 	* **user-agent** -- Sessions with given user-agent. E.g ``user-agent:Chrome``
 	* **attack_types** -- Sessions with given attack type such as lfi, rfi, xss, cmd_exec, sqli. E.g ``attack_types:lfi``
@@ -44,4 +43,4 @@ Multiple filters can be applied as ``peer_ip:127.0.0.1 start_time:1480560 possib
 /session/<sess-uuid>
 ~~~~~~~~~~~~~~~~~~~~~~~~
 It gives all information about the session with given uuid. Here you may find some of the text clickable such as 
-`peer_ip`,`possible_owners`, `start_time`, `end_time`, `attack_types`. Clicking on them will display all the sessions will same attribute value.
+``peer_ip``,``possible_owners``, ``start_time``, ``end_time``, ``attack_types``. Clicking on them will display all the sessions will same attribute value.
