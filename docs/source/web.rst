@@ -8,12 +8,13 @@ This is the index page which shows ``Tanner Web``.
 
 /snares
 ~~~~~~~~~~ 
-This shows all the snares' uuid. Each snare object is clickable. Clicking displays the page `/snare/<snare-uuid>`
+This shows all the snares' uuid. Each snare object is clickable. Clicking displays the page **/snare/<snare-uuid>**
 
 /snare/<snare-uuid>
 ~~~~~~~~~~~~~~~~~~~~~~
-Replace ``<snare-uuid>`` with a valid `snare-uuid` and it will provide two options -  and `Sessions`
-	* **Snare-Stats** -- It will move you to `/snare-stats/<snare-uuid>` 
+Replace ``<snare-uuid>`` with a valid `snare-uuid` and it will provide two options:
+	* **Snare-Stats** -- It will move you to **/snare-stats/<snare-uuid>**
+	* **Sessions** -- It will move you to **/<snare-uuid>/sessions**
 
 /snare-stats/<snare-uuid>
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,7 +26,7 @@ This page shows some general stats about the snare
 
 /<snare-uuid>/sessions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This shows all the sessions' uuid. Each is clickable. Clicking displays `/session/<sess-uuid>`.
+This shows all the sessions' uuid. Each is clickable. Clicking displays **/session/<sess-uuid>**
 Filters can be on the sessions using the input box and clicking the `Apply` button.
 Filters are sepatated by ``white-space`` and name-value pair are separated by ``:``. E.g ``filter1:value1 filter2:value2``.
 
@@ -42,4 +43,5 @@ Multiple filters can be applied as ``peer_ip:127.0.0.1 start_time:1480560 possib
 
 /session/<sess-uuid>
 ~~~~~~~~~~~~~~~~~~~~~~~~
-It gives all information about the session with given uuid. Here you may find some of the text clickable such as `peer_ip`,`possible_owners`, `start_time`, `end_time`, `attack_types`. Clicking on them will display all the sessions will same attribute value.
+It gives all information about the session with given uuid. Here you may find some of the text clickable such as 
+`peer_ip`,`possible_owners`, `start_time`, `end_time`, `attack_types`. Clicking on them will display all the sessions will same attribute value.

@@ -36,6 +36,8 @@ It supports 5 filters:
 	* **start_time** -- Sessions which started after `start_time`. E.g ``start_time:1480560``
 	* **end_time** -- Sessions which ended before `end_time`. E.g ``end_time:1480560``
 
+Multiple filters can be applied as ``peer_ip:127.0.0.1 start_time:1480560 possible_owners:attacker``
+
 /api/session/<sess-uuid>
 ~~~~~~~~~~~~~~~~~~~~~~~~
 It gives all information about the session with given uuid.
