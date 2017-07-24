@@ -11,7 +11,7 @@ Session class accepts ``data`` as a parameter. The ``data`` came from SNARE and 
     * **ip** -- peer ip address.
     * **port** -- peer port.
     * **user_agent** -- peer user agent.
-    * **sensor** -- SNARE sensor uuid.
+    * **snare_uuid** -- SNARE sensor uuid.
     * **paths** -- list of dictionaries. Contains ``path``, ``timestamp``, ``attack_type`` and SNARE ``response status``.
     * **sess_uuid** -- randomly generated session uuid.
     * **start_timestamp** -- session start time.
@@ -50,7 +50,7 @@ The result contains next fields:
     * **peer_ip**
     * **peer_port**
     * **user_agent**
-    * **sensor_uuid**
+    * **snare_uuid**
     * **start_time**
     * **cookies**
 * **end_time** -- last session timestamp

@@ -17,6 +17,8 @@ Contents:
    storage
    dorks
    config
+   api
+   web
 
 
 

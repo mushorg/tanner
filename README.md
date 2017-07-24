@@ -46,6 +46,14 @@ Getting Started
 4. Install TANNER: ``python3 setup.py install``
 5. Run TANNER: ``sudo tanner``
 
+### Run Tanner Api
+
+Run ``sudo tannerapi``
+
+### Run Tanner WebUI
+
+Run ``sudo tannerweb``
+
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
 [See the docs for more info](docs/source/index.rst)
