@@ -43,6 +43,7 @@ class TannerWebServer:
     @aiohttp_jinja2.template('sessions.html')
     async def handle_sessions(self, request):
         snare_uuid = request.match_info['snare_uuid']
+        page_id = int(request.match_info['page_id'])
         params = request.url.query
         applied_filters = {'snare_uuid': snare_uuid}
         try:
@@ -58,9 +59,26 @@ class TannerWebServer:
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
-            result = sessions
+            result = sessions[15*(page_id-1):15*page_id]
+            next_val = None
+            pre_val = None
+            if(page_id*15 <= len(sessions)):
+                next_val = '/{snare_uuid}/sessions/page/{page_id}'.format(snare_uuid=snare_uuid,
+                                                                          page_id=str(page_id + 1)
+                                                                          )
+                if len(applied_filters) > 1:
+                    next_val += '?filters={filters}'.format(filters=params['filters'])
+            if(page_id > 1):
+                pre_val = '/{snare_uuid}/sessions/page/{page_id}'.format(snare_uuid=snare_uuid,
+                                                                          page_id=str(page_id - 1)
+                                                                          )
+                if len(applied_filters) > 1:
+                    pre_val += '?filters={filters}'.format(filters=params['filters'])
+
         return {
-            'sessions' : result
+            'sessions' : result,
+            'next_val' : next_val,
+            'pre_val' : pre_val
         }
 
     @aiohttp_jinja2.template('session.html')
@@ -77,7 +95,7 @@ class TannerWebServer:
         app.router.add_resource('/snare/{snare_uuid}').add_route('GET', self.handle_snare)
         app.router.add_resource('/snare-stats/{snare_uuid}').add_route('GET', self.handle_snare_stats)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
-        app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
+        app.router.add_resource('/{snare_uuid}/sessions/page/{page_id}').add_route('GET', self.handle_sessions)
         app.router.add_static('/static/', path='tanner/web/static')
 
     def create_app(self, loop):

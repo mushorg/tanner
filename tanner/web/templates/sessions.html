@@ -25,6 +25,11 @@ See the docs for more filters.">How?</i>
   </tr>
   {% endfor %}
 </table>
+<br>
+<div align="center">
+  {% if pre_val %}<a href="{{pre_val if pre_val}}">Previous</a>{% endif %}
+  {% if next_val %}<a href="{{next_val}}">Next</a>{% endif %}
+</div>
 <script src="/static/js/site.js"></script>
 </script>
 {% endblock %}
