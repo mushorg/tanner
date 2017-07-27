@@ -71,7 +71,7 @@ class TestAPIServer(AioHTTPTestCase):
         async def mock_return_sessions(filters):
             if type(filters) is dict and filters['peer_ip'] == "127.0.0.1" and \
             filters['start_time'] == 1497890400 and filters['user_agent'] == 'ngnix':
-                return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
+                return [{"sess_uuid":"f387d46eaeb1454cadf0713a4a55be49"}, {"sess_uuid":"e85ae767b0bb4b1f91b421b3a28082ef"}]
 
         assert_content = {"version": 1, "response": {"message": ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]}}
         self.serv.api.return_sessions = mock_return_sessions
