@@ -57,11 +57,7 @@ class TannerWebServer:
             self.logger.error('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
-            sess_uuids = await self.api.return_sessions(applied_filters)
-            sessions = []
-            for sess_uuid in sess_uuids:
-                sess = await self.api.return_session_info(sess_uuid)
-                sessions.append(sess)
+            sessions = await self.api.return_sessions(applied_filters)
             result = sessions
         return {
             'sessions' : result
