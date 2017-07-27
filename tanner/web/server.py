@@ -89,6 +89,9 @@ class TannerWebServer:
             'session' : session
         }
 
+    async def on_shutdown(self, app):
+        self.redis_client.close()
+
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
@@ -102,6 +105,7 @@ class TannerWebServer:
         app = web.Application(loop= loop)
         aiohttp_jinja2.setup(app,
             loader= jinja2.FileSystemLoader('tanner/web/templates'))
+        app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
 
