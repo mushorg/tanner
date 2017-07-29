@@ -57,7 +57,9 @@ class ApiServer:
             self.logger.error('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
-            result = await self.api.return_sessions(applied_filters)
+            sessions = await self.api.return_sessions(applied_filters)
+            sess_uuids = [sess['sess_uuid'] for sess in sessions]
+            result = sess_uuids
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 

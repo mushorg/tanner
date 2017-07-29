@@ -88,7 +88,7 @@ class Api:
                         return 'Invalid filter : %s' % filter_name
 
                 if match_count == len(filters):
-                    matching_sessions.append(sess['sess_uuid']) 
+                    matching_sessions.append(sess) 
                 
         return matching_sessions
 
