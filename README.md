@@ -28,7 +28,7 @@ Getting Started
 ### Setup PHP Sandbox
 
 
-1. For PHP Sandbox setup, see sandbox [manual] (https://github.com/mushorg/phpox)
+1. For PHP Sandbox setup, see sandbox [manual](https://github.com/mushorg/phpox)
 2. In PHP Sandbox directory, run sandbox: ``sudo python3 sandbox.py``
 
 ### Setup Docker
