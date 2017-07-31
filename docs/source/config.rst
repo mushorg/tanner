@@ -13,6 +13,14 @@ There are 8 different sections :
 
     :Host: The host at which Tanner is running
     :Port: The port at which Tanner is running
+  * **WEB**
+
+    :Host: The host at which Tanner Web UI is running
+    :Port: The port at which Tanner Web UI is running
+  * **API**
+
+    :Host: The host at which Tanner API is running
+    :Port: The port at which Tanner API is running
   * **REDIS**
 
     :Host: The host address at which redis is running
@@ -22,6 +30,7 @@ There are 8 different sections :
   * **EMULATORS**
 
     :root_dir: The root directory for emulators that need data storing such as SQLI and LFI. Data will be stored in this directory
+    :emulator_enabled: This tells which emulators are enabled.
   * **SQLI**
   
     :db_name: THe name of database used in SQLI emulator
@@ -53,8 +62,12 @@ If no file is specified, following json will be used as default:
               'user_dorks': '/opt/tanner/data/user_dorks.pickle',
               'vdocs': '/opt/tanner/data/vdocs.json'},
      'TANNER': {'host': '0.0.0.0', 'port': 8090},
+     'WEB': {'host': '0.0.0.0', 'port': 8091},
+     'API': {'host': '0.0.0.0', 'port': 8092},
      'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
-     'EMULATORS': {'root_dir': '/opt/tanner'},
+     'EMULATORS': {'root_dir': '/opt/tanner',
+                    'emulator_enabled': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True}
+                  },
      'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
      'DOCKER': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},

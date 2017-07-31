@@ -10,12 +10,13 @@ LOGGER = logging.getLogger(__name__)
 
 class RedisClient:
     @staticmethod
-    async def get_redis_client():
+    async def get_redis_client(poolsize=None):
         redis_client = None
         try:
             host = TannerConfig.get('REDIS', 'host')
             port = TannerConfig.get('REDIS', 'port')
-            poolsize = TannerConfig.get('REDIS', 'poolsize')
+            if poolsize is None:
+                poolsize = TannerConfig.get('REDIS', 'poolsize')
             timeout = TannerConfig.get('REDIS', 'timeout')
             redis_client = await asyncio.wait_for(asyncio_redis.Pool.create(
                 host=host, port=int(port), poolsize=int(poolsize)), timeout=int(timeout))

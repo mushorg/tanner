@@ -32,8 +32,12 @@ class TestServer(AioHTTPTestCase):
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
             return sess
 
-        self.serv.session_manager.add_or_update_session = _add_or_update_mock
+        async def _delete_sessions_mock(client):
+            pass
 
+        self.serv.session_manager.add_or_update_session = _add_or_update_mock
+        self.serv.session_manager.delete_sessions_on_shutdown = _delete_sessions_mock
+        
         async def choosed(client):
             return [x for x in range(10)]
 
@@ -88,26 +92,6 @@ class TestServer(AioHTTPTestCase):
     async def test_dorks_request(self):
         assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
         request = await self.client.request("GET", "/dorks")
-        assert request.status == 200
-        detection = await request.json()
-        self.assertDictEqual(detection, assert_content)
-
-    @unittest_run_loop
-    async def test_api_request(self):
-        assert_content = {"version": 1, "response": {"message": "tanner api"}}
-        request = await self.client.request("GET", "/api")
-        assert request.status == 200
-        detection = await request.json()
-        self.assertDictEqual(detection, assert_content)
-
-    @unittest_run_loop
-    async def test_stats_api_request(self):
-        async def _make_api_coroutine(*args, **kwargs):
-            return ["1", "2"]
-
-        assert_content = {"version": 1, "response": {"message": ["1", "2"]}}
-        self.serv.api.handle_api_request = _make_api_coroutine
-        request = await self.client.request("GET", "/api/stats")
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)

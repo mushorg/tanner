@@ -1,0 +1,9 @@
+#!/usr/bin/python3.5
+from tanner.web import server
+
+def main():
+    tannerweb = server.TannerWebServer()
+    tannerweb.start()
+
+if __name__ == "__main__":
+    main()

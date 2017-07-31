@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Snare Sessions{% endblock %}
+{% block content %}
+<h3 align="center">SNARE-SESSIONS</h3>
+<div align="center">
+  <form>
+  <b>Filters:</b> <input size="80" type="text" name="filters" id="filters">
+  <input type="submit" value="Apply"> <i title="E.g - peer_ip:172.25.23.1, possible_owner:attacker
+See the docs for more filters.">How?</i>
+  </form>
+</div>
+<table align="center">
+  <tr>
+    <th style="width: 20%">No</th>
+    <th>Session-uuid</th>
+    <th>IP</th>
+    <th>Owner</th>
+  </tr>
+  {% for sess in sessions %}
+  <tr>
+    <td>{{loop.index}}</td>
+    <td><a href="/session/{{sess.sess_uuid}}">{{sess.sess_uuid}}</a></td>
+    <td>{{sess.peer_ip}}</td>
+    <td>{{sess.possible_owners|join(',')}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<br>
+<div align="center">
+  {% if pre_val %}<a href="{{pre_val if pre_val}}">Previous</a>{% endif %}
+  {% if next_val %}<a href="{{next_val}}">Next</a>{% endif %}
+</div>
+<script src="/static/js/site.js"></script>
+</script>
+{% endblock %}

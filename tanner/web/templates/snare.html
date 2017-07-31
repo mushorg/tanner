@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Snare({{snare}}){% endblock %}
+{% block content %}
+<h3 align="center">{{snare}}</h3>
+<h4 align="center"><a href="/snare-stats/{{snare}}">Snare-Stats</a></h4>
+<h4 align="center"><a href="/{{snare}}/sessions/page/1">Sessions</a></h4>
+{% endblock %}

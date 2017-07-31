@@ -22,7 +22,6 @@ class TannerServer:
 
         self.session_manager = session_manager.SessionManager()
         self.dorks = dorks_manager.DorksManager()
-        self.api = api.Api()
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.redis_client = None
@@ -73,28 +72,18 @@ class TannerServer:
                 lr.create_session(session_data)
         return web.json_response(response_msg)
 
-    async def handle_api(self, request):
-        api_query = request.match_info.get("api_query")
-        if api_query is None:
-            data = "tanner api"
-        else:
-            data = await self.api.handle_api_request(api_query, request.url.query, self.redis_client)
-        response_msg = self._make_response(data)
-        return web.json_response(response_msg)
-
     async def handle_dorks(self, request):
         dorks = await self.dorks.choose_dorks(self.redis_client)
         response_msg = dict(version=1, response=dict(dorks=dorks))
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
+        await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
         self.redis_client.close()
-        
+
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)
-        app.router.add_get('/api', self.handle_api)
-        app.router.add_get('/api/{api_query}', self.handle_api)
         app.router.add_get('/dorks', self.handle_dorks)
 
     def create_app(self, loop):
@@ -105,8 +94,8 @@ class TannerServer:
 
     def start(self):
         loop = asyncio.get_event_loop()
-        tanner_app = self.create_app(loop)
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        app = self.create_app(loop)
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
-        web.run_app(tanner_app, host=host, port=port)
+        web.run_app(app, host=host, port=port)

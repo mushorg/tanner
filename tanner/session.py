@@ -17,7 +17,7 @@ class Session:
             self.ip = data['peer']['ip']
             self.port = data['peer']['port']
             self.user_agent = data['headers']['user-agent']
-            self.sensor = data['uuid']
+            self.snare_uuid = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time(),
                            'response_status': data['status']}]
             self.cookies = data['cookies']
@@ -47,7 +47,7 @@ class Session:
     def to_json(self):
         sess = dict(peer=dict(ip=self.ip, port=self.port),
                     user_agent=self.user_agent,
-                    sensor=self.sensor,
+                    snare_uuid=self.snare_uuid,
                     sess_uuid=self.sess_uuid.hex,
                     start_time=self.start_timestamp,
                     end_time=self.timestamp,
