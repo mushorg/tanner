@@ -11,7 +11,7 @@ class PHPCodeInjection:
 
     async def get_injection_result(self, code): 
         code_injection_result = None
-        code = '<?php {code} ?>'.format(code=code)
+        code = '<?php eval(\'$a = {code}\'); ?>'.format(code=code)
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:
                 async with session.post('http://127.0.0.1:8088/', data=code) as resp:
