@@ -18,7 +18,7 @@ class BaseHandler:
             'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
             'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
             'cmd_exec': cmd_exec.CmdExecEmulator() if self.emulator_enabled['cmd_exec'] else None,
-            'php_code_injection': php_code_injection.PHPCodeInjection() if self.emulator_enabled['php_code_injection'] else None
+            'php_code_injection': php_code_injection.PHPCodeInjection(loop) if self.emulator_enabled['php_code_injection'] else None
             }
 
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec' ]
