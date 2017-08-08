@@ -19,7 +19,6 @@ class PHPCodeInjection:
         except aiohttp.ClientError as client_error:
             self.logger.error('Error during connection to php sandbox %s', client_error)
         else:
-            await resp.release()
             await session.close()
         return code_injection_result
 
