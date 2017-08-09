@@ -5,20 +5,24 @@ import urllib.parse
 import yarl
 
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection 
 from tanner.utils import patterns
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
+        self.emulator_enabled = TannerConfig.get('EMULATORS', 'emulator_enabled')
+ 
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop) if TannerConfig.get('EMULATOR_ENABLED', 'rfi') else None,
-            'lfi': lfi.LfiEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'lfi') else None,
-            'xss': xss.XssEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'xss') else None,
-            'sqli': sqli.SqliEmulator(db_name, base_dir) if TannerConfig.get('EMULATOR_ENABLED', 'sqli') else None,
-            'cmd_exec': cmd_exec.CmdExecEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec') else None
+            'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
+            'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
+            'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
+            'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
+            'cmd_exec': cmd_exec.CmdExecEmulator() if self.emulator_enabled['cmd_exec'] else None,
+            'php_code_injection': php_code_injection.PHPCodeInjection(loop) if self.emulator_enabled['php_code_injection'] else None
             }
-        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
-        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
+
+        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec' ]
+        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec']
         self.cookie_emulators = ['sqli']
 
     def extract_get_data(self, path):
