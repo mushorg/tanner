@@ -18,7 +18,7 @@ class XssEmulator:
         value = ''
         for param in attack_params:
             value += param['value'] if not value else '\n' + param['value']
-        result = dict(value=value)
+        result = dict(value=value, page=True)
         return result
 
     async def handle(self, attack_params, session):

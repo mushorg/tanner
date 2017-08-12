@@ -31,5 +31,5 @@ class PHPCodeInjection:
     async def handle(self, attack_params, session=None):
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
-            return ''
-        return result['stdout']
+            return dict(status_code=504) 
+        return dict(value=result['stdout'], page=False)
