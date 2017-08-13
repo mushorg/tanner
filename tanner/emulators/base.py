@@ -117,7 +117,7 @@ class BaseHandler:
         if 'payload' not in detection:
             detection['type'] = 1
         elif 'payload' in detection:
-            if 'status_code' not in detection:
+            if 'status_code' not in detection['payload']:
                 detection['type'] = 2
                 if detection['payload']['page']:
                     injectable_page = self.set_injectable_page(session)
