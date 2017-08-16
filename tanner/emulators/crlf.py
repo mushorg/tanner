@@ -1,11 +1,9 @@
 import logging
 import re
 
-from tanner.util import patterns
+from tanner.utils import patterns
 
 class CRLFEmulator:
-    def __init__:
-        self.logger = 
 
     def scan(self, value):
         detection = None
@@ -14,9 +12,9 @@ class CRLFEmulator:
         return detection
 
     def get_crlf_results(self, attack_params):
-        headers = {attack_param['id']: attack_value['value']}
+        headers = {attack_params[0]['id']: attack_params[0]['value']}
         return headers
 
     async def handle(self, attack_params, session):
         result = self.get_crlf_results(attack_params)
-        return dict(value='', page=True, headers=value)
+        return dict(value='', page=True, headers=result)
