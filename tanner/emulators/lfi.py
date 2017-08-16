@@ -35,5 +35,6 @@ class LfiEmulator:
         result = None
         container = await self.setup_virtual_env()
         if container:
-            result = await self.get_lfi_result(container, attack_params[0]['value'])
+            lfi_result = await self.get_lfi_result(container, attack_params[0]['value'])
+            result = dict(value=lfi_result, page=False)
         return result

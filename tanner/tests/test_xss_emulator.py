@@ -24,5 +24,5 @@ class TestXSSEmulator(unittest.TestCase):
         attack_params = [dict(id= 'foo', value= '<script>alert(\'xss\');</script>')]
         xss = self.loop.run_until_complete(self.handler.handle(attack_params, None))
 
-        assert_result = dict(value=attack_params[0]['value'])
+        assert_result = dict(value=attack_params[0]['value'], page=True)
         self.assertDictEqual(xss, assert_result)

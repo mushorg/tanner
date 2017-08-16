@@ -96,6 +96,6 @@ class RfiEmulator:
     async def handle(self, attack_params, session=None):
         result = await self.get_rfi_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
-            return ''
+            return dict(value='', page=True)
         else:
-            return result['stdout']
+            return dict(value=result['stdout'], page=False)
