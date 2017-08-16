@@ -61,8 +61,9 @@ class BaseHandler:
 
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
-            detection['payload'] = emulation_result
-
+            if emulation_result:
+                detection['payload'] = emulation_result
+                
         return detection
 
     async def handle_post(self, session, data):
@@ -112,12 +113,19 @@ class BaseHandler:
             detection = await self.handle_post(session, data)
         else:
             detection = await self.handle_get(session, data)
-
-        if 'payload' in detection and type(detection['payload']) is dict:
-            injectable_page = self.set_injectable_page(session)
-            if injectable_page is None:
-                injectable_page = '/index.html'
-            detection['payload']['page'] = injectable_page
+        
+        if 'payload' not in detection:
+            detection['type'] = 1
+        elif 'payload' in detection:
+            if 'status_code' not in detection['payload']:
+                detection['type'] = 2
+                if detection['payload']['page']:
+                    injectable_page = self.set_injectable_page(session)
+                    if injectable_page is None:
+                        injectable_page = '/index.html'
+                    detection['payload']['page'] = injectable_page
+            else:
+                detection['type'] = 3
 
         return detection
 

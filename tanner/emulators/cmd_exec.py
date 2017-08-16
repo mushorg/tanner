@@ -17,7 +17,7 @@ class CmdExecEmulator:
 
     async def get_cmd_exec_results(self, container, cmd):
         execute_result = await self.helper.execute_cmd(container, cmd)
-        result = dict(value= execute_result, page= '/index.html')
+        result = dict(value=execute_result, page=True)
         return result
 
     def scan(self, value):
