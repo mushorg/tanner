@@ -82,6 +82,16 @@ It emulates `Command Execution`_ vulnerability. This attack is detected with pat
 * The ``command`` is executed in a docker container safely.
 * Results from container is injected into the index page.
 
+PHP Code Injection Emulator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It emulates `PHP code injection`_ vuln. Usually, this type of vuln is found where user input is directly passed to
+functions like eval, assert. To mimic the functionality, user input is converted to the following code
+``<?php eval('$a = user_input'); ?>`` and then passed to phpox to get php code emulation results.
+
+CRLF Emulator
+~~~~~~~~~~~~~
+It emulates `CRLF`_ vuln. The attack is detected using ``\r\n`` pattern in the input. The parameter which looks suspicious
+is injected as a header with parameter name as header name and param value as header value.
 
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
@@ -89,4 +99,6 @@ It emulates `Command Execution`_ vulnerability. This attack is detected with pat
 .. _XSS: https://en.wikipedia.org/wiki/Cross-site_scripting
 .. _SQL injection: https://en.wikipedia.org/wiki/SQL_injection
 .. _Command Execution: https://www.owasp.org/index.php/Command_Injection
+.. _PHP Code Injection: https://www.owasp.org/index.php/Code_Injection
+.. _CRLF: https://www.owasp.org/index.php/CRLF_Injection
 .. _manual: https://github.com/client9/libinjection/wiki/doc-sqli-python
