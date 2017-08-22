@@ -10,7 +10,7 @@ class SqliTest(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
-        
+
         query_map = {
             'users': [{'name':'id', 'type':'INTEGER'}, {'name':'login', 'type':'text'},
                       {'name':'email', 'type':'text'}, {'name':'username', 'type':'text'},
@@ -57,4 +57,4 @@ class SqliTest(unittest.TestCase):
                         that corresponds to your MySQL server version for the\
                         right syntax to use near foo at line 1'
         result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
-        self.assertEqual(assert_result, result)
+        self.assertEqual(assert_result, result['value'])
