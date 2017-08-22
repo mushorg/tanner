@@ -30,7 +30,7 @@ class SqliEmulator:
         param_value = attack_value['value'].replace('\'', ' ')
         tables = []
         for table, columns in self.query_map.items():
-            for column in columns: 
+            for column in columns:
                 if param == column['name']:
                     tables.append(dict(table_name=table, column=column))
 
@@ -45,9 +45,10 @@ class SqliEmulator:
     async def get_sqli_result(self, attack_value, attacker_db):
         db_query = self.map_query(attack_value)
         if db_query is None:
-            result = 'You have an error in your SQL syntax; check the manual\
+            error_result = 'You have an error in your SQL syntax; check the manual\
                         that corresponds to your MySQL server version for the\
                         right syntax to use near {} at line 1'.format(attack_value['id'])
+            result = dict(value=error_result, page=True)
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
             if isinstance(execute_result, list):
