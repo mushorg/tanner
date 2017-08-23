@@ -98,4 +98,4 @@ class TannerServer:
         app = self.create_app(loop)
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
-        web.run_app(app, host=host, port=port)
+        web.run_app(app, host=host, port=int(port))
