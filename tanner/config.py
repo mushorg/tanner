@@ -10,6 +10,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'WEB': {'host': '0.0.0.0', 'port': 8091},
                    'API': {'host': '0.0.0.0', 'port': 8092},
+                   'PHPOX': {'host': '0.0.0.0', 'port': 8088},
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': '/opt/tanner',
                        'emulator_enabled': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'php_code_injection': True, 'cmd_exec': True, 'crlf':True}

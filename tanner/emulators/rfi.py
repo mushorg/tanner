@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import aiohttp
 import yarl
 
+from tanner import config
 from tanner.utils import patterns
 
 
@@ -76,9 +77,12 @@ class RfiEmulator:
             return rfi_result
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
+        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig().get('PHPOX', 'host'),
+                                                      port=config.TannerConfig().get('PHPOX', 'port')
+                                                      )
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:
-                async with session.post('http://127.0.0.1:8088/', data=script_data) as resp:
+                async with session.post(phpox_address, data=script_data) as resp:
                     rfi_result = await resp.json()
         except aiohttp.ClientError as client_error:
             self.logger.error('Error during connection to php sandbox %s', client_error)
