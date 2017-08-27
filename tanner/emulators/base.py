@@ -4,6 +4,7 @@ import re
 import urllib.parse
 import yarl
 
+from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
 from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, crlf
 from tanner.utils import patterns
@@ -127,7 +128,7 @@ class BaseHandler:
                     detection['payload']['page'] = injectable_page
             else:
                 detection['type'] = 3
-
+        detection['version'] = tanner_version
         return detection
 
     async def handle(self, data, session):
