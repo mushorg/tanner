@@ -13,8 +13,8 @@ class PHPCodeInjection:
     async def get_injection_result(self, code):
         code_injection_result = None
         code = '<?php eval(\'$a = {code}\'); ?>'.format(code=code)
-        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig().get('PHPOX', 'host'),
-                                                      port=config.TannerConfig().get('PHPOX', 'port')
+        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
+                                                      port=config.TannerConfig.get('PHPOX', 'port')
                                                       )
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:

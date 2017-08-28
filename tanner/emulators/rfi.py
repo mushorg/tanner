@@ -77,8 +77,8 @@ class RfiEmulator:
             return rfi_result
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
-        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig().get('PHPOX', 'host'),
-                                                      port=config.TannerConfig().get('PHPOX', 'port')
+        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
+                                                      port=config.TannerConfig.get('PHPOX', 'port')
                                                       )
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:
