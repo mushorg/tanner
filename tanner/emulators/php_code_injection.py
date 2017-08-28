@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 import logging
 
+from tanner import config
 from tanner.utils import patterns
 
 class PHPCodeInjection:
@@ -9,12 +10,15 @@ class PHPCodeInjection:
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.php_code_injecton')
 
-    async def get_injection_result(self, code): 
+    async def get_injection_result(self, code):
         code_injection_result = None
         code = '<?php eval(\'$a = {code}\'); ?>'.format(code=code)
+        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
+                                                      port=config.TannerConfig.get('PHPOX', 'port')
+                                                      )
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:
-                async with session.post('http://127.0.0.1:8088/', data=code) as resp:
+                async with session.post(phpox_address, data=code) as resp:
                     code_injection_result = await resp.json()
         except aiohttp.ClientError as client_error:
             self.logger.error('Error during connection to php sandbox %s', client_error)
@@ -31,5 +35,5 @@ class PHPCodeInjection:
     async def handle(self, attack_params, session=None):
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
-            return dict(status_code=504) 
+            return dict(status_code=504)
         return dict(value=result['stdout'], page=False)
