@@ -11,6 +11,7 @@ from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
 from tanner.reporting.log_mongodb import Reporting as mongo_report
+from tanner.reporting.log_hpfeeds import Reporting as hpfeeds_report
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -25,6 +26,8 @@ class TannerServer:
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.redis_client = None
+        if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
+            self.hpf = hpfeeds_report()
 
     @staticmethod
     def _make_response(msg):
@@ -66,6 +69,10 @@ class TannerServer:
                 db = mongo_report()
                 session_id = db.create_session(session_data)
                 self.logger.info("Writing session to DB: {}".format(session_id))
+                
+            # Log to hpfeeds
+            if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
+                self.hpf.create_session(session_data)
 
             if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
                 lr = local_report()
