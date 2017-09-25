@@ -54,7 +54,10 @@ __all__ = ["new", "FeedException"]
 
 
 class BadClient(Exception):
-        pass
+    pass
+
+class FeedException(Exception):
+    pass
 
 # packs a string with 1 byte length field
 def strpack8(x):
@@ -156,11 +159,11 @@ class HPC(object):
             else:
                 raise FeedException('Expected info message at this point.')
 
-            self.s.settimeout(None)
-            self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.s.settimeout(None)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-            if sys.platform in ('linux2', ):
-                self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
+        if sys.platform in ('linux2', ):
+            self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
 
     def publish(self, chaninfo, data):
         if type(chaninfo) == str:
@@ -172,6 +175,6 @@ class HPC(object):
         try: self.s.close()
         except: logger.warn('Socket exception when closing.')
 
-def new(host=None, port=10000, ident=None, secret=None, reconnect=True, sleepwait=20):
+def new(host=None, port=10000, ident=None, secret=None, reconnect=True):
     return HPC(host, port, ident, secret, reconnect)
         
