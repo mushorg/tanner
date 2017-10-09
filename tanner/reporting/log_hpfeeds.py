@@ -14,8 +14,16 @@ class Reporting():
         self.secret = config.TannerConfig.get('HPFEEDS', 'SECRET')
         self.channel = config.TannerConfig.get('HPFEEDS', 'CHANNEL')
         self.reconnect=True
-            
-        self.hpc = hpfeeds.new(self.host, self.port, self.ident, self.secret, self.reconnect)
+
+    def connect(self):
+        try:
+            self.hpc = hpfeeds.new(self.host, self.port, self.ident, self.secret, self.reconnect)
+            self.connected_state = True
+        except hpfeeds.FeedException:
+            self.connected_state = False
+
+    def connected(self):
+        return self.connected_state
 
     def create_session(self, session_data):
         event_data = json.dumps(session_data)

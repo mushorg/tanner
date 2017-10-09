@@ -28,6 +28,10 @@ class TannerServer:
         self.redis_client = None
         if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
             self.hpf = hpfeeds_report()
+            self.hpf.connect()
+
+            if self.hpf.connected() is False:
+                self.logger.warning('hpfeeds not connected - no hpfeeds messages will be created')
 
     @staticmethod
     def _make_response(msg):
@@ -72,7 +76,8 @@ class TannerServer:
                 
             # Log to hpfeeds
             if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
-                self.hpf.create_session(session_data)
+                if self.hpf.connected():
+                    self.hpf.create_session(session_data)
 
             if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
                 lr = local_report()

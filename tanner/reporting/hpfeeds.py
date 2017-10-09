@@ -29,7 +29,7 @@ import struct
 import hashlib
 import sys
 import socket
-from time import sleep
+import time
 
 logger = logging.getLogger('pyhpfeeds')
 
@@ -57,6 +57,9 @@ class BadClient(Exception):
     pass
 
 class FeedException(Exception):
+    pass
+
+class Disconnect(Exception):
     pass
 
 # packs a string with 1 byte length field
@@ -130,11 +133,45 @@ class HPC(object):
         self.brokername = 'unknown'
         self.connected = False
         self.stopped = False
+        self.s = None
         self.unpacker = FeedUnpack()
 
-        self.connect()
+        self.tryconnect()
+
+    def send(self, data):
+        try:
+            self.s.sendall(data)
+        except socket.timeout:
+            logger.warn("Timeout while sending - disconnect.")
+            raise Disconnect()
+        except socket.error as e:
+            logger.warn("Socket error: %s", e)
+            raise Disconnect()
+
+    def tryconnect(self):
+        if not self.connected:
+            while True:
+                try:
+                    self.connect()
+                    break
+                except socket.error as e:
+                    logger.warn('Socket error while connecting: {0}'.format(e))
+                    time.sleep(self.sleepwait)
+                except FeedException as e:
+                    logger.warn('FeedException while connecting: {0}'.format(e))
+                    time.sleep(self.sleepwait)
+                except Disconnect as e:
+                    logger.warn('Disconnect while connecting.')
+                    time.sleep(self.sleepwait)
+
+    def close_old(self):
+        if self.s:
+            try: self.s.close()
+            except: pass
 
     def connect(self):
+        self.close_old()
+
         logger.info('connecting to %s:%s', self.host, self.port)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(self.timeout)
@@ -169,7 +206,14 @@ class HPC(object):
         if type(chaninfo) == str:
             chaninfo = [chaninfo,]
         for c in chaninfo:
-            self.s.send(msgpublish(self.ident, c, data))
+            try:
+                self.send(msgpublish(self.ident, c, data))
+            except Disconnect:
+                logger.info('Disconnected from broker (in publish).')
+                if self.reconnect:
+                    self.tryconnect()
+                else:
+                    raise
 
     def close(self):
         try: self.s.close()
