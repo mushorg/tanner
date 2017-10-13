@@ -156,7 +156,7 @@ class HPC(object):
         if not self.connected:
             i = 0
             while i < self.reconnect_attempts:
-                i++
+                i += 1
                 try:
                     self.connect()
                     break
