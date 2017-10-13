@@ -19,7 +19,7 @@ class Reporting():
         try:
             self.hpc = hpfeeds.new(self.host, self.port, self.ident, self.secret, self.reconnect)
             self.connected_state = True
-        except hpfeeds.FeedException:
+        except:
             self.connected_state = False
 
     def connected(self):
@@ -30,4 +30,5 @@ class Reporting():
         try:
             self.hpc.publish(self.channel, event_data)
         except:
+            self.connected_state = False
             traceback.print_exc()

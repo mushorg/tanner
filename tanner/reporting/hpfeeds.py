@@ -124,11 +124,12 @@ class FeedUnpack(object):
 
 
 class HPC(object):
-    def __init__(self, host, port, ident, secret, timeout=3, reconnect=False, sleepwait=20):
+    def __init__(self, host, port, ident, secret, timeout=3, reconnect=False, reconnect_attempts=3, sleepwait=20):
         self.host, self.port = host, port
         self.ident, self.secret = ident, secret
         self.timeout = timeout
         self.reconnect = reconnect
+        self.reconnect_attempts = reconnect_attempts
         self.sleepwait = sleepwait
         self.brokername = 'unknown'
         self.connected = False
@@ -136,7 +137,10 @@ class HPC(object):
         self.s = None
         self.unpacker = FeedUnpack()
 
-        self.tryconnect()
+        try:
+            self.tryconnect()
+        except:
+            pass
 
     def send(self, data):
         try:
@@ -150,7 +154,9 @@ class HPC(object):
 
     def tryconnect(self):
         if not self.connected:
-            while True:
+            i = 0
+            while i < self.reconnect_attempts:
+                i++
                 try:
                     self.connect()
                     break
@@ -163,6 +169,9 @@ class HPC(object):
                 except Disconnect as e:
                     logger.warn('Disconnect while connecting.')
                     time.sleep(self.sleepwait)
+
+            if not self.connected:
+                raise Disconnect()
 
     def close_old(self):
         if self.s:
