@@ -140,7 +140,7 @@ class HPC(object):
         try:
             self.tryconnect()
         except:
-            pass
+            raise
 
     def send(self, data):
         try:
@@ -229,5 +229,7 @@ class HPC(object):
         except: logger.warn('Socket exception when closing.')
 
 def new(host=None, port=10000, ident=None, secret=None, reconnect=True):
-    return HPC(host, port, ident, secret, reconnect)
-        
+    try:
+        return HPC(host, port, ident, secret, reconnect)
+    except:
+        raise
