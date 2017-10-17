@@ -57,6 +57,14 @@ There are 8 different sections :
 
     :enabled: Check whether MONGO database is enabled
     :URI: URI for connecting to MONGO DB
+  * **HPFEEDS**
+
+    :enabled: Check whether HPFEEDS logging is enabled
+    :HOST: IP address or name of the hpfeeds server
+    :PORT: Port of the hpfeeds service
+    :IDENT: Identifier of the hpfeeds client
+    :SECRET: Secret of the hpfeeds client
+    :CHANNEL: Channel to which publish messages
   * **LOCALLOG**
 
     :enabled: Check local(temporary) logging is enabled
