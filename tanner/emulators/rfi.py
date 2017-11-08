@@ -60,7 +60,7 @@ class RfiEmulator:
             ftp.cwd(ftp_path)
             tmp_filename = name + str(time.time())
             file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
-            with open(file_name, 'wb') as ftp_script:
+            with open(os.path.join(self.script_dir, file_name), 'wb') as ftp_script:
                 ftp.retrbinary('RETR %s' % name, ftp_script.write)
         except ftplib.all_errors as ftp_errors:
             self.logger.error("Problem with ftp download %s", ftp_errors)
