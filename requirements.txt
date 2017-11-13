@@ -3,7 +3,7 @@ aiomysql
 aiohttp_jinja2
 docker<2.6
 elizabeth==0.3.27
-yarl
+yarl<0.14
 redis
 asyncio_redis
 uvloop
