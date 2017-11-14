@@ -58,7 +58,7 @@ Emulator returns the script body and the page, into which this script must be in
 SQLi emulator
 ~~~~~~~~~~~~~
 
-It emulates `SQL injection`_ vulnerability. This attack is detected by ``libinjection``. To install ``libinjection``, see the official manual_.
+It emulates `SQL injection`_ vulnerability. This attack is detected by ``libinjection``.
 
 The emulator copies the original database (see :doc:`db_setup` for more info about db) to a dummy database for every attacker.
 It uses UUID of the session for the attacker's db name. Every query is executed on the attacker's db.
