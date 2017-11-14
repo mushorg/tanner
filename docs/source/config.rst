@@ -8,7 +8,6 @@ There are 8 different sections :
     :db_config: Location of SQLI database configuration
     :dorks: Location of dorks
     :user_dorks: Location of user dorks
-    :vdocs: Location of configuration file for virtual docs
   * **TANNER**
 
     :Host: The host at which Tanner is running
@@ -76,7 +75,6 @@ If no file is specified, following json will be used as default:
 
     {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
               'user_dorks': '/opt/tanner/data/user_dorks.pickle',
-              'vdocs': '/opt/tanner/data/vdocs.json'},
      'TANNER': {'host': '0.0.0.0', 'port': 8090},
      'WEB': {'host': '0.0.0.0', 'port': 8091},
      'API': {'host': '0.0.0.0', 'port': 8092},
