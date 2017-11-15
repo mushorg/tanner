@@ -9,7 +9,7 @@ class TestCongif(unittest.TestCase):
         config.TannerConfig.config = None
         self.d = {
             'DATA': {'db_config': '/tmp/user_tanner/db/db_config.json', 'dorks': '/tmp/user_tanner/data/dorks.pickle',
-                     'user_dorks': '/tmp/user_tanner/data/user_dorks.pickle',
+                     'user_dorks': '/tmp/user_tanner/data/user_dorks.pickle'},
             'TANNER': {'host': '0.0.0.0', 'port': '9000'},
             'WEB': {'host': '0.0.0.0', 'port': '9001'},
             'WEB': {'host': '0.0.0.0', 'port': '9002'},
