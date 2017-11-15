@@ -56,7 +56,7 @@ class TestCongif(unittest.TestCase):
     def test_get_when_file_dont_exists(self):
         config_template = {
             'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
-                     'user_dorks': '/opt/tanner/data/user_dorks.pickle',
+                     'user_dorks': '/opt/tanner/data/user_dorks.pickle'},
             'TANNER': {'host': '0.0.0.0', 'port': 8090},
             'WEB': {'host': '0.0.0.0', 'port': 8091},
             'API': {'host': '0.0.0.0', 'port': 8092},
