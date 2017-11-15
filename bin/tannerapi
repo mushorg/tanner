@@ -1,7 +1,15 @@
 #!/usr/bin/python3.5
 from tanner.api import server
+from tanner.config import TannerConfig
+import argparse
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", help="tanner config")
+    args = parser.parse_args()
+    if args.config:
+        TannerConfig.set_config(args.config)
+
     api = server.ApiServer()
     api.start()
 
