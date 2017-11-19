@@ -1,7 +1,16 @@
 #!/usr/bin/python3.5
 from tanner.web import server
+from tanner.config import TannerConfig
+import argparse
+
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", help="tanner config")
+    args = parser.parse_args()
+    if args.config:
+        TannerConfig.set_config(args.config)
+
     tannerweb = server.TannerWebServer()
     tannerweb.start()
 
