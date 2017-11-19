@@ -115,5 +115,5 @@ class TannerWebServer:
         self.api = api.Api(self.redis_client)
         app = self.create_app(loop)
         host = TannerConfig.get('WEB', 'host')
-        port = TannerConfig.get('WEB', 'port')
+        port = int(TannerConfig.get('WEB', 'port'))
         web.run_app(app, host=host, port=port)
