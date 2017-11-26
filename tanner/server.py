@@ -38,7 +38,7 @@ class TannerServer:
     @staticmethod
     def _make_response(msg):
         response_message = dict(
-            version=1,
+            version=tanner_version,
             response=dict(message=msg)
         )
         return response_message
@@ -88,7 +88,7 @@ class TannerServer:
 
     async def handle_dorks(self, request):
         dorks = await self.dorks.choose_dorks(self.redis_client)
-        response_msg = dict(version=1, response=dict(dorks=dorks))
+        response_msg = dict(version=tanner_version, response=dict(dorks=dorks))
         return web.json_response(response_msg)
 
     async def handle_version(self, request):
