@@ -6,7 +6,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from tanner import server
 from tanner.config import TannerConfig
-
+from tanner import __version__ as tanner_version
 
 class TestServer(AioHTTPTestCase):
     def setUp(self):
@@ -95,3 +95,13 @@ class TestServer(AioHTTPTestCase):
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
+
+    @unittest_run_loop
+    async def test_version(self):
+        assert_content = dict(version=tanner_version)
+        request = await self.client.request("GET", "/version")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
+
+
