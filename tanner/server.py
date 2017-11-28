@@ -12,6 +12,8 @@ from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
 from tanner.reporting.log_mongodb import Reporting as mongo_report
 from tanner.reporting.log_hpfeeds import Reporting as hpfeeds_report
+from tanner import __version__ as tanner_version
+
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -36,7 +38,7 @@ class TannerServer:
     @staticmethod
     def _make_response(msg):
         response_message = dict(
-            version=1,
+            version=tanner_version,
             response=dict(message=msg)
         )
         return response_message
@@ -86,7 +88,11 @@ class TannerServer:
 
     async def handle_dorks(self, request):
         dorks = await self.dorks.choose_dorks(self.redis_client)
-        response_msg = dict(version=1, response=dict(dorks=dorks))
+        response_msg = dict(version=tanner_version, response=dict(dorks=dorks))
+        return web.json_response(response_msg)
+
+    async def handle_version(self, request):
+        response_msg = dict(version=tanner_version)
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
@@ -97,6 +103,7 @@ class TannerServer:
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)
         app.router.add_get('/dorks', self.handle_dorks)
+        app.router.add_get('/version', self.handle_version)
 
     def create_app(self, loop):
         app = web.Application(loop=loop)

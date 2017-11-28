@@ -6,7 +6,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from tanner import server
 from tanner.config import TannerConfig
-
+from tanner import __version__ as tanner_version
 
 class TestServer(AioHTTPTestCase):
     def setUp(self):
@@ -72,7 +72,7 @@ class TestServer(AioHTTPTestCase):
     def test_make_response(self):
         msg = 'test'
         content = self.serv._make_response(msg)
-        assert_content = dict(version=1, response=dict(message=msg))
+        assert_content = dict(version=tanner_version, response=dict(message=msg))
         self.assertDictEqual(content, assert_content)
 
     @unittest_run_loop
@@ -80,7 +80,7 @@ class TestServer(AioHTTPTestCase):
         async def _make_handle_coroutine(*args, **kwargs):
             return {'name': 'index', 'order': 1, "payload": None}
 
-        detection_assert = {'version': 1, 'response': {
+        detection_assert = {'version': tanner_version, 'response': {
             'message': {'detection': {'name': 'index', 'order': 1, "payload": None}, 'sess_uuid': str(self.test_uuid)}}}
         self.serv.base_handler.handle = _make_handle_coroutine
         request = await self.client.request("POST", "/event", data=b"{\"path\":\"/index.html\"}")
@@ -90,8 +90,18 @@ class TestServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_dorks_request(self):
-        assert_content = dict(version=1, response=dict(dorks=[x for x in range(10)]))
+        assert_content = dict(version=tanner_version, response=dict(dorks=[x for x in range(10)]))
         request = await self.client.request("GET", "/dorks")
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
+
+    @unittest_run_loop
+    async def test_version(self):
+        assert_content = dict(version=tanner_version)
+        request = await self.client.request("GET", "/version")
+        assert request.status == 200
+        detection = await request.json()
+        self.assertDictEqual(detection, assert_content)
+
+
