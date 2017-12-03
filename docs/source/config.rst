@@ -85,6 +85,6 @@ If no file is specified, following json will be used as default:
      'DOCKER': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
      'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
      'CLEANLOG': {'enabled': 'False'}
      }

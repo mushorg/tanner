@@ -20,7 +20,7 @@ class TestCongif(unittest.TestCase):
             'DOCKER': {'host_image': 'test_image'},
 			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'}
+            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'},
             'CLEANLOG': {'enabled': 'False'}
             }
 
