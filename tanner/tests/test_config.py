@@ -21,6 +21,7 @@ class TestCongif(unittest.TestCase):
 			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'}
+            'CLEANLOG': {'enabled': 'False'}
             }
 
         self.valid_config_path = '/tmp/tanner_config'
@@ -68,6 +69,7 @@ class TestCongif(unittest.TestCase):
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+            'CLEANLOG': {'enabled': 'False'}
             }
 
         for section in config_template:
