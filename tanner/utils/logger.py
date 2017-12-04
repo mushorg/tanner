@@ -14,7 +14,7 @@ class LevelFilter(logging.Filter):
 class Logger:
     @staticmethod
     def create_logger(debug_filename, err_filename, logger_name):
-        if TannerConfig.get('CLEANLOG', 'enabled') == 'True':
+        if TannerConfig.get('CLEANLOG', 'enabled') == True:
             with open(err_filename, 'w'):
                 pass
 

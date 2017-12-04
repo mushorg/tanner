@@ -28,7 +28,7 @@ class TannerServer:
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.redis_client = None
-        if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
+        if TannerConfig.get('HPFEEDS', 'enabled') == True:
             self.hpf = hpfeeds_report()
             self.hpf.connect()
 
@@ -71,17 +71,17 @@ class TannerServer:
             session_data['response_msg'] = response_msg
 
             # Log to Mongo
-            if TannerConfig.get('MONGO', 'enabled') == 'True':
+            if TannerConfig.get('MONGO', 'enabled') == True:
                 db = mongo_report()
                 session_id = db.create_session(session_data)
                 self.logger.info("Writing session to DB: {}".format(session_id))
                 
             # Log to hpfeeds
-            if TannerConfig.get('HPFEEDS', 'enabled') == 'True':
+            if TannerConfig.get('HPFEEDS', 'enabled') == True:
                 if self.hpf.connected():
                     self.hpf.create_session(session_data)
 
-            if TannerConfig.get('LOCALLOG', 'enabled') == 'True':
+            if TannerConfig.get('LOCALLOG', 'enabled') == True:
                 lr = local_report()
                 lr.create_session(session_data)
         return web.json_response(response_msg)

@@ -10,8 +10,8 @@ from tanner import __version__ as tanner_version
 
 class TestServer(AioHTTPTestCase):
     def setUp(self):
-        d = dict(MONGO={'enabled': 'False', 'URI': 'mongodb://localhost'},
-                 LOCALLOG={'enabled': 'False', 'PATH': '/tmp/tanner_report.json'})
+        d = dict(MONGO={'enabled': False, 'URI': 'mongodb://localhost'},
+                 LOCALLOG={'enabled': False, 'PATH': '/tmp/tanner_report.json'})
         m = mock.MagicMock()
         m.__getitem__.side_effect = d.__getitem__
         m.__iter__.side_effect = d.__iter__
