@@ -80,10 +80,10 @@ If no file is specified, following json will be used as default:
      'API': {'host': '0.0.0.0', 'port': 8092},
      'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
      'EMULATORS': {'root_dir': '/opt/tanner'},
-     'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
+     'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
      'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
      'DOCKER': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
-     'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+     'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
+     'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'}
      }
