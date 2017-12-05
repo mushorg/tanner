@@ -10,21 +10,21 @@ There are 8 different sections :
     :user_dorks: Location of user dorks
   * **TANNER**
 
-    :Host: The host at which Tanner is running
-    :Port: The port at which Tanner is running
+    :host: The host at which Tanner is running
+    :port: The port at which Tanner is running
   * **WEB**
 
-    :Host: The host at which Tanner Web UI is running
-    :Port: The port at which Tanner Web UI is running
+    :host: The host at which Tanner Web UI is running
+    :port: The port at which Tanner Web UI is running
   * **API**
 
-    :Host: The host at which Tanner API is running
-    :Port: The port at which Tanner API is running
+    :host: The host at which Tanner API is running
+    :port: The port at which Tanner API is running
   * **REDIS**
 
-    :Host: The host address at which redis is running
-    :Post: The port at which which redis is running
-    :Poolsize: The poolsize of redis server
+    :host: The host address at which redis is running
+    :port: The port at which which redis is running
+    :poolsize: The poolsize of redis server
     :timeout: The duration of timeout for redis server
   * **EMULATORS**
 
@@ -40,7 +40,6 @@ There are 8 different sections :
 
   * **SQLI**
 
-    :db_name: THe name of database used in SQLI emulator
     :type: Supports two types MySQL/SQLITE
     :db_name: The name of database used in SQLI emulator
     :host: This will be used for MySQL to get the host address
@@ -51,7 +50,8 @@ There are 8 different sections :
     :host_image: The image which emulates commands in Command Execution Emulator and file system in LFI emulator
   * **LOGGER**
 
-    :log_file: Location of tanner log file
+    :log_debug: Location of tanner log file
+    :log_err: Location of tanner error file
   * **MONGO**
 
     :enabled: Check whether MONGO database is enabled
@@ -85,5 +85,6 @@ If no file is specified, following json will be used as default:
      'DOCKER': {'host_image': 'busybox:latest'},
      'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
      'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
+     'CLEANLOG': {'enabled': 'False'}
      }

@@ -20,7 +20,8 @@ class TestCongif(unittest.TestCase):
             'DOCKER': {'host_image': 'test_image'},
 			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'}
+            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'},
+            'CLEANLOG': {'enabled': 'False'}
             }
 
         self.valid_config_path = '/tmp/tanner_config'
@@ -67,7 +68,8 @@ class TestCongif(unittest.TestCase):
             'DOCKER': {'host_image': 'busybox:latest'},
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'}
+            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
+            'CLEANLOG': {'enabled': 'False'}
             }
 
         for section in config_template:
