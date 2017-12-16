@@ -75,4 +75,4 @@ class TestCongif(unittest.TestCase):
         for section in config_template:
             for value, assertion_data in config_template[section].items():
                 data = config.TannerConfig.get(section, value)
-                self.assertEqual(data, str(assertion_data))
+                self.assertEqual(data, assertion_data)
