@@ -11,11 +11,11 @@ from tanner.utils import patterns
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop) if TannerConfig.get('EMULATOR_ENABLED', 'rfi')=='True' else None,
-            'lfi': lfi.LfiEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'lfi')=='True' else None,
-            'xss': xss.XssEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'xss')=='True' else None,
-            'sqli': sqli.SqliEmulator(db_name, base_dir) if TannerConfig.get('EMULATOR_ENABLED', 'sqli')=='True' else None,
-            'cmd_exec': cmd_exec.CmdExecEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec')=='True' else None
+            'rfi': rfi.RfiEmulator(base_dir, loop) if TannerConfig.get('EMULATOR_ENABLED', 'rfi') else None,
+            'lfi': lfi.LfiEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'lfi') else None,
+            'xss': xss.XssEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'xss') else None,
+            'sqli': sqli.SqliEmulator(db_name, base_dir) if TannerConfig.get('EMULATOR_ENABLED', 'sqli') else None,
+            'cmd_exec': cmd_exec.CmdExecEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec') else None
             }
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
         self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
@@ -46,7 +46,7 @@ class BaseHandler:
         attack_params = {}
         for param_id, param_value in data.items():
             for emulator in target_emulators:
-                if TannerConfig.get('EMULATOR_ENABLED', emulator)=="True":
+                if TannerConfig.get('EMULATOR_ENABLED', emulator):
 	                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
 	                if possible_detection:
 	                    if detection['order'] < possible_detection['order']:
