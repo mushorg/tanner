@@ -11,7 +11,7 @@ from tanner.utils import patterns
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
-        self.emulator_enabled = TannerConfig.get('EMULATORS', 'emulator_enabled')
+        self.emulator_enabled = TannerConfig.get_section('EMULATOR_ENABLED')
          
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
