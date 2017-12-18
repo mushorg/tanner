@@ -39,7 +39,8 @@ class TannerConfig():
     def get(section, value):
         if TannerConfig.config is not None:
             try:
-                res = TannerConfig.config.get(section, value)
+                convert_type = type(config_template[section][value]) 
+                res = convert_type(TannerConfig.config.get(section, value))
             except (configparser.NoOptionError, configparser.NoSectionError):
                 LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
                 res = config_template[section][value]
