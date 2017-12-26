@@ -52,7 +52,8 @@ class TestCongif(unittest.TestCase):
         for section in self.d:
             for value, assertion_data in self.d[section].items():
                 data = config.TannerConfig.get(section, value)
-                self.assertEqual(data, assertion_data)
+                convert_type = type(data)
+                self.assertEqual(data, convert_type(assertion_data))
 
     def test_get_when_file_dont_exists(self):
         config_template = {
