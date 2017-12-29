@@ -11,14 +11,14 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks
                    'API': {'host': '0.0.0.0', 'port': 8092},
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': '/opt/tanner'},
-                   'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
+                   'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
                    'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
                    'DOCKER': {'host_image': 'busybox:latest'},
                    'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
-                   'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-                   'HPFEEDS': {'enabled': 'False', 'HOST': 'localhost', 'PORT': '10000', 'IDENT': '', 'SECRET': '', 'CHANNEL': 'tanner.events'},
-                   'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
-                   'CLEANLOG': {'enabled': 'False'}
+                   'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
+                   'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '', 'CHANNEL': 'tanner.events'},
+                   'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
+                   'CLEANLOG': {'enabled': False}
                    }
 
 
@@ -39,7 +39,8 @@ class TannerConfig():
     def get(section, value):
         if TannerConfig.config is not None:
             try:
-                res = TannerConfig.config.get(section, value)
+                convert_type = type(config_template[section][value]) 
+                res = convert_type(TannerConfig.config.get(section, value))
             except (configparser.NoOptionError, configparser.NoSectionError):
                 LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
                 res = config_template[section][value]

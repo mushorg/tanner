@@ -52,7 +52,8 @@ class TestCongif(unittest.TestCase):
         for section in self.d:
             for value, assertion_data in self.d[section].items():
                 data = config.TannerConfig.get(section, value)
-                self.assertEqual(data, assertion_data)
+                convert_type = type(data)
+                self.assertEqual(data, convert_type(assertion_data))
 
     def test_get_when_file_dont_exists(self):
         config_template = {
@@ -63,13 +64,13 @@ class TestCongif(unittest.TestCase):
             'API': {'host': '0.0.0.0', 'port': 8092},
             'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
             'EMULATORS': {'root_dir': '/opt/tanner'},
-            'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
+            'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
             'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
             'DOCKER': {'host_image': 'busybox:latest'},
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
-            'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-            'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
-            'CLEANLOG': {'enabled': 'False'}
+            'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
+            'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
+            'CLEANLOG': {'enabled': False}
             }
 
         for section in config_template:

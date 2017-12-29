@@ -9,7 +9,7 @@ class Reporting():
     def __init__(self):
         # Create the connection
         self.host = config.TannerConfig.get('HPFEEDS', 'HOST')
-        self.port = int(config.TannerConfig.get('HPFEEDS', 'PORT'))
+        self.port = config.TannerConfig.get('HPFEEDS', 'PORT')
         self.ident = config.TannerConfig.get('HPFEEDS', 'IDENT')
         self.secret = config.TannerConfig.get('HPFEEDS', 'SECRET')
         self.channel = config.TannerConfig.get('HPFEEDS', 'CHANNEL')

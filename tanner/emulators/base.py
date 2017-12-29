@@ -46,7 +46,7 @@ class BaseHandler:
         attack_params = {}
         for param_id, param_value in data.items():
             for emulator in target_emulators:
-            	if TannerConfig.get('EMULATOR_ENABLED', emulator):
+                if TannerConfig.get('EMULATOR_ENABLED', emulator):
 	                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
 	                if possible_detection:
 	                    if detection['order'] < possible_detection['order']:

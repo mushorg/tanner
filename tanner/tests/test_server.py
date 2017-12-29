@@ -16,6 +16,7 @@ class TestServer(AioHTTPTestCase):
         m.__getitem__.side_effect = d.__getitem__
         m.__iter__.side_effect = d.__iter__
         TannerConfig.config = m
+        TannerConfig.get = m.get
 
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('tanner.emulators.base.BaseHandler', mock.Mock(), create=True):
