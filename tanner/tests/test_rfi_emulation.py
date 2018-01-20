@@ -1,5 +1,4 @@
 import asyncio
-import ftplib
 import unittest
 
 from tanner.emulators import rfi
@@ -32,12 +31,10 @@ class TestRfiEmulator(unittest.TestCase):
         with self.assertLogs():
             self.loop.run_until_complete(self.handler.download_file(path))
 
-
     def test_get_result_fail(self):
         data = "test data"
         result = self.loop.run_until_complete(self.handler.get_rfi_result(data))
         self.assertIsNone(result)
-
 
     def test_invalid_scheme(self):
         path = 'file://mirror.yandex.ru/archlinux/foobar'

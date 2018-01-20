@@ -1,7 +1,8 @@
 #!/usr/bin/python3.5
+import argparse
+
 from tanner.web import server
 from tanner.config import TannerConfig
-import argparse
 
 
 def main():
@@ -13,6 +14,7 @@ def main():
 
     tannerweb = server.TannerWebServer()
     tannerweb.start()
+
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,6 @@
 #!/usr/bin/python3.5
 import argparse
-import os
-import tanner
+
 from tanner.config import TannerConfig
 from tanner import server
 from tanner.utils import logger

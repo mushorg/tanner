@@ -4,6 +4,7 @@ import unittest
 
 from tanner import config
 
+
 class TestCongif(unittest.TestCase):
     def setUp(self):
         config.TannerConfig.config = None
@@ -17,13 +18,14 @@ class TestCongif(unittest.TestCase):
             'REDIS': {'host': 'localhost', 'port': '1337', 'poolsize': '40', 'timeout': '5'},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
-            'SQLI': {'type':'SQLITE', 'db_name': 'user_tanner_db', 'host':'localhost', 'user':'user_name', 'password':'user_pass'},
+            'SQLI': {'type': 'SQLITE', 'db_name': 'user_tanner_db', 'host': 'localhost', 'user': 'user_name',
+                     'password': 'user_pass'},
             'DOCKER': {'host_image': 'test_image'},
-			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
+            'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'},
             'CLEANLOG': {'enabled': 'False'}
-            }
+        }
 
         self.valid_config_path = '/tmp/tanner_config'
         self.cfg = configparser.ConfigParser()
@@ -67,13 +69,14 @@ class TestCongif(unittest.TestCase):
             'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
-            'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
+            'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
+                     'password': 'user_pass'},
             'DOCKER': {'host_image': 'busybox:latest'},
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
             'CLEANLOG': {'enabled': False}
-            }
+        }
 
         for section in config_template:
             for value, assertion_data in config_template[section].items():

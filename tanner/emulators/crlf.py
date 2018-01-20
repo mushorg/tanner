@@ -1,7 +1,5 @@
-import logging
-import re
-
 from tanner.utils import patterns
+
 
 class CRLFEmulator:
 

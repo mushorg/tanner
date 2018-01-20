@@ -1,10 +1,12 @@
 import asyncio
 import logging
 
-from tanner.api import api
 from aiohttp import web
+
+from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
+
 
 class ApiServer:
     def __init__(self):

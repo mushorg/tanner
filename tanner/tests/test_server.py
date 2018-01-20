@@ -1,4 +1,3 @@
-import asyncio
 import uuid
 from unittest import mock
 
@@ -7,6 +6,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 from tanner import server
 from tanner.config import TannerConfig
 from tanner import __version__ as tanner_version
+
 
 class TestServer(AioHTTPTestCase):
     def setUp(self):
@@ -25,7 +25,6 @@ class TestServer(AioHTTPTestCase):
 
         self.test_uuid = uuid.uuid4()
 
-
         async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
@@ -38,7 +37,7 @@ class TestServer(AioHTTPTestCase):
 
         self.serv.session_manager.add_or_update_session = _add_or_update_mock
         self.serv.session_manager.delete_sessions_on_shutdown = _delete_sessions_mock
-        
+
         async def choosed(client):
             return [x for x in range(10)]
 
@@ -104,5 +103,3 @@ class TestServer(AioHTTPTestCase):
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
-
-

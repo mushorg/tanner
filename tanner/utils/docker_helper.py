@@ -1,17 +1,18 @@
-import asyncio
-import docker
 import logging
-# TODO : Replace docker with aiodocker
+import docker
+
 from tanner.config import TannerConfig
+
+# TODO : Replace docker with aiodocker
 
 class DockerHelper:
     def __init__(self):
+        self.logger = logging.getLogger('tanner.docker_helper.DockerHelper')
         try:
             self.docker_client = docker.from_env(version='auto')
         except docker.errors.APIError as docker_error:
             self.logger.error('Error while connecting to docker service %s', docker_error)
         self.host_image = TannerConfig.get('DOCKER', 'host_image')
-        self.logger = logging.getLogger('tanner.docker_helper.DockerHelper')
 
     async def setup_host_image(self):
         try:
@@ -19,27 +20,27 @@ class DockerHelper:
                 self.docker_client.images.pull(self.host_image)
         except docker.errors.APIError as docker_error:
             self.logger.error('Error while pulling %s image %s', self.host_image, docker_error)
-        
+
     async def get_container(self, container_name):
         container = None
         try:
-            container_if_exists = self.docker_client.containers.list(all= True,
-                                                                     filters= dict(name= container_name)
+            container_if_exists = self.docker_client.containers.list(all=True,
+                                                                     filters=dict(name=container_name)
                                                                      )
             if container_if_exists:
                 container = container_if_exists[0]
         except docker.errors.APIError as server_error:
             self.logger.error('Error while fetching container list %s', server_error)
         return container
-    
+
     async def create_container(self, container_name):
         await self.setup_host_image()
         container = await self.get_container(container_name)
         if not container:
             try:
-                container = self.docker_client.containers.create(image= self.host_image,
-                                                                 stdin_open= True, 
-                                                                 name= container_name
+                container = self.docker_client.containers.create(image=self.host_image,
+                                                                 stdin_open=True,
+                                                                 name=container_name
                                                                  )
             except (docker.errors.APIError, docker.errors.ImageNotFound) as docker_error:
                 self.logger.error('Error while creating a container %s', docker_error)
@@ -49,7 +50,7 @@ class DockerHelper:
         container = await self.get_container(container_name)
         try:
             if container:
-                container.remove(force = True)
+                container.remove(force=True)
         except docker.errors.APIError as server_error:
             self.logger.error('Error while removing container %s', server_error)
 

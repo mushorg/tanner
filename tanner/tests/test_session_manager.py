@@ -109,8 +109,7 @@ class TestSessions(unittest.TestCase):
         self.assertEquals([sess], self.handler.sessions)
 
     def test_updating_session(self):
-
-        async  def sess_sadd(key, value):
+        async def sess_sadd(key, value):
             return None
 
         data = {
@@ -133,7 +132,6 @@ class TestSessions(unittest.TestCase):
         self.assertEqual(self.handler.sessions[0].count, 2)
 
     def test_deleting_sessions(self):
-
         async def analyze(session_key, redis_client):
             return None
 

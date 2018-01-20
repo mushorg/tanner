@@ -1,17 +1,21 @@
 import logging
 import logging.handlers
+
 from tanner.config import TannerConfig
 
+
 class LevelFilter(logging.Filter):
-    '''Filters (lets through) all messages with level < LEVEL'''
+    """Filters (lets through) all messages with level < LEVEL"""
+
     def __init__(self, level):
         self.level = level
 
     def filter(self, record):
-        return record.levelno < self.level # "<" instead of "<=": since logger.setLevel is inclusive, this should be exclusive
+        return record.levelno < self.level  # "<" instead of "<=": since logger.setLevel is inclusive, this should be exclusive
 
 
 class Logger:
+
     @staticmethod
     def create_logger(debug_filename, err_filename, logger_name):
         if TannerConfig.get('CLEANLOG', 'enabled') == 'True':

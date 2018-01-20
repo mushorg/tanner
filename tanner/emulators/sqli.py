@@ -1,11 +1,8 @@
-import os
 import pylibinjection
-import sqlite3
-import urllib.parse
 
-from tanner.utils import sqlite_db_helper
 from tanner.config import TannerConfig
 from tanner.emulators import mysqli, sqlite
+
 
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
@@ -21,7 +18,7 @@ class SqliEmulator:
         payload = bytes(value, 'utf-8')
         sqli = pylibinjection.detect_sqli(payload)
         if int(sqli['sqli']):
-            detection = dict(name= 'sqli', order= 2)
+            detection = dict(name='sqli', order=2)
         return detection
 
     def map_query(self, attack_value):
