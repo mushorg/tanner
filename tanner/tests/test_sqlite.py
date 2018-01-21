@@ -17,7 +17,7 @@ class SqliteTest(unittest.TestCase):
         # Insert some testing data
         conn = sqlite3.connect(self.filename)
         self.cursor = conn.cursor()
-        self.cursor.execute('CREATE TABLE test (id INTEGER PRIMARY KEY, username TEXT);')
+        self.cursor.execute('CREATE TABLE test (id INTEGER PRIMARY KEY, username TEXT)')
         self.cursor.execute('INSERT INTO TEST VALUES(0, "test0")')
         conn.commit()
 
@@ -35,7 +35,7 @@ class SqliteTest(unittest.TestCase):
 
     def test_create_query_map(self):
         result = self.handler.helper.create_query_map('/tmp/db', 'test_db')
-        assert_result = {'test': [{'name': 'id', 'type': 'INTEGER'}, {'name': 'username', 'type': 'text'}]}
+        assert_result = {'test': [{'name': 'id', 'type': 'INTEGER'}, {'name': 'username', 'type': 'TEXT'}]}
         self.assertEqual(result, assert_result)
 
     def test_insert_dummy_data(self):
