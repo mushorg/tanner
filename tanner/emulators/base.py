@@ -1,24 +1,31 @@
-import asyncio
 import mimetypes
 import re
 import urllib.parse
 import yarl
 
+from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, crlf
 from tanner.utils import patterns
+
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
+        self.emulator_enabled = TannerConfig.get_section('EMULATOR_ENABLED')
+
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop) if TannerConfig.get('EMULATOR_ENABLED', 'rfi') else None,
-            'lfi': lfi.LfiEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'lfi') else None,
-            'xss': xss.XssEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'xss') else None,
-            'sqli': sqli.SqliEmulator(db_name, base_dir) if TannerConfig.get('EMULATOR_ENABLED', 'sqli') else None,
-            'cmd_exec': cmd_exec.CmdExecEmulator() if TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec') else None
-            }
-        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
-        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'cmd_exec']
+            'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
+            'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
+            'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
+            'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
+            'cmd_exec': cmd_exec.CmdExecEmulator() if self.emulator_enabled['cmd_exec'] else None,
+            'php_code_injection': php_code_injection.PHPCodeInjection(loop) if self.emulator_enabled[
+                'php_code_injection'] else None,
+            'crlf': crlf.CRLFEmulator() if self.emulator_enabled['crlf'] else None
+        }
+
+        self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
+        self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
         self.cookie_emulators = ['sqli']
 
     def extract_get_data(self, path):
@@ -47,17 +54,18 @@ class BaseHandler:
         for param_id, param_value in data.items():
             for emulator in target_emulators:
                 if TannerConfig.get('EMULATOR_ENABLED', emulator):
-	                possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
-	                if possible_detection:
-	                    if detection['order'] < possible_detection['order']:
-	                        detection = possible_detection
-	                    if emulator not in attack_params:
-	                        attack_params[emulator] = []
-	                    attack_params[emulator].append(dict(id=param_id, value=param_value))
+                    possible_detection = self.emulators[emulator].scan(param_value) if param_value else None
+                    if possible_detection:
+                        if detection['order'] < possible_detection['order']:
+                            detection = possible_detection
+                        if emulator not in attack_params:
+                            attack_params[emulator] = []
+                        attack_params[emulator].append(dict(id=param_id, value=param_value))
 
         if detection['name'] in self.emulators:
             emulation_result = await self.emulators[detection['name']].handle(attack_params[detection['name']], session)
-            detection['payload'] = emulation_result
+            if emulation_result:
+                detection['payload'] = emulation_result
 
         return detection
 
@@ -84,11 +92,11 @@ class BaseHandler:
             detection = {'name': 'index', 'order': 1}
         # check attacks against get parameters
         possible_get_detection = await self.get_emulation_result(session, get_data, self.get_emulators)
-        if possible_get_detection and detection['order'] < possible_get_detection['order'] :
+        if possible_get_detection and detection['order'] < possible_get_detection['order']:
             detection = possible_get_detection
         # check attacks against cookie values
         possible_cookie_detection = await self.handle_cookies(session, data)
-        if possible_cookie_detection and detection['order'] < possible_cookie_detection['order'] :
+        if possible_cookie_detection and detection['order'] < possible_cookie_detection['order']:
             detection = possible_cookie_detection
 
         return detection
@@ -109,12 +117,19 @@ class BaseHandler:
         else:
             detection = await self.handle_get(session, data)
 
-        if 'payload' in detection and type(detection['payload']) is dict:
-            injectable_page = self.set_injectable_page(session)
-            if injectable_page is None:
-                injectable_page = '/index.html'
-            detection['payload']['page'] = injectable_page
-
+        if 'payload' not in detection:
+            detection['type'] = 1
+        elif 'payload' in detection:
+            if 'status_code' not in detection['payload']:
+                detection['type'] = 2
+                if detection['payload']['page']:
+                    injectable_page = self.set_injectable_page(session)
+                    if injectable_page is None:
+                        injectable_page = '/index.html'
+                    detection['payload']['page'] = injectable_page
+            else:
+                detection['type'] = 3
+        detection['version'] = tanner_version
         return detection
 
     async def handle(self, data, session):

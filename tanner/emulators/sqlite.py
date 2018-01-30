@@ -1,9 +1,7 @@
-import asyncio
 import os
 import sqlite3
 
 from tanner.utils import sqlite_db_helper
-from tanner import config
 
 
 class SQLITEEmulator:

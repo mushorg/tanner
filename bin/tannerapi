@@ -1,7 +1,9 @@
 #!/usr/bin/python3.5
+import argparse
+
 from tanner.api import server
 from tanner.config import TannerConfig
-import argparse
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -12,6 +14,7 @@ def main():
 
     api = server.ApiServer()
     api.start()
+
 
 if __name__ == "__main__":
     main()

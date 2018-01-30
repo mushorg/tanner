@@ -18,8 +18,12 @@ There are 8 different sections :
     :port: The port at which Tanner Web UI is running
   * **API**
 
-    :host: The host at which Tanner API is running
-    :port: The port at which Tanner API is running
+    :Host: The host at which Tanner API is running
+    :Port: The port at which Tanner API is running
+  * **PHPOX**
+
+    :Host: The host at which PHPOX is running
+    :Port: The port at which PHPOX is running
   * **REDIS**
 
     :host: The host address at which redis is running
@@ -78,6 +82,7 @@ If no file is specified, following json will be used as default:
      'TANNER': {'host': '0.0.0.0', 'port': 8090},
      'WEB': {'host': '0.0.0.0', 'port': 8091},
      'API': {'host': '0.0.0.0', 'port': 8092},
+     'PHPOX': {'host': '0.0.0.0', 'port': 8088},
      'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
      'EMULATORS': {'root_dir': '/opt/tanner'},
      'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},

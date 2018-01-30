@@ -8,6 +8,7 @@ from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
 
+
 class TannerWebServer:
     def __init__(self):
         self.logger = logging.getLogger('tanner.web.tannerwebserver')
@@ -22,14 +23,14 @@ class TannerWebServer:
     async def handle_snares(self, request):
         snares = await self.api.return_snares()
         return {
-            'snares' : snares
+            'snares': snares
         }
 
     @aiohttp_jinja2.template('snare.html')
     async def handle_snare(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        return{
-            'snare' : snare_uuid
+        return {
+            'snare': snare_uuid
         }
 
     @aiohttp_jinja2.template('snare-stats.html')
@@ -37,7 +38,7 @@ class TannerWebServer:
         snare_uuid = request.match_info['snare_uuid']
         snare_stats = await self.api.return_snare_stats(snare_uuid)
         return {
-            'snare_stats' : snare_stats
+            'snare_stats': snare_stats
         }
 
     @aiohttp_jinja2.template('sessions.html')
@@ -59,26 +60,26 @@ class TannerWebServer:
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
-            result = sessions[15*(page_id-1):15*page_id]
+            result = sessions[15 * (page_id - 1):15 * page_id]
             next_val = None
             pre_val = None
-            if(page_id*15 <= len(sessions)):
+            if page_id * 15 <= len(sessions):
                 next_val = '/{snare_uuid}/sessions/page/{page_id}'.format(snare_uuid=snare_uuid,
                                                                           page_id=str(page_id + 1)
                                                                           )
                 if len(applied_filters) > 1:
                     next_val += '?filters={filters}'.format(filters=params['filters'])
-            if(page_id > 1):
+            if page_id > 1:
                 pre_val = '/{snare_uuid}/sessions/page/{page_id}'.format(snare_uuid=snare_uuid,
-                                                                          page_id=str(page_id - 1)
-                                                                          )
+                                                                         page_id=str(page_id - 1)
+                                                                         )
                 if len(applied_filters) > 1:
                     pre_val += '?filters={filters}'.format(filters=params['filters'])
 
         return {
-            'sessions' : result,
-            'next_val' : next_val,
-            'pre_val' : pre_val
+            'sessions': result,
+            'next_val': next_val,
+            'pre_val': pre_val
         }
 
     @aiohttp_jinja2.template('session.html')
@@ -86,7 +87,7 @@ class TannerWebServer:
         sess_uuid = request.match_info['sess_uuid']
         session = await self.api.return_session_info(sess_uuid)
         return {
-            'session' : session
+            'session': session
         }
 
     async def on_shutdown(self, app):
@@ -102,9 +103,9 @@ class TannerWebServer:
         app.router.add_static('/static/', path='tanner/web/static')
 
     def create_app(self, loop):
-        app = web.Application(loop= loop)
+        app = web.Application(loop=loop)
         aiohttp_jinja2.setup(app,
-            loader= jinja2.FileSystemLoader('tanner/web/templates'))
+                             loader=jinja2.FileSystemLoader('tanner/web/templates'))
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app

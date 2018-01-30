@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 import asyncio_redis

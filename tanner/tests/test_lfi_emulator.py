@@ -1,7 +1,7 @@
 import unittest
-from unittest import mock
 import asyncio
 from tanner.emulators import lfi
+
 
 class TestLfiEmulator(unittest.TestCase):
     def setUp(self):
@@ -11,16 +11,16 @@ class TestLfiEmulator(unittest.TestCase):
         self.handler.helper.host_image = 'busybox:latest'
 
     def test_handle_abspath_lfi(self):
-        attack_params = [dict(id= 'foo', value= '/etc/passwd')]
+        attack_params = [dict(id='foo', value='/etc/passwd')]
         result = self.loop.run_until_complete(self.handler.handle(attack_params))
-        self.assertIn('root:x:0:0:root:/root:/bin/sh', result)
+        self.assertIn('root:x:0:0:root:/root:/bin/sh', result['value'])
 
     def test_handle_relative_path_lfi(self):
-        attack_params = [dict(id= 'foo', value= '../../../../../etc/passwd')]
+        attack_params = [dict(id='foo', value='../../../../../etc/passwd')]
         result = self.loop.run_until_complete(self.handler.handle(attack_params))
-        self.assertIn('root:x:0:0:root:/root:/bin/sh', result)
+        self.assertIn('root:x:0:0:root:/root:/bin/sh', result['value'])
 
     def test_handle_missing_lfi(self):
-        attack_params = [dict(id= 'foo', value= '../../../../../etc/bar')]
+        attack_params = [dict(id='foo', value='../../../../../etc/bar')]
         result = self.loop.run_until_complete(self.handler.handle(attack_params))
-        self.assertIn('No such file or directory', result)
+        self.assertIn('No such file or directory', result['value'])

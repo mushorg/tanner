@@ -4,6 +4,7 @@ import unittest
 
 from tanner import config
 
+
 class TestCongif(unittest.TestCase):
     def setUp(self):
         config.TannerConfig.config = None
@@ -12,17 +13,19 @@ class TestCongif(unittest.TestCase):
                      'user_dorks': '/tmp/user_tanner/data/user_dorks.pickle'},
             'TANNER': {'host': '0.0.0.0', 'port': '9000'},
             'WEB': {'host': '0.0.0.0', 'port': '9001'},
-            'WEB': {'host': '0.0.0.0', 'port': '9002'},
+            'API': {'host': '0.0.0.0', 'port': '9002'},
+            'PHPOX': {'host': '0.0.0.0', 'port': '8088'},
             'REDIS': {'host': 'localhost', 'port': '1337', 'poolsize': '40', 'timeout': '5'},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
-            'SQLI': {'type':'SQLITE', 'db_name': 'user_tanner_db', 'host':'localhost', 'user':'user_name', 'password':'user_pass'},
+            'SQLI': {'type': 'SQLITE', 'db_name': 'user_tanner_db', 'host': 'localhost', 'user': 'user_name',
+                     'password': 'user_pass'},
             'DOCKER': {'host_image': 'test_image'},
-			'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
+            'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'},
             'CLEANLOG': {'enabled': 'False'}
-            }
+        }
 
         self.valid_config_path = '/tmp/tanner_config'
         self.cfg = configparser.ConfigParser()
@@ -51,8 +54,12 @@ class TestCongif(unittest.TestCase):
         config.TannerConfig.config = self.cfg
         for section in self.d:
             for value, assertion_data in self.d[section].items():
-                data = config.TannerConfig.get(section, value)
-                convert_type = type(data)
+
+                convert_type = type(self.d[section][value])
+                if convert_type is bool:
+                    data = config.TannerConfig.config.getboolean(section, value)
+                else:
+                    data = config.TannerConfig.config.get(section, value)
                 self.assertEqual(data, convert_type(assertion_data))
 
     def test_get_when_file_dont_exists(self):
@@ -62,16 +69,18 @@ class TestCongif(unittest.TestCase):
             'TANNER': {'host': '0.0.0.0', 'port': 8090},
             'WEB': {'host': '0.0.0.0', 'port': 8091},
             'API': {'host': '0.0.0.0', 'port': 8092},
+            'PHPOX': {'host': '0.0.0.0', 'port': 8088},
             'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
-            'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
+            'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
+                     'password': 'user_pass'},
             'DOCKER': {'host_image': 'busybox:latest'},
             'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
             'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
             'CLEANLOG': {'enabled': False}
-            }
+        }
 
         for section in config_template:
             for value, assertion_data in config_template[section].items():

@@ -1,13 +1,12 @@
-import asyncio
 import json
 import time
-import asyncio
 import uuid
 
 from tanner.config import TannerConfig
 from tanner.utils import docker_helper
 from tanner.utils.mysql_db_helper import MySQLDBHelper
 from tanner.utils.sqlite_db_helper import SQLITEDBHelper
+
 
 class Session:
     KEEP_ALIVE_TIME = 75
@@ -54,7 +53,7 @@ class Session:
                     count=self.count,
                     paths=self.paths,
                     cookies=self.cookies
-                   )
+                )
         return json.dumps(sess)
 
     def set_attack_type(self, path, attack_type):
@@ -66,7 +65,7 @@ class Session:
         self.associated_db = db_name
 
     async def remove_associated_db(self):
-        if(TannerConfig.get('SQLI', 'type') == 'MySQL'):
+        if TannerConfig.get('SQLI', 'type') == 'MySQL':
             await MySQLDBHelper().delete_db(self.associated_db)
         else:
             SQLITEDBHelper().delete_db(self.associated_db)
