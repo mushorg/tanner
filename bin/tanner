@@ -25,7 +25,7 @@ def main():
     logger.Logger.create_logger(debug_log_file_name, error_log_file_name, __package__)
     print("Debug logs will be stored in", debug_log_file_name)
     print("Error logs will be stored in", error_log_file_name)
-    if TannerConfig.get('LOCALLOG', 'enabled') == True:
+    if TannerConfig.get('LOCALLOG', 'enabled') is True:
         print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
     tanner = server.TannerServer()
     tanner.start()

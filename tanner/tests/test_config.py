@@ -54,8 +54,12 @@ class TestCongif(unittest.TestCase):
         config.TannerConfig.config = self.cfg
         for section in self.d:
             for value, assertion_data in self.d[section].items():
-                data = config.TannerConfig.get(section, value)
-                convert_type = type(data)
+
+                convert_type = type(self.d[section][value])
+                if convert_type is bool:
+                    data = config.TannerConfig.config.getboolean(section, value)
+                else:
+                    data = config.TannerConfig.config.get(section, value)
                 self.assertEqual(data, convert_type(assertion_data))
 
     def test_get_when_file_dont_exists(self):
