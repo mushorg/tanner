@@ -1,16 +1,12 @@
-import mimetypes
-import re
-import urllib.parse
-
 from tanner.utils import patterns
 
 
 class XssEmulator:
-    
+
     def scan(self, value):
         detection = None
         if patterns.XSS_ATTACK.match(value):
-            detection = dict(name= 'xss', order= 3)
+            detection = dict(name='xss', order=3)
         return detection
 
     def get_xss_result(self, session, attack_params):

@@ -42,7 +42,6 @@ class TestSessionAnalyzer(unittest.TestCase):
             self.loop.run_until_complete(self.handler.analyze(None, redis_mock))
 
     def test_create_stats(self):
-
         async def sess_get():
             return session
 

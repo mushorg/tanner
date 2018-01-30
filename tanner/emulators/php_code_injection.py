@@ -5,6 +5,7 @@ import logging
 from tanner import config
 from tanner.utils import patterns
 
+
 class PHPCodeInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()

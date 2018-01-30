@@ -45,7 +45,7 @@ class SessionAnalyzer:
         sess_duration = session['end_time'] - session['start_time']
         rps = sess_duration / session['count']
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
-                                                                                redis_client)
+                                                                           redis_client)
 
         stats = dict(
             sess_uuid=session['sess_uuid'],
@@ -76,7 +76,7 @@ class SessionAnalyzer:
         current_path = paths[0]
         dorks = await redis_client.smembers_asset(DorksManager.dorks_key)
 
-        for i, path in enumerate(paths, start=1):
+        for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
             current_path = path
         tbr_average = sum(tbr) / float(len(tbr))
@@ -84,7 +84,7 @@ class SessionAnalyzer:
         errors = 0
         hidden_links = 0
         for path in paths:
-            if path['response_status'] is not 200:
+            if path['response_status'] != 200:
                 errors += 1
             if path['path'] in dorks:
                 hidden_links += 1
@@ -111,7 +111,7 @@ class SessionAnalyzer:
                       'IEMobile/11.0; NOKIA; Lumia 530) like Gecko (compatible; bingbot/2.0; '
                       '+http://www.bing.com/bingbot.htm)']
         if stats['user_agent'] in bots_owner:
-            hostname, aliaslist, ipaddrlist = socket.gethostbyaddr(stats['peer_ip'])
+            hostname, _, _ = socket.gethostbyaddr(stats['peer_ip'])
             if 'search.msn.com' or 'googlebot.com' in hostname:
                 possible_owners['crawler'] += 1
             else:

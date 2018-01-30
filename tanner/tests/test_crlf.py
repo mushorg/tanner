@@ -3,6 +3,7 @@ import unittest
 
 from tanner.emulators import crlf
 
+
 class TestCRLF(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -16,6 +17,6 @@ class TestCRLF(unittest.TestCase):
 
     def test_handle(self):
         attack_params = [dict(id='foo', value='bar \r\n Set-Cookie : id=0')]
-        assert_result = {'foo' : 'bar \r\n Set-Cookie : id=0'}
+        assert_result = {'foo': 'bar \r\n Set-Cookie : id=0'}
         result = self.loop.run_until_complete(self.handler.handle(attack_params, None))
         self.assertEqual(result['headers'], assert_result)

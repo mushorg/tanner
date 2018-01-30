@@ -3,6 +3,7 @@ import unittest
 
 from tanner.emulators import php_code_injection
 
+
 class TestPHPCodeInjection(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -18,8 +19,9 @@ class TestPHPCodeInjection(unittest.TestCase):
     def test_handle_status_code(self):
         async def mock_get_injection_results(code):
             return None
+
         self.handler.get_injection_result = mock_get_injection_results
         attack_params = [dict(id='foo', value=';sleep(50);')]
-        assert_result = dict(status_code = 504)
+        assert_result = dict(status_code=504)
         result = self.loop.run_until_complete(self.handler.handle(attack_params))
         self.assertEqual(result, assert_result)

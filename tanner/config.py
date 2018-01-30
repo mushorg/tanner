@@ -4,6 +4,7 @@ import os
 import sys
 
 LOGGER = logging.getLogger(__name__)
+
 config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
                             'user_dorks': '/opt/tanner/data/user_dorks.pickle'},
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
@@ -55,7 +56,7 @@ class TannerConfig():
             try:
                 res = TannerConfig.config[section]
             except (configparser.NoOptionError, configparser.NoSectionError):
-                LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section, value)
+                LOGGER.warning("Error in config, default value will be used. Section: %s Value: %s", section)
                 res = config_template[section]
             return res
         else:

@@ -1,8 +1,8 @@
 import json
 import logging
 import operator
-import asyncio
 import asyncio_redis
+
 
 class Api:
     def __init__(self, redis_client):
@@ -26,11 +26,11 @@ class Api:
 
         result['total_sessions'] = len(sessions)
         result['total_duration'] = 0
-        result['attack_frequency'] = {'sqli' : 0,
-                                      'lfi' : 0,
-                                      'xss' : 0,
-                                      'rfi' : 0,
-                                      'cmd_exec' : 0}
+        result['attack_frequency'] = {'sqli': 0,
+                                      'lfi': 0,
+                                      'xss': 0,
+                                      'rfi': 0,
+                                      'cmd_exec': 0}
 
         for sess in sessions:
             result['total_duration'] += sess['end_time'] - sess['start_time']
@@ -53,7 +53,7 @@ class Api:
                 query_res[i] = json.loads(val)
         return query_res
 
-    async def return_session_info(self, sess_uuid, snare_uuid= None):
+    async def return_session_info(self, sess_uuid, snare_uuid=None):
         query_res = []
         if snare_uuid:
             snare_uuids = [snare_uuid]
@@ -82,25 +82,25 @@ class Api:
                 match_count = 0
                 for filter_name, filter_value in filters.items():
                     try:
-                        if(self.apply_filter(filter_name, filter_value, sess)):
+                        if (self.apply_filter(filter_name, filter_value, sess)):
                             match_count += 1
                     except KeyError:
                         return 'Invalid filter : %s' % filter_name
 
                 if match_count == len(filters):
-                    matching_sessions.append(sess) 
-                
+                    matching_sessions.append(sess)
+
         return matching_sessions
 
     def apply_filter(self, filter_name, filter_value, sess):
-        available_filters = {'user_agent' : operator.contains,
-                             'peer_ip' : operator.eq,
-                             'attack_types' : operator.contains,
-                             'possible_owners' : operator.contains,
-                             'start_time' : operator.le,
+        available_filters = {'user_agent': operator.contains,
+                             'peer_ip': operator.eq,
+                             'attack_types': operator.contains,
+                             'possible_owners': operator.contains,
+                             'start_time': operator.le,
                              'end_time': operator.ge,
-                             'snare_uuid' : operator.eq
-                            }
+                             'snare_uuid': operator.eq
+                             }
 
         try:
             if available_filters[filter_name] is operator.contains:

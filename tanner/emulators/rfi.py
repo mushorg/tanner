@@ -94,7 +94,7 @@ class RfiEmulator:
     def scan(self, value):
         detection = None
         if patterns.RFI_ATTACK.match(value):
-            detection = dict(name= 'rfi', order= 2)
+            detection = dict(name='rfi', order=2)
         return detection
 
     async def handle(self, attack_params, session=None):

@@ -1,8 +1,8 @@
-import asyncio
-import elizabeth
 import json
 import logging
 import random
+
+import elizabeth
 
 from tanner.config import TannerConfig
 
@@ -20,7 +20,8 @@ class BaseDBHelper:
             else:
                 return config
 
-    def generate_dummy_data(self, data_tokens):
+    @staticmethod
+    def generate_dummy_data(data_tokens):
         """
         Insert dummy data based on data tokens
         I - integer id
@@ -50,8 +51,8 @@ class BaseDBHelper:
                     data = elizabeth.Personal().password()
                     values.append(data)
                 if token == 'T':
-                    sample_length = random.randint(1,10)
-                    data = elizabeth.Text().text(quantity= sample_length)
+                    sample_length = random.randint(1, 10)
+                    data = elizabeth.Text().text(quantity=sample_length)
                     values.append(data)
             inserted_data.append(tuple(values))
 
