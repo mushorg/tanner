@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   quick-start
+   .. _quick-start: docs/source/index.rst
    emulators
    sessions
    storage
