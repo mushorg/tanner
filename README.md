@@ -56,4 +56,4 @@ Run ``sudo tannerweb``
 
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
-[See the docs for more info](docs/Index.md)
+[See the docs for more info](docs/source/index.rst)
