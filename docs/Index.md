@@ -6,7 +6,7 @@ Contents:
    
    2. [Emulators](source/emulators.rst)
    
-   3. [Sessions](source/cloner.rst)
+   3. [Sessions](source/sessions.rst)
    
    4. [Storage](source/storage.rst)
    
