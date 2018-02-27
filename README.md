@@ -1,8 +1,9 @@
-TANNER [![Build Status](https://travis-ci.org/mushorg/tanner.svg?branch=master)](https://travis-ci.org/mushorg/tanner)
+TANNER 
 ======
+[![Documentation Status](https://readthedocs.org/projects/tanner/badge/?version=latest)](http://tanner.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://travis-ci.org/mushorg/tanner.svg?branch=master)](https://travis-ci.org/mushorg/tanner)
 
-<b>He who flays the hide</b>
-
+<b><i>He who flays the hide</b></i>
 
 Basic Concept
 -------------
@@ -56,4 +57,4 @@ Run ``sudo tannerweb``
 
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
-[See the docs for more info](docs/source/index.rst)
+[See the docs for more info](http://tanner.readthedocs.io/en/latest/)
