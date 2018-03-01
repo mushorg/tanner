@@ -71,13 +71,19 @@ class SessionManager:
                 continue
             is_deleted = await self.delete_session(sess, redis_client)
             if is_deleted:
-                self.sessions.remove(sess)
+                try:
+                    self.sessions.remove(sess)
+                except ValueError:
+                    continue
 
     async def delete_sessions_on_shutdown(self, redis_client):
         for sess in self.sessions:
             is_deleted = await self.delete_session(sess, redis_client)
             if is_deleted:
-                self.sessions.remove(sess)
+                try:
+                    self.sessions.remove(sess)
+                except ValueError:
+                    continue
 
     async def delete_session(self, sess, redis_client):
         await sess.remove_associated_db()
