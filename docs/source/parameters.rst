@@ -4,4 +4,4 @@ tanner [**--config**]
 
 Description
 ~~~~~~~~~~~
-* **config** -- tanner config
+* **config** -- path to tanner config file
