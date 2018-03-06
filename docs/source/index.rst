@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    quick-start
+   parameters
    emulators
    sessions
    storage
