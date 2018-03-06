@@ -26,7 +26,7 @@ class Logger:
         logger.setLevel(logging.DEBUG)
         logger.propagate = False
         formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s:%(name)s:%(funcName)s: %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M')
+                                      datefmt='%Y-%m-%d %H:%M:%S')
 
         # ERROR log to 'tanner.err'
         error_log_handler = logging.handlers.RotatingFileHandler(err_filename, encoding='utf-8')
