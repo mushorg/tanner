@@ -34,8 +34,8 @@ class SessionAnalyzer:
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.lpush(s_key, [json.dumps(session)])
                 await redis_client.delete([del_key])
+                await redis_client.lpush(s_key, [json.dumps(session)])
             except asyncio_redis.NotConnectedError as redis_error:
                 self.logger.error('Error with redis. Session will be returned to the queue: %s',
                                   redis_error)

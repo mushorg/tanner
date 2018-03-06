@@ -76,7 +76,7 @@ class SessionManager:
     async def delete_sessions_on_shutdown(self, redis_client):
         for sess in self.sessions:
             is_deleted = await self.delete_session(sess, redis_client)
-            if is_deleted and sess in self.sessions:
+            if is_deleted:
                 self.sessions.remove(sess)
 
     async def delete_session(self, sess, redis_client):
