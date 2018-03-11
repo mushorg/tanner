@@ -11,7 +11,7 @@ TANNER is a remote data analysis, and classification service, to evaluate HTTP r
 
 Documentation
 ---------------
-The build of the documentations [source](https://github.com/mushorg/tanner/tree/master/docs/source) can be found [here](http://tanner.readthedocs.io).
+The documentation can be found [here](http://tanner.readthedocs.io).
 
 Basic Concept
 -------------
