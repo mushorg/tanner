@@ -5,6 +5,14 @@ TANNER
 
 <b><i>He who flays the hide</b></i>
 
+About
+--------
+TANNER is a remote data analysis, and classification service, to evaluate HTTP requests and composing the response then served by [SNARE](https://github.com/mushorg/snare) events.
+
+Documentation
+---------------
+The documentation can be found [here](http://tanner.readthedocs.io).
+
 Basic Concept
 -------------
 
@@ -57,4 +65,22 @@ Run ``sudo tannerweb``
 
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
-[See the docs for more info](http://tanner.readthedocs.io/en/latest/)
+## Sample Output
+
+
+```shell
+    # sudo tanner
+    
+           _________    _   ___   ____________
+          /_  __/   |  / | / / | / / ____/ __ \
+           / / / /| | /  |/ /  |/ / __/ / /_/ /
+          / / / ___ |/ /|  / /|  / /___/ _, _/
+         /_/ /_/  |_/_/ |_/_/ |_/_____/_/ |_|
+
+    
+     Debug logs will be stored in /opt/tanner/tanner.log
+     Error logs will be stored in /opt/tanner/tanner.err
+     ======== Running on http://0.0.0.0:8090 ========
+     (Press CTRL+C to quit)
+     
+```
