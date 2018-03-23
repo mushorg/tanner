@@ -2,15 +2,7 @@ import asyncio
 import unittest
 from unittest import mock
 from tanner.emulators import rfi
-
-def AsyncMock(*args, **kwargs):
-    m = mock.MagicMock(*args, **kwargs)
-    
-    async def mock_coro(*args, **kwargs):
-        return m(*args, **kwargs)
-
-    mock_coro.mock = m
-    return mock_coro
+from async_mock import AsyncMock
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
@@ -50,3 +42,6 @@ class TestRfiEmulator(unittest.TestCase):
         data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(data)
         
+if __name__ == '__main__':
+    unittest.main()
+    
