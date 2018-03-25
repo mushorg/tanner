@@ -5,6 +5,7 @@ from tanner.config import TannerConfig
 
 # TODO : Replace docker with aiodocker
 
+
 class DockerHelper:
     def __init__(self):
         self.logger = logging.getLogger('tanner.docker_helper.DockerHelper')

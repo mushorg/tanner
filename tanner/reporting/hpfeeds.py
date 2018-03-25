@@ -23,7 +23,6 @@
 #
 
 
-import os
 import logging
 import struct
 import hashlib
@@ -35,19 +34,19 @@ logger = logging.getLogger('pyhpfeeds')
 
 BUFSIZ = 16384
 
-OP_ERROR        = 0
-OP_INFO         = 1
-OP_AUTH         = 2
-OP_PUBLISH      = 3
-OP_SUBSCRIBE    = 4
+OP_ERROR = 0
+OP_INFO = 1
+OP_AUTH = 2
+OP_PUBLISH = 3
+OP_SUBSCRIBE = 4
 
 MAXBUF = 1024**2
 SIZES = {
-    OP_ERROR: 5+MAXBUF,
-    OP_INFO: 5+256+20,
-    OP_AUTH: 5+256+20,
-    OP_PUBLISH: 5+MAXBUF,
-    OP_SUBSCRIBE: 5+256*2,
+    OP_ERROR: 5 + MAXBUF,
+    OP_INFO: 5 + 256 + 20,
+    OP_AUTH: 5 + 256 + 20,
+    OP_PUBLISH: 5 + MAXBUF,
+    OP_SUBSCRIBE: 5 + 256 * 2,
 }
 
 __all__ = ["new", "FeedException"]
@@ -56,27 +55,30 @@ __all__ = ["new", "FeedException"]
 class BadClient(Exception):
     pass
 
+
 class FeedException(Exception):
     pass
 
+
 class Disconnect(Exception):
     pass
+
 
 # packs a string with 1 byte length field
 def strpack8(x):
     if isinstance(x, str):
         x = x.encode('latin1')
-    return struct.pack('!B', len(x)%0xff) + x
+    return struct.pack('!B', len(x) % 0xff) + x
 
 
 # unpacks a string with 1 byte length field
 def strunpack8(x):
-    l = x[0]
-    return x[1:1+l], x[1+l:]
+    lenght = x[0]
+    return x[1:1 + lenght], x[1 + lenght:]
 
 
 def msghdr(op, data):
-    return struct.pack('!iB', 5+len(data), op) + data
+    return struct.pack('!iB', 5 + len(data), op) + data
 
 
 def msgpublish(ident, chan, data):
@@ -90,7 +92,7 @@ def msgsubscribe(ident, chan):
 
 
 def msgauth(rand, ident, secret):
-    auth_hash = hashlib.sha1(rand+secret.encode('latin1')).digest()
+    auth_hash = hashlib.sha1(rand + secret.encode('latin1')).digest()
     return msghdr(OP_AUTH, strpack8(ident) + auth_hash)
 
 
@@ -139,7 +141,7 @@ class HPC(object):
 
         try:
             self.tryconnect()
-        except:
+        except Exception:
             raise
 
     def send(self, data):
@@ -175,8 +177,11 @@ class HPC(object):
 
     def close_old(self):
         if self.s:
-            try: self.s.close()
-            except: pass
+            try:
+                self.s.close()
+
+            except Exception:
+                pass
 
     def connect(self):
         self.close_old()
@@ -184,13 +189,17 @@ class HPC(object):
         logger.info('connecting to %s:%s', self.host, self.port)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(self.timeout)
-        try: self.s.connect((self.host, self.port))
-        except: raise FeedException('Could not connect to broker.')
+        try:
+            self.s.connect((self.host, self.port))
+        except Exception:
+            raise FeedException('Could not connect to broker.')
         self.connected = True
-        
-        try: d = self.s.recv(BUFSIZ)
-        except socket.timeout: raise FeedException('Connection receive timeout.')
-        
+
+        try:
+            d = self.s.recv(BUFSIZ)
+        except socket.timeout:
+            raise FeedException('Connection receive timeout.')
+
         self.unpacker.feed(d)
         for opcode, data in self.unpacker:
             if opcode == OP_INFO:
@@ -199,7 +208,7 @@ class HPC(object):
 
                 logger.debug('info message name: %s, rand: %s', name, repr(rand))
                 self.brokername = name
-                
+
                 self.s.send(msgauth(rand, self.ident, self.secret))
                 break
             else:
@@ -213,7 +222,7 @@ class HPC(object):
 
     def publish(self, chaninfo, data):
         if type(chaninfo) == str:
-            chaninfo = [chaninfo,]
+            chaninfo = [chaninfo]
         for c in chaninfo:
             try:
                 self.send(msgpublish(self.ident, c, data))
@@ -225,11 +234,14 @@ class HPC(object):
                     raise
 
     def close(self):
-        try: self.s.close()
-        except: logger.warn('Socket exception when closing.')
+        try:
+            self.s.close()
+        except Exception:
+            logger.warn('Socket exception when closing.')
+
 
 def new(host=None, port=10000, ident=None, secret=None, reconnect=True):
     try:
         return HPC(host, port, ident, secret, reconnect)
-    except:
+    except Exception:
         raise

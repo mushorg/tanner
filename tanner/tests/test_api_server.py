@@ -83,7 +83,8 @@ class TestAPIServer(AioHTTPTestCase):
             "message": ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]}}
         self.serv.api.return_sessions = mock_return_sessions
         request = await self.client.request("GET",
-                                            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions?filters=peer_ip:127.0.0.1 start_time:1497890400 user_agent:ngnix")
+                                            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions?\
+                                            filters=peer_ip:127.0.0.1 start_time:1497890400 user_agent:ngnix")
         assert request.status == 200
         detection = await request.json()
         self.assertDictEqual(detection, assert_content)
