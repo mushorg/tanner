@@ -10,3 +10,4 @@ uvloop
 pymongo
 pylibinjection
 jinja2
+pycodestyle
