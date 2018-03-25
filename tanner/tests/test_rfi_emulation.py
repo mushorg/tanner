@@ -4,7 +4,7 @@ from unittest import mock
 from tanner.emulators import rfi
 
 # Custom function to mock ascyncio coroutines
-def AsyncMock(*args, **kwargs):
+def async_mock(*args, **kwargs):
     m = mock.MagicMock(*args, **kwargs)
     
     async def mock_coro(*args, **kwargs):
@@ -30,9 +30,9 @@ class TestRfiEmulator(unittest.TestCase):
         self.assertIsNone(filename)
         
     def test_ftp_download(self):
-        self.handler.download_file = AsyncMock(return_value = '10ddd27e6bab5c8e2aa356906d1b71e5')
+        self.handler.download_file_ftp = async_mock(return_value = '10ddd27e6bab5c8e2aa356906d1b71e5')
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
-        data = self.loop.run_until_complete(self.handler.download_file(path))
+        data = self.loop.run_until_complete(self.handler.download_file_ftp(path))
         self.assertIsNotNone(data)
 
     def test_ftp_download_fail(self):
@@ -50,3 +50,8 @@ class TestRfiEmulator(unittest.TestCase):
         path = 'file://mirror.yandex.ru/archlinux/foobar'
         data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(data)
+if __name__ == '__main__':
+	unittest.main()
+
+
+
