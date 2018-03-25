@@ -50,8 +50,5 @@ class TestRfiEmulator(unittest.TestCase):
         path = 'file://mirror.yandex.ru/archlinux/foobar'
         data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(data)
-if __name__ == '__main__':
-	unittest.main()
-
 
 
