@@ -2,6 +2,7 @@ import asyncio
 import unittest
 from unittest import mock
 from tanner.emulators import rfi
+import yarl
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
@@ -20,10 +21,10 @@ class TestRfiEmulator(unittest.TestCase):
         self.assertIsNone(filename)
         
     def test_ftp_download(self):
-        self.handler.download_file_ftp = mock.MagicMock(return_value = '10ddd27e6bab5c8e2aa356906d1b71e5')
+        self.handler.download_file_ftp = mock.MagicMock()
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
         data = self.loop.run_until_complete(self.handler.download_file(path))
-        self.assertIsNotNone(data)
+        self.handler.download_file_ftp.assert_called_with(yarl.URL(path))
 
     def test_ftp_download_fail(self):
         path = 'ftp://mirror.yandex.ru/archlinux/foobar'
