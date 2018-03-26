@@ -32,7 +32,7 @@ class TestRfiEmulator(unittest.TestCase):
     def test_ftp_download(self):
         self.handler.download_file_ftp = async_mock(return_value = '10ddd27e6bab5c8e2aa356906d1b71e5')
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
-        data = self.loop.run_until_complete(self.handler.download_file_ftp(path))
+        data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNotNone(data)
 
     def test_ftp_download_fail(self):
@@ -50,5 +50,3 @@ class TestRfiEmulator(unittest.TestCase):
         path = 'file://mirror.yandex.ru/archlinux/foobar'
         data = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(data)
-
-
