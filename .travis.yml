@@ -7,6 +7,10 @@ language: python
 python:
   - "3.5"
 # command to install dependencies
-install: "pip install -r requirements.txt"
+install: 
+  - "pip install -r requirements.txt"
+  - pip install coveralls
 # command to run tests
-script: nosetests -w ./tanner -vv
+script: nosetests -w ./tanner -vv --with-coverage --cover-inclusive --cover-package=tanner
+after_success:
+- coveralls
