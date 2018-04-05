@@ -120,7 +120,9 @@ class MySQLDBHelper(BaseDBHelper):
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
-                query = 'SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name= \'{table_name}\' AND table_schema= \'{db_name}\''
+                query = 'SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE \
+                table_name= \'{table_name}\' AND table_schema= \'{db_name}\''
+
                 columns = []
                 try:
                     await cursor.execute(query.format(table_name=table, db_name=db_name))
@@ -131,6 +133,6 @@ class MySQLDBHelper(BaseDBHelper):
                         else:
                             columns.append(dict(name=row[3], type='TEXT'))
                     query_map[table] = columns
-                except:
+                except Exception:
                     self.logger.error('Error during query map creation')
         return query_map

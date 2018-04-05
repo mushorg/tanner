@@ -11,7 +11,8 @@ class LevelFilter(logging.Filter):
         self.level = level
 
     def filter(self, record):
-        return record.levelno < self.level  # "<" instead of "<=": since logger.setLevel is inclusive, this should be exclusive
+        # "<" instead of "<=": since logger.setLevel is inclusive, this should be exclusive
+        return record.levelno < self.level
 
 
 class Logger:

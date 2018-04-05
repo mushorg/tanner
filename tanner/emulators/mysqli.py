@@ -1,5 +1,6 @@
 from tanner.utils import mysql_db_helper
 
+
 class MySQLIEmulator:
     def __init__(self, db_name):
         self.db_name = db_name

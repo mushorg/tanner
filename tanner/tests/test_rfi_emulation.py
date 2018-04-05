@@ -4,6 +4,7 @@ from unittest import mock
 from tanner.emulators import rfi
 import yarl
 
+
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -19,7 +20,7 @@ class TestRfiEmulator(unittest.TestCase):
         path = 'http://foobarfvfd'
         filename = self.loop.run_until_complete(self.handler.download_file(path))
         self.assertIsNone(filename)
-        
+
     def test_ftp_download(self):
         self.handler.download_file_ftp = mock.MagicMock()
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
