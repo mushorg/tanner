@@ -70,7 +70,7 @@ class SessionManager:
             if not sess.is_expired():
                 continue
             is_deleted = await self.delete_session(sess, redis_client)
-            if is_deleted :
+            if is_deleted:
                 try:
                     self.sessions.remove(sess)
                 except ValueError:

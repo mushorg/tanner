@@ -53,7 +53,7 @@ class Session:
                     count=self.count,
                     paths=self.paths,
                     cookies=self.cookies
-                )
+                    )
         return json.dumps(sess)
 
     def set_attack_type(self, path, attack_type):

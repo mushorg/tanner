@@ -16,7 +16,8 @@ class TestSessions(unittest.TestCase):
     def test_validate_missing_peer(self):
         data = {
             'headers': {
-                'USER-AGENT': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                'USER-AGENT':
+                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
@@ -26,7 +27,8 @@ class TestSessions(unittest.TestCase):
         assertion_data = {
             'peer': {'ip': None, 'port': None},
             'headers': {
-                'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                'user-agent':
+                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
