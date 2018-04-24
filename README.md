@@ -2,6 +2,7 @@ TANNER
 ======
 [![Documentation Status](https://readthedocs.org/projects/tanner/badge/?version=latest)](http://tanner.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/mushorg/tanner.svg?branch=master)](https://travis-ci.org/mushorg/tanner)
+[![Coverage Status](https://coveralls.io/repos/github/mushorg/tanner/badge.svg?branch=master)](https://coveralls.io/github/mushorg/tanner?branch=master)
 
 <b><i>He who flays the hide</b></i>
 
