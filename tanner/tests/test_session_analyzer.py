@@ -1,8 +1,8 @@
 import asyncio
 import json
 import unittest
-from unittest import mock
-
+from unittest.mock import Mock
+from geoip2.database import Reader
 import asyncio_redis
 
 from tanner.session_analyzer import SessionAnalyzer
@@ -30,12 +30,18 @@ class TestSessionAnalyzer(unittest.TestCase):
         asyncio.set_event_loop(None)
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer(loop=self.loop)
+        response = Mock()
+        response.country.name = 'United States'
+        response.country.iso_code = 'US'
+        response.city.name = 'Smyrna'
+        response.postal.code = '30080'
+        Reader.city = Mock(return_value=response)
 
     def tests_load_session_fail(self):
         async def sess_get(key):
             return asyncio_redis.NotConnectedError
 
-        redis_mock = mock.Mock()
+        redis_mock = Mock()
         redis_mock.get = sess_get
         res = None
         with self.assertLogs():
@@ -51,14 +57,14 @@ class TestSessionAnalyzer(unittest.TestCase):
         async def push_list():
             return ''
 
-        redis_mock = mock.Mock()
+        redis_mock = Mock()
         redis_mock.get = sess_get
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
 
-    def test_find_location(self):
+    def test_find_location_result(self):
         async def sess_get():
             return session
 
@@ -67,7 +73,7 @@ class TestSessionAnalyzer(unittest.TestCase):
 
         async def push_list():
             return ''
-        redis_mock = mock.Mock()
+        redis_mock = Mock()
         redis_mock.get = sess_get
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
@@ -79,3 +85,19 @@ class TestSessionAnalyzer(unittest.TestCase):
             zip_code='30080',
         )
         self.assertEqual(stats['location'], expected_res)
+
+    def test_find_location_call(self):
+        async def sess_get():
+            return session
+
+        async def set_of_members(key):
+            return set()
+
+        async def push_list():
+            return ''
+        redis_mock = Mock()
+        redis_mock.get = sess_get
+        redis_mock.smembers_asset = set_of_members
+        redis_mock.lpush = push_list
+        self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
+        Reader.city.assert_called_with('74.217.37.84')
