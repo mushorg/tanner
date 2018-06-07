@@ -58,7 +58,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
 
-    def test_ip_locator(self):
+    def test_ifind_location(self):
         async def sess_get():
             return session
 
@@ -75,10 +75,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         expected_res = dict(
             country='United States',
             country_code='US',
-            region='Georgia',
-            region_code='GA',
             city='Smyrna',
             zip_code='30080',
-            time_zone='America/New_York'
         )
         self.assertEqual(stats['location'], expected_res)

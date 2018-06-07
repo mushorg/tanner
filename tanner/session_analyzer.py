@@ -1,10 +1,9 @@
 import asyncio
 import json
-from urllib.request import urlopen
-from concurrent.futures import ThreadPoolExecutor
 import logging
 import operator
 import socket
+from geoip2.database import Reader
 
 import asyncio_redis
 
@@ -140,15 +139,12 @@ class SessionAnalyzer:
 
     @staticmethod
     def find_location(ip):
-        url = "http://www.freegeoip.net/json/{0}".format(ip)
-        location_info = json.load(urlopen(url))
+        reader = Reader('/opt/tanner/data/GeoLite2-City.mmdb')
+        location = reader.city(ip)
         info = dict(
-            country=location_info['country_name'],
-            country_code=location_info['country_code'],
-            region=location_info['region_name'],
-            region_code=location_info['region_code'],
-            city=location_info['city'],
-            zip_code=location_info['zip_code'],
-            time_zone=location_info['time_zone']
+            country=location.country.name,
+            country_code=location.country.iso_code,
+            city=location.city.name,
+            zip_code=location.postal.code,
         )
         return dict(info)
