@@ -1,6 +1,7 @@
 import asyncio
 import json
 from urllib.request import urlopen
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import operator
 import socket
@@ -45,7 +46,9 @@ class SessionAnalyzer:
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
         rps = sess_duration / session['count']
-        location_info = self.find_location(session['peer']['ip'])
+        location_info = await self._loop.run_in_executor(
+            None, self.find_location, session['peer']['ip']
+        )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
                                                                            redis_client)
 
@@ -147,5 +150,5 @@ class SessionAnalyzer:
             city=location_info['city'],
             zip_code=location_info['zip_code'],
             time_zone=location_info['time_zone']
-        )          
+        )
         return dict(info)

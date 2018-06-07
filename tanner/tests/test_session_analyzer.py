@@ -57,7 +57,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock.lpush = push_list
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
-    
+
     def test_ip_locator(self):
         async def sess_get():
             return session
