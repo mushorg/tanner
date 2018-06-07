@@ -137,7 +137,7 @@ class SessionAnalyzer:
         maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
         owners = [k for k, v in possible_owners.items() if v == maxval]
         return {'possible_owners': owners}
-    
+
     @staticmethod
     def find_location(ip):
         url = "http://www.freegeoip.net/json/{0}".format(ip)
