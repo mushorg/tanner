@@ -139,8 +139,9 @@ class SessionAnalyzer:
 
     @staticmethod
     def find_location(ip):
-        reader = Reader('tanner/data/GeoLite2-City.mmdb')
+        reader = Reader('./tanner/data/GeoLite2-City.mmdb')
         location = reader.city(ip)
+        print(type(location))
         info = dict(
             country=location.country.name,
             country_code=location.country.iso_code,
