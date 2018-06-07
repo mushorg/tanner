@@ -1,5 +1,6 @@
 import asyncio
 import json
+from urllib.request import urlopen
 import logging
 import operator
 import socket
@@ -44,6 +45,7 @@ class SessionAnalyzer:
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
         rps = sess_duration / session['count']
+        location_info = self.find_location(session['peer']['ip'])
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
                                                                            redis_client)
 
@@ -51,6 +53,7 @@ class SessionAnalyzer:
             sess_uuid=session['sess_uuid'],
             peer_ip=session['peer']['ip'],
             peer_port=session['peer']['port'],
+            location=location_info,
             user_agent=session['user_agent'],
             snare_uuid=session['snare_uuid'],
             start_time=session['start_time'],
@@ -131,3 +134,18 @@ class SessionAnalyzer:
         maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
         owners = [k for k, v in possible_owners.items() if v == maxval]
         return {'possible_owners': owners}
+    
+    @staticmethod
+    def find_location(ip):
+        url = "http://www.freegeoip.net/json/{0}".format(ip)
+        location_info = json.loads(urlopen(url).read())
+        info = dict(
+            country=location_info['country_name'],
+            country_code=location_info['country_code'],
+            region=location_info['region_name'],
+            region_code=location_info['region_code'],
+            city=location_info['city'],
+            zip_code=location_info['zip_code'],
+            time_zone=location_info['time_zone']
+        )          
+        return dict(info)

@@ -20,7 +20,7 @@ session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466
           b'"response_status": 200}, {"timestamp": 1466091899.9854052, ' \
           b'"path": "/wow-movie.html?exec=/../../../..///././././.../../../etc/passwd",' \
           b' "attack_type": "lfi", "response_status": 200}], ' \
-          b'"peer": {"port": 56970, "ip": "192.168.1.3"}, ' \
+          b'"peer": {"port": 56970, "ip": "74.217.37.84"}, ' \
           b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
 
 
@@ -57,3 +57,28 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock.lpush = push_list
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
+    
+    def test_ip_locator(self):
+        async def sess_get():
+            return session
+
+        async def set_of_members(key):
+            return set()
+
+        async def push_list():
+            return ''
+        redis_mock = mock.Mock()
+        redis_mock.get = sess_get
+        redis_mock.smembers_asset = set_of_members
+        redis_mock.lpush = push_list
+        stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
+        expected_res = dict(
+            country='United States',
+            country_code='US',
+            region='Georgia',
+            region_code='GA',
+            city='Smyrna',
+            zip_code='30080',
+            time_zone='America/New_York'
+        )
+        self.assertEqual(stats['location'], expected_res)
