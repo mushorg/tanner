@@ -58,7 +58,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
 
-    def test_ifind_location(self):
+    def test_find_location(self):
         async def sess_get():
             return session
 

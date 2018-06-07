@@ -139,7 +139,7 @@ class SessionAnalyzer:
 
     @staticmethod
     def find_location(ip):
-        reader = Reader('/opt/tanner/data/GeoLite2-City.mmdb')
+        reader = Reader('tanner/data/GeoLite2-City.mmdb')
         location = reader.city(ip)
         info = dict(
             country=location.country.name,

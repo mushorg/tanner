@@ -11,6 +11,5 @@ setup(name='Tanner',
       packages=find_packages(exclude=['*.pyc']),
       scripts=['bin/tanner', 'bin/tannerweb', 'bin/tannerapi'],
       data_files=[('/opt/tanner/db/', ['tanner/data/db_config.json']),
-                  ('/opt/tanner/data/', ['tanner/data/dorks.pickle']),
-				  ('/opt/tanner/data/', ['tanner/data/GeoLite2-City.mmdb'])]
+                  ('/opt/tanner/data/', ['tanner/data/dorks.pickle'])]
       )
