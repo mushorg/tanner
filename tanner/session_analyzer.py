@@ -141,7 +141,7 @@ class SessionAnalyzer:
     @staticmethod
     def find_location(ip):
         url = "http://www.freegeoip.net/json/{0}".format(ip)
-        location_info = json.loads(urlopen(url).read())
+        location_info = json.load(urlopen(url))
         info = dict(
             country=location_info['country_name'],
             country_code=location_info['country_code'],
