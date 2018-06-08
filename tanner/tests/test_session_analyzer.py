@@ -1,8 +1,9 @@
 import asyncio
 import json
 import unittest
-from unittest import mock
-
+from unittest.mock import Mock
+from geoip2.database import Reader
+import geoip2
 import asyncio_redis
 
 from tanner.session_analyzer import SessionAnalyzer
@@ -20,7 +21,7 @@ session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466
           b'"response_status": 200}, {"timestamp": 1466091899.9854052, ' \
           b'"path": "/wow-movie.html?exec=/../../../..///././././.../../../etc/passwd",' \
           b' "attack_type": "lfi", "response_status": 200}], ' \
-          b'"peer": {"port": 56970, "ip": "192.168.1.3"}, ' \
+          b'"peer": {"port": 56970, "ip": "74.217.37.84"}, ' \
           b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
 
 
@@ -35,7 +36,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         async def sess_get(key):
             return asyncio_redis.NotConnectedError
 
-        redis_mock = mock.Mock()
+        redis_mock = Mock()
         redis_mock.get = sess_get
         res = None
         with self.assertLogs():
@@ -51,9 +52,19 @@ class TestSessionAnalyzer(unittest.TestCase):
         async def push_list():
             return ''
 
-        redis_mock = mock.Mock()
+        redis_mock = Mock()
         redis_mock.get = sess_get
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], ['attacker'])
+
+    def test_find_location(self):
+        location_stats = self.handler.find_location("74.217.37.84")
+        expected_res = dict(
+            country='United States',
+            country_code='US',
+            city='Smyrna',
+            zip_code='30080',
+        )
+        self.assertEqual(location_stats, expected_res)
