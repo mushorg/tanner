@@ -3,6 +3,7 @@ import json
 import logging
 import operator
 import socket
+from geoip2.database import Reader
 
 import asyncio_redis
 
@@ -44,6 +45,9 @@ class SessionAnalyzer:
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
         rps = sess_duration / session['count']
+        location_info = await self._loop.run_in_executor(
+            None, self.find_location, session['peer']['ip']
+        )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
                                                                            redis_client)
 
@@ -51,6 +55,7 @@ class SessionAnalyzer:
             sess_uuid=session['sess_uuid'],
             peer_ip=session['peer']['ip'],
             peer_port=session['peer']['port'],
+            location=location_info,
             user_agent=session['user_agent'],
             snare_uuid=session['snare_uuid'],
             start_time=session['start_time'],
@@ -131,3 +136,16 @@ class SessionAnalyzer:
         maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
         owners = [k for k, v in possible_owners.items() if v == maxval]
         return {'possible_owners': owners}
+
+    @staticmethod
+    def find_location(ip):
+        reader = Reader('./tanner/data/GeoLite2-City.mmdb')
+        location = reader.city(ip)
+        print(type(location))
+        info = dict(
+            country=location.country.name,
+            country_code=location.country.iso_code,
+            city=location.city.name,
+            zip_code=location.postal.code,
+        )
+        return dict(info)
