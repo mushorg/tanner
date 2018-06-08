@@ -12,6 +12,6 @@ install:
   - pip install coveralls
 # command to run tests
 script:
-    - nosetests -w ./tanner -vv --with-coverage --cover-inclusive --cover-package=tanner
+    - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
     - pycodestyle . --max-line-length=120
 after_success: coveralls
