@@ -4,6 +4,7 @@ import logging
 import operator
 import socket
 from geoip2.database import Reader
+import geoip2
 
 import asyncio_redis
 
@@ -140,12 +141,16 @@ class SessionAnalyzer:
     @staticmethod
     def find_location(ip):
         reader = Reader('./tanner/data/GeoLite2-City.mmdb')
-        location = reader.city(ip)
-        print(type(location))
-        info = dict(
-            country=location.country.name,
-            country_code=location.country.iso_code,
-            city=location.city.name,
-            zip_code=location.postal.code,
-        )
-        return dict(info)
+        try:
+            location = reader.city(ip)
+            print(type(location))
+            info = dict(
+                country=location.country.name,
+                country_code=location.country.iso_code,
+                city=location.city.name,
+                zip_code=location.postal.code,
+            )
+        except geoip2.errors.AddressNotFoundError:
+            # When IP doesn't exist in the db, set info as "NA - Not Available"
+            info = "NA"
+        return info
