@@ -5,9 +5,7 @@ import operator
 import socket
 from geoip2.database import Reader
 import geoip2
-
 import asyncio_redis
-
 from tanner.dorks_manager import DorksManager
 
 
@@ -150,6 +148,5 @@ class SessionAnalyzer:
                 zip_code=location.postal.code,
             )
         except geoip2.errors.AddressNotFoundError:
-            # When IP doesn't exist in the db, set info as "NA - Not Available"
-            info = "NA"
+            info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
         return info
