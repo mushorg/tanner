@@ -79,7 +79,7 @@ services:
     networks:
      - tanner_local
     ports:
-     - "80:80"
+     - "8090:8090"
     image: "mushorg/tanner:latest"
     command: tanner
     read_only: true
