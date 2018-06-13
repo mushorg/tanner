@@ -1,0 +1,89 @@
+version: '2.3'
+
+networks:
+  tanner_local:
+
+services:
+
+# Tanner Redis Service
+  tanner_redis:
+    build: ./redis
+    container_name: tanner_redis
+    restart: always
+    stop_signal: SIGKILL
+    tty: true
+    networks:
+     - tanner_local
+    image: "mushorg/redis:latest"
+    read_only: true
+
+# PHP Sandbox service
+  tanner_phpox:
+    build: ./phpox
+    container_name: tanner_phpox
+    restart: always
+    stop_signal: SIGKILL
+    tty: true
+    networks:
+     - tanner_local
+    image: "mushorg/phpox:latest"
+    read_only: true
+
+# Tanner API Service
+  tanner_api:
+    build: ./tanner
+    container_name: tanner_api
+    restart: always
+    stop_signal: SIGKILL
+    tmpfs:
+     - /tmp/tanner:uid=65534,gid=65534
+     - /var/log/tanner:uid=65534,gid=65534
+    tty: true
+    networks:
+     - tanner_local
+    image: "mushorg/tanner:latest"
+    read_only: true
+    command: tannerapi 
+    depends_on:
+     - tanner_redis
+
+# Tanner WEB Service
+  tanner_web:
+    build: ./tanner
+    container_name: tanner_web
+    restart: always
+    stop_signal: SIGKILL
+    tmpfs:
+     - /tmp/tanner:uid=65534,gid=65534
+     - /var/log/tanner:uid=65534,gid=65534
+    tty: true
+    networks:
+     - tanner_local
+    image: "mushorg/tanner:latest"
+    command: tannerweb
+    read_only: true
+    depends_on:
+     - tanner_redis
+
+# Tanner Service
+  tanner:
+    build: ./tanner
+    container_name: tanner
+    restart: always
+    stop_signal: SIGKILL
+    tmpfs:
+     - /tmp/tanner:uid=65534,gid=65534
+     - /var/log/tanner:uid=65534,gid=65534
+     - /opt/tanner/files:uid=65534,gid=65534
+    tty: true
+    networks:
+     - tanner_local
+    ports:
+     - "80:80"
+    image: "mushorg/tanner:latest"
+    command: tanner
+    read_only: true
+    depends_on:
+     - tanner_api
+     - tanner_web
+     - tanner_phpox
