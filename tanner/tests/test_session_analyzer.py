@@ -68,6 +68,7 @@ class TestSessionAnalyzer(unittest.TestCase):
             attack_types={'index'},
             requests_in_second=11.1
         )
+
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
         self.loop.run_until_complete(test())
@@ -84,11 +85,12 @@ class TestSessionAnalyzer(unittest.TestCase):
             requests_in_second=2,
             user_agent='user'
         )
+
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
         self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'attacker': 1.0})
-    
+
     def test_choose_owner_mixed(self):
         stats = dict(
             paths=[{
@@ -98,15 +100,16 @@ class TestSessionAnalyzer(unittest.TestCase):
             }],
             attack_types='',
             requests_in_second=2,
-            user_agent= 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+            user_agent='Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
             peer_ip='74.217.37.84',
-            hidden_links = 0
+            hidden_links=0
         )
+
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
         self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'attacker': 0.25, 'crawler': 0.75, 'tool': 0.15, 'user': 0.25})
-        
+
     def test_find_location(self):
         location_stats = self.handler.find_location("74.217.37.84")
         expected_res = dict(
