@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import operator
 import socket
 from geoip2.database import Reader
 import geoip2
@@ -43,7 +42,7 @@ class SessionAnalyzer:
 
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
-        rps = sess_duration / session['count']
+        rps = session['count'] / sess_duration
         location_info = await self._loop.run_in_executor(
             None, self.find_location, session['peer']['ip']
         )
@@ -69,7 +68,7 @@ class SessionAnalyzer:
             cookies=session['cookies']
         )
 
-        owner = self.choose_possible_owner(stats)
+        owner = await self.choose_possible_owner(stats)
         stats.update(owner)
         return stats
 
@@ -96,13 +95,12 @@ class SessionAnalyzer:
                 attack_types.append(path['attack_type'])
         return tbr_average, errors, hidden_links, attack_types
 
-    @staticmethod
-    def choose_possible_owner(stats):
+    async def choose_possible_owner(self, stats):
         possible_owners = dict(
-            user=0,
-            tool=0,
-            crawler=0,
-            attacker=0
+            user=0.0,
+            tool=0.0,
+            crawler=0.0,
+            attacker=0.0
         )
         attacks = {'rfi', 'sqli', 'lfi', 'xss'}
         bots_owner = ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
@@ -114,26 +112,14 @@ class SessionAnalyzer:
                       'Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; '
                       'IEMobile/11.0; NOKIA; Lumia 530) like Gecko (compatible; bingbot/2.0; '
                       '+http://www.bing.com/bingbot.htm)']
-        if stats['user_agent'] in bots_owner:
-            hostname, _, _ = socket.gethostbyaddr(stats['peer_ip'])
-            if 'search.msn.com' or 'googlebot.com' in hostname:
-                possible_owners['crawler'] += 1
-            else:
-                possible_owners['attacker'] += 1
-        if stats['requests_in_second'] >= 10:
-            possible_owners['tool'] += 1
-            possible_owners['crawler'] += 1
-        else:
-            possible_owners['user'] += 1
-            possible_owners['attacker'] += 1
-        if stats['hidden_links'] > 0:
-            possible_owners['crawler'] += 1
-            possible_owners['attacker'] += 1
-        if set(stats['attack_types']).intersection(attacks):
-            possible_owners['attacker'] += 1
+        possible_owners['crawler'], possible_owners['tool'] = await self.detect_crawler(stats, bots_owner)
+        possible_owners['attacker'] = await self.detect_attacker(stats, bots_owner, attacks)
 
-        maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
-        owners = [k for k, v in possible_owners.items() if v == maxval]
+        maxcf = max([possible_owners['crawler'], possible_owners['attacker'], possible_owners['tool']])
+
+        possible_owners['user'] = round(1 - maxcf, 2)
+
+        owners = {k: v for k, v in possible_owners.items() if v != 0}
         return {'possible_owners': owners}
 
     @staticmethod
@@ -150,3 +136,36 @@ class SessionAnalyzer:
         except geoip2.errors.AddressNotFoundError:
             info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
         return info
+
+    async def detect_crawler(self, stats, bots_owner):
+        for _, path in enumerate(stats['paths']):
+            if path['path'] == '/robots.txt':
+                return (1.0, 0.0)
+        if stats['requests_in_second'] > 10:
+            if stats['user_agent'] in bots_owner:
+                return (0.85, 0.15)
+            return (0.5, 0.85)
+        if stats['user_agent'] in bots_owner:
+            hostname, _, _ = await self._loop.run_in_executor(
+                None, socket.gethostbyaddr, stats['peer_ip']
+            )
+            if 'search.msn.com' or 'googlebot.com' in hostname:
+                return (0.75, 0.15)
+            return (0.25, 0.15)
+        return (0.0, 0.0)
+
+    async def detect_attacker(self, stats, bots_owner, attacks):
+        if set(stats['attack_types']).intersection(attacks):
+            return 1.0
+        if stats['requests_in_second'] > 10:
+            return 0.0
+        if stats['user_agent'] in bots_owner:
+            hostname, _, _ = await self._loop.run_in_executor(
+                None, socket.gethostbyaddr, stats['peer_ip']
+            )
+            if 'search.msn.com' or 'googlebot.com' in hostname:
+                return 0.25
+            return 0.75
+        if stats['hidden_links'] > 0:
+            return 0.5
+        return 0.0

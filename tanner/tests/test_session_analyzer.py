@@ -2,8 +2,6 @@ import asyncio
 import json
 import unittest
 from unittest.mock import Mock
-from geoip2.database import Reader
-import geoip2
 import asyncio_redis
 
 from tanner.session_analyzer import SessionAnalyzer
@@ -31,6 +29,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         asyncio.set_event_loop(None)
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer(loop=self.loop)
+        self.res = None
 
     def tests_load_session_fail(self):
         async def sess_get(key):
@@ -57,8 +56,57 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
         stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
-        self.assertEqual(stats['possible_owners'], ['attacker'])
+        self.assertEqual(stats['possible_owners'], {'attacker': 1.0})
 
+    def test_choose_owner_crawler(self):
+        stats = dict(
+            paths=[{
+                'path': '/robots.txt',
+                'timestamp': 1.0, 'response_status': 200,
+                'attack_type': 'index'
+            }],
+            attack_types={'index'},
+            requests_in_second=11.1
+        )
+        async def test():
+            self.res = await self.handler.choose_possible_owner(stats)
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.res['possible_owners'], {'crawler': 1.0})
+
+    def test_choose_owner_attacker(self):
+        stats = dict(
+            paths=[{
+                'path': '/',
+                'timestamp': 1.0, 'response_status': 200,
+                'attack_type': 'rfi'
+            }],
+            attack_types={'rfi', 'lfi'},
+            requests_in_second=2,
+            user_agent='user'
+        )
+        async def test():
+            self.res = await self.handler.choose_possible_owner(stats)
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.res['possible_owners'], {'attacker': 1.0})
+    
+    def test_choose_owner_mixed(self):
+        stats = dict(
+            paths=[{
+                'path': '/',
+                'timestamp': 1.0, 'response_status': 200,
+                'attack_type': ''
+            }],
+            attack_types='',
+            requests_in_second=2,
+            user_agent= 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+            peer_ip='74.217.37.84',
+            hidden_links = 0
+        )
+        async def test():
+            self.res = await self.handler.choose_possible_owner(stats)
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.res['possible_owners'], {'attacker': 0.25, 'crawler': 0.75, 'tool': 0.15, 'user': 0.25})
+        
     def test_find_location(self):
         location_stats = self.handler.find_location("74.217.37.84")
         expected_res = dict(
