@@ -96,12 +96,8 @@ class SessionAnalyzer:
         return tbr_average, errors, hidden_links, attack_types
 
     async def choose_possible_owner(self, stats):
-        possible_owners = dict(
-            user=0.0,
-            tool=0.0,
-            crawler=0.0,
-            attacker=0.0
-        )
+        owner_names = ['user', 'tool', 'crawler', 'attacker']
+        possible_owners = {k: 0.0 for k in owner_names}
         attacks = {'rfi', 'sqli', 'lfi', 'xss'}
         bots_owner = ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
                       'Googlebot/2.1 (+http://www.google.com/bot.html)',
@@ -138,7 +134,7 @@ class SessionAnalyzer:
         return info
 
     async def detect_crawler(self, stats, bots_owner):
-        for _, path in enumerate(stats['paths']):
+        for path in stats['paths']:
             if path['path'] == '/robots.txt':
                 return (1.0, 0.0)
         if stats['requests_in_second'] > 10:
