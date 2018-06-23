@@ -99,18 +99,15 @@ class SessionAnalyzer:
         owner_names = ['user', 'tool', 'crawler', 'attacker']
         possible_owners = {k: 0.0 for k in owner_names}
         attacks = {'rfi', 'sqli', 'lfi', 'xss'}
-        bots_owner = ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                      'Googlebot/2.1 (+http://www.google.com/bot.html)',
-                      'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-                      'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0 like Mac OS X) AppleWebKit/537.51.1 '
-                      '(KHTML, like Gecko) Version/7.0 Mobile/11A465 Safari/9537.53 (compatible; '
-                      'bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-                      'Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; '
-                      'IEMobile/11.0; NOKIA; Lumia 530) like Gecko (compatible; bingbot/2.0; '
-                      '+http://www.bing.com/bingbot.htm)']
-        possible_owners['crawler'], possible_owners['tool'] = await self.detect_crawler(stats, bots_owner)
-        possible_owners['attacker'] = await self.detect_attacker(stats, bots_owner, attacks)
-
+        with open("tanner/data/crawler_user_agents.txt") as f:
+            bots_owner = await self._loop.run_in_executor(None, f.read)
+        crawler_hosts = ['googlebot.com', 'baiduspider', 'search.msn.com', 'spider.yandex.com', 'crawl.sogou.com']
+        possible_owners['crawler'], possible_owners['tool'] = await self.detect_crawler(
+            stats, bots_owner, crawler_hosts
+        )
+        possible_owners['attacker'] = await self.detect_attacker(
+            stats, bots_owner, crawler_hosts, attacks
+        )
         maxcf = max([possible_owners['crawler'], possible_owners['attacker'], possible_owners['tool']])
 
         possible_owners['user'] = round(1 - maxcf, 2)
@@ -133,7 +130,7 @@ class SessionAnalyzer:
             info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
         return info
 
-    async def detect_crawler(self, stats, bots_owner):
+    async def detect_crawler(self, stats, bots_owner, crawler_hosts):
         for path in stats['paths']:
             if path['path'] == '/robots.txt':
                 return (1.0, 0.0)
@@ -145,12 +142,13 @@ class SessionAnalyzer:
             hostname, _, _ = await self._loop.run_in_executor(
                 None, socket.gethostbyaddr, stats['peer_ip']
             )
-            if 'search.msn.com' or 'googlebot.com' in hostname:
-                return (0.75, 0.15)
+            for crawler_host in crawler_hosts:
+                if crawler_host in hostname:
+                    return (0.75, 0.15)
             return (0.25, 0.15)
         return (0.0, 0.0)
 
-    async def detect_attacker(self, stats, bots_owner, attacks):
+    async def detect_attacker(self, stats, bots_owner, crawler_hosts, attacks):
         if set(stats['attack_types']).intersection(attacks):
             return 1.0
         if stats['requests_in_second'] > 10:
@@ -159,8 +157,9 @@ class SessionAnalyzer:
             hostname, _, _ = await self._loop.run_in_executor(
                 None, socket.gethostbyaddr, stats['peer_ip']
             )
-            if 'search.msn.com' or 'googlebot.com' in hostname:
-                return 0.25
+            for crawler_host in crawler_hosts:
+                if crawler_host in hostname:
+                    return 0.25
             return 0.75
         if stats['hidden_links'] > 0:
             return 0.5

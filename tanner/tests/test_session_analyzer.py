@@ -108,7 +108,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
         self.loop.run_until_complete(test())
-        self.assertEqual(self.res['possible_owners'], {'attacker': 0.25, 'crawler': 0.75, 'tool': 0.15, 'user': 0.25})
+        self.assertEqual(self.res['possible_owners'], {'attacker': 0.75, 'crawler': 0.25, 'tool': 0.15, 'user': 0.25})
 
     def test_find_location(self):
         location_stats = self.handler.find_location("74.217.37.84")
