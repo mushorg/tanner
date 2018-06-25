@@ -2,10 +2,11 @@ import asyncio
 import json
 import unittest
 from unittest.mock import Mock
+from unittest.mock import patch
 import geoip2
 import asyncio_redis
-
 from tanner.session_analyzer import SessionAnalyzer
+
 
 session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
           b'"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
@@ -22,6 +23,11 @@ session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466
           b' "attack_type": "lfi", "response_status": 200}], ' \
           b'"peer": {"port": 56970, "ip": "74.217.37.84"}, ' \
           b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
+
+def mock_open():
+    with open('./tanner/data/crawler_user_agents.txt') as f:
+        f.close = Mock()
+        return Mock(return_value=f)
 
 
 class TestSessionAnalyzer(unittest.TestCase):
@@ -89,7 +95,8 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock.get = sess_get
         redis_mock.smembers_asset = set_of_members
         redis_mock.lpush = push_list
-        stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
+        with patch('builtins.open', new_callable=mock_open) as m:
+            stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], {'attacker': 1.0})
 
     def test_choose_owner_crawler(self):
@@ -105,7 +112,8 @@ class TestSessionAnalyzer(unittest.TestCase):
 
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
-        self.loop.run_until_complete(test())
+        with patch('builtins.open', new_callable=mock_open) as m:
+            self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'crawler': 1.0})
 
     def test_choose_owner_attacker(self):
@@ -122,7 +130,8 @@ class TestSessionAnalyzer(unittest.TestCase):
 
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
-        self.loop.run_until_complete(test())
+        with patch('builtins.open', new_callable=mock_open) as m:
+            self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'attacker': 1.0})
 
     def test_choose_owner_mixed(self):
@@ -141,7 +150,8 @@ class TestSessionAnalyzer(unittest.TestCase):
 
         async def test():
             self.res = await self.handler.choose_possible_owner(stats)
-        self.loop.run_until_complete(test())
+        with patch('builtins.open', new_callable=mock_open) as m:
+            self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'attacker': 0.75, 'crawler': 0.25, 'tool': 0.15, 'user': 0.25})
 
     def test_find_location(self):
