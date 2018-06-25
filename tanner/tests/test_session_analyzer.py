@@ -24,6 +24,7 @@ session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466
           b'"peer": {"port": 56970, "ip": "74.217.37.84"}, ' \
           b'"cookies": {"sess_uuid": "c546114f97f548f982756495f963e280"}}'
 
+
 def mock_open():
     with open('./tanner/data/crawler_user_agents.txt') as f:
         f.close = Mock()
