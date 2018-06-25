@@ -2,6 +2,7 @@ import asyncio
 import json
 import unittest
 from unittest.mock import Mock
+import geoip2
 import asyncio_redis
 
 from tanner.session_analyzer import SessionAnalyzer
@@ -30,6 +31,8 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer(loop=self.loop)
         self.res = None
+        with open("./tanner/data/crawler_user_agents.txt") as f:
+            self.bot_owners = f.read()
 
     def tests_load_session_fail(self):
         async def sess_get(key):
@@ -111,7 +114,40 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.assertEqual(self.res['possible_owners'], {'attacker': 0.75, 'crawler': 0.25, 'tool': 0.15, 'user': 0.25})
 
     def test_find_location(self):
-        location_stats = self.handler.find_location("74.217.37.84")
+        geoip2.database.Reader.__init__ = Mock(return_value=None)
+        rvalue = geoip2.models.City(
+            {'city': {'geoname_id': 4223379, 'names': {'en': 'Smyrna',
+                                                       'ru': 'Смирна', 'zh-CN': '士麦那'}},
+             'continent': {'code': 'NA', 'geoname_id': 6255149,
+                           'names': {'de': 'Nordamerika', 'en': 'North America',
+                                     'es': 'Norteamérica', 'fr': 'Amérique du Nord',
+                                     'ja': '北アメリカ', 'pt-BR': 'América do Norte',
+                                     'ru': 'Северная Америка', 'zh-CN': '北美洲'}},
+             'country': {'geoname_id': 6252001, 'iso_code': 'US',
+                         'names': {'de': 'USA', 'en': 'United States',
+                                   'es': 'Estados Unidos', 'fr': 'États-Unis',
+                                   'ja': 'アメリカ合衆国', 'pt-BR': 'Estados Unidos',
+                                   'ru': 'США', 'zh-CN': '美国'}},
+             'location': {'accuracy_radius': 10,
+                          'latitude': 33.8633,
+                          'longitude': -84.4984,
+                          'metro_code': 524,
+                          'time_zone': 'America/New_York'},
+             'postal': {'code': '30080'},
+             'registered_country': {'geoname_id': 6252001, 'iso_code': 'US',
+                                    'names': {'de': 'USA', 'en': 'United States',
+                                              'es': 'Estados Unidos', 'fr': 'États-Unis',
+                                              'ja': 'アメリカ合衆国', 'pt-BR': 'Estados Unidos',
+                                              'ru': 'США', 'zh-CN': '美国'}},
+             'subdivisions': [{'geoname_id': 4197000, 'iso_code': 'GA',
+                               'names': {'en': 'Georgia', 'es': 'Georgia',
+                                         'fr': 'Géorgie', 'ja': 'ジョージア州',
+                                         'pt-BR': 'Geórgia', 'ru': 'Джорджия',
+                                         'zh-CN': '乔治亚'}}],
+             'traits': {'ip_address': '74.217.37.8'}}, ['en']
+        )
+        geoip2.database.Reader.city = Mock(return_value=rvalue)
+        location_stats = self.handler.find_location("74.217.37.8")
         expected_res = dict(
             country='United States',
             country_code='US',
