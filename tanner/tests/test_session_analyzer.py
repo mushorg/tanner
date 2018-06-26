@@ -156,7 +156,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.assertEqual(self.res['possible_owners'], {'attacker': 0.75, 'crawler': 0.25, 'tool': 0.15, 'user': 0.25})
 
     def test_find_location(self):
-        location_stats = self.handler.find_location("74.217.37.8")
+        location_stats = self.handler.find_location("74.217.37.84")
         expected_res = dict(
             country='United States',
             country_code='US',
