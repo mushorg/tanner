@@ -6,6 +6,7 @@ from geoip2.database import Reader
 import geoip2
 import asyncio_redis
 from tanner.dorks_manager import DorksManager
+from tanner.config import TannerConfig
 
 
 class SessionAnalyzer:
@@ -99,7 +100,7 @@ class SessionAnalyzer:
         owner_names = ['user', 'tool', 'crawler', 'attacker']
         possible_owners = {k: 0.0 for k in owner_names}
         attacks = {'rfi', 'sqli', 'lfi', 'xss'}
-        with open("/opt/tanner/data/crawler_user_agents.txt") as f:
+        with open(TannerConfig.get('DATA', 'crawler_stats')) as f:
             bots_owner = await self._loop.run_in_executor(None, f.read)
         crawler_hosts = ['googlebot.com', 'baiduspider', 'search.msn.com', 'spider.yandex.com', 'crawl.sogou.com']
         possible_owners['crawler'], possible_owners['tool'] = await self.detect_crawler(
@@ -117,7 +118,7 @@ class SessionAnalyzer:
 
     @staticmethod
     def find_location(ip):
-        reader = Reader('/opt/tanner/db/GeoLite2-City.mmdb')
+        reader = Reader(TannerConfig.get('DATA', 'geo_db'))
         try:
             location = reader.city(ip)
             info = dict(
