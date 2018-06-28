@@ -10,7 +10,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                             'user_dorks': '/opt/tanner/data/user_dorks.pickle',
                             'crawler_stats': '/opt/tanner/data/crawler_user_agents.txt',
                             'geo_db': '/opt/tanner/db/GeoLite2-City.mmdb'
-                           },
+                            },
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'WEB': {'host': '0.0.0.0', 'port': 8091},
                    'API': {'host': '0.0.0.0', 'port': 8092},
@@ -28,7 +28,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                                'CHANNEL': 'tanner.events'},
                    'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
                    'CLEANLOG': {'enabled': False}
-                  }
+                   }
 
 
 class TannerConfig():
@@ -82,4 +82,3 @@ class TannerConfig():
             res = config_template[section]
 
         return res
-
