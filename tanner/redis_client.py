@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import asyncio_redis
+import aioredis
 
 from tanner.config import TannerConfig
 
@@ -18,8 +18,8 @@ class RedisClient:
             if poolsize is None:
                 poolsize = TannerConfig.get('REDIS', 'poolsize')
             timeout = TannerConfig.get('REDIS', 'timeout')
-            redis_client = await asyncio.wait_for(asyncio_redis.Pool.create(
-                host=host, port=int(port), poolsize=int(poolsize)), timeout=int(timeout))
+            redis_client = await asyncio.wait_for(aioredis.create_pool(
+                (host, int(port)), maxsize=int(poolsize)), timeout=int(timeout))
         except asyncio.TimeoutError as timeout_error:
             LOGGER.error('Problem with redis connection. Please, check your redis server. %s', timeout_error)
             exit()

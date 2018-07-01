@@ -1,6 +1,6 @@
 import logging
 
-import asyncio_redis
+import aioredis
 
 from tanner.session import Session
 from tanner.session_analyzer import SessionAnalyzer
@@ -18,7 +18,7 @@ class SessionManager:
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
-        await redis_client.sadd('snare_ids', [valid_data['uuid']])
+        await redis_client.execute('sadd', 'snare_ids', *[valid_data['uuid']])
         session = self.get_session(valid_data)
         if session is None:
             try:
@@ -28,9 +28,8 @@ class SessionManager:
                 return
             self.sessions.append(new_session)
             return new_session
-        else:
-            session.update_session(valid_data)
-            return session
+        session.update_session(valid_data)
+        return session
 
     @staticmethod
     def validate_data(data):
@@ -87,9 +86,9 @@ class SessionManager:
         if sess.associated_env is not None:
             await sess.remove_associated_env()
         try:
-            await redis_client.set(sess.get_uuid(), sess.to_json())
+            await redis_client.execute('set', sess.get_uuid(), sess.to_json())
             await self.analyzer.analyze(sess.get_uuid(), redis_client)
-        except asyncio_redis.NotConnectedError as redis_error:
+        except aioredis.ProtocolError as redis_error:
             self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
             return False
         else:

@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import Mock
 from unittest.mock import patch
 import geoip2
-import asyncio_redis
+import aioredis
 from tanner.session_analyzer import SessionAnalyzer
 
 
@@ -73,8 +73,9 @@ class TestSessionAnalyzer(unittest.TestCase):
         geoip2.database.Reader.city = Mock(return_value=rvalue)
 
     def tests_load_session_fail(self):
+
         async def sess_get(key):
-            return asyncio_redis.NotConnectedError
+            return aioredis.ProtocolError
 
         redis_mock = Mock()
         redis_mock.get = sess_get
@@ -83,19 +84,19 @@ class TestSessionAnalyzer(unittest.TestCase):
             self.loop.run_until_complete(self.handler.analyze(None, redis_mock))
 
     def test_create_stats(self):
+
+        async def mock_execute(command, *args):
+            if command == 'smembers':
+                return set()
+            if command == 'lpush':
+                return ''
+
         async def sess_get():
             return session
 
-        async def set_of_members(key):
-            return set()
-
-        async def push_list():
-            return ''
-
         redis_mock = Mock()
         redis_mock.get = sess_get
-        redis_mock.smembers_asset = set_of_members
-        redis_mock.lpush = push_list
+        redis_mock.execute = mock_execute
         with patch('builtins.open', new_callable=mock_open) as m:
             stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], {'attacker': 1.0})

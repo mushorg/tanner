@@ -4,7 +4,7 @@ import logging
 import socket
 from geoip2.database import Reader
 import geoip2
-import asyncio_redis
+import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
 
@@ -19,9 +19,9 @@ class SessionAnalyzer:
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await redis_client.get(session_key)
+            session = await redis_client.execute('get', session_key)
             session = json.loads(session)
-        except (asyncio_redis.NotConnectedError, TypeError, ValueError) as error:
+        except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.error('Can\'t get session for analyze: %s', error)
         else:
             result = await self.create_stats(session, redis_client)
@@ -34,16 +34,19 @@ class SessionAnalyzer:
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.lpush(s_key, [json.dumps(session)])
-                await redis_client.delete([del_key])
-            except asyncio_redis.NotConnectedError as redis_error:
+                await redis_client.execute('lpush', s_key, *[json.dumps(session)])
+                await redis_client.execute('del', *[del_key])
+            except aioredis.ProtocolError as redis_error:
                 self.logger.error('Error with redis. Session will be returned to the queue: %s',
                                   redis_error)
                 self.queue.put(session)
 
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
-        rps = session['count'] / sess_duration
+        if sess_duration != 0:
+            rps = session['count'] / sess_duration
+        else:
+            rps = 0
         location_info = await self._loop.run_in_executor(
             None, self.find_location, session['peer']['ip']
         )
@@ -78,7 +81,7 @@ class SessionAnalyzer:
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = await redis_client.smembers_asset(DorksManager.dorks_key)
+        dorks = await redis_client.execute('smembers', DorksManager.dorks_key)
 
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
