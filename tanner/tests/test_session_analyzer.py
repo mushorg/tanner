@@ -85,18 +85,19 @@ class TestSessionAnalyzer(unittest.TestCase):
 
     def test_create_stats(self):
 
-        async def mock_execute(command, *args):
-            if command == 'smembers':
-                return set()
-            if command == 'lpush':
-                return ''
-
         async def sess_get():
             return session
 
+        async def set_of_members(key):
+            return set()
+
+        async def push_list():
+            return ''
+
         redis_mock = Mock()
         redis_mock.get = sess_get
-        redis_mock.execute = mock_execute
+        redis_mock.smembers = set_of_members
+        redis_mock.lpush = push_list
         with patch('builtins.open', new_callable=mock_open) as m:
             stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], {'attacker': 1.0})

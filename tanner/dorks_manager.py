@@ -31,22 +31,22 @@ class DorksManager:
                 dorks = dorks.split()
             if isinstance(dorks, set):
                 dorks = [x for x in dorks if x is not None]
-            await redis_client.execute('sadd', redis_key, *dorks)
+            await redis_client.sadd(redis_key, *dorks)
 
     async def extract_path(self, path, redis_client):
         extracted = re.match(patterns.QUERY, path)
         if extracted:
             extracted = extracted.group(0)
             try:
-                await redis_client.execute('sadd', self.user_dorks_key, *[extracted])
+                await redis_client.sadd(self.user_dorks_key, *[extracted])
             except aioredis.ProtocolError as connection_error:
                 self.logger.error('Problem with redis connection: %s', connection_error)
 
     async def init_dorks(self, redis_client):
         try:
             transaction = await redis_client.multi_exec()
-            dorks_exist = await transaction.execute('exists', self.dorks_key)
-            user_dorks_exist = await transaction.execute('exists', self.user_dorks_key)
+            dorks_exist = await transaction.exists(self.dorks_key)
+            user_dorks_exist = await transaction.exists(self.user_dorks_key)
 
             await transaction.exec()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
@@ -70,8 +70,8 @@ class DorksManager:
         max_dorks = 50
         try:
             transaction = await redis_client.multi_exec()
-            dorks = await transaction.execute('smembers', self.dorks_key)
-            user_dorks = await transaction.execute('smembers', self.user_dorks_key)
+            dorks = await transaction.smembers(self.dorks_key)
+            user_dorks = await transaction.smembers(self.user_dorks_key)
 
             await transaction.execute()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:

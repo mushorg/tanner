@@ -5,11 +5,6 @@ from unittest import mock
 from tanner import session, session_manager
 
 
-async def mock_execute(command, *args):
-    if command == 'sadd':
-        return None
-
-
 class TestSessions(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -106,8 +101,11 @@ class TestSessions(unittest.TestCase):
             'cookies': {'sess_uuid': None}
         }
 
+        async def sess_sadd(key, value):
+            return None
+
         redis_mock = mock.Mock()
-        redis_mock.execute = mock_execute
+        redis_mock.sadd = sess_sadd
         sess = self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
 
         self.assertEquals([sess], self.handler.sessions)
@@ -130,7 +128,7 @@ class TestSessions(unittest.TestCase):
         sess = session.Session(data)
         data['cookies']['sess_uuid'] = sess.get_uuid()
         redis_mock = mock.Mock()
-        redis_mock.execute = mock_execute
+        redis_mock.sadd = sess_sadd
         self.handler.sessions.append(sess)
         self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
         self.assertEqual(self.handler.sessions[0].count, 2)

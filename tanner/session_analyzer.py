@@ -34,8 +34,8 @@ class SessionAnalyzer:
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.execute('lpush', s_key, *[json.dumps(session)])
-                await redis_client.execute('del', *[del_key])
+                await redis_client.lpush(s_key, *[json.dumps(session)])
+                await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
                 self.logger.error('Error with redis. Session will be returned to the queue: %s',
                                   redis_error)
@@ -81,7 +81,7 @@ class SessionAnalyzer:
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = await redis_client.execute('smembers', DorksManager.dorks_key)
+        dorks = await redis_client.smembers(DorksManager.dorks_key)
 
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
