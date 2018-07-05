@@ -44,7 +44,7 @@ class DorksManager:
 
     async def init_dorks(self, redis_client):
         try:
-            transaction = await redis_client.multi_exec()
+            transaction = redis_client.multi_exec()
             dorks_exist = await transaction.exists(self.dorks_key)
             user_dorks_exist = await transaction.exists(self.user_dorks_key)
 
