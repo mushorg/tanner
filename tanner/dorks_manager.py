@@ -45,10 +45,10 @@ class DorksManager:
     async def init_dorks(self, redis_client):
         try:
             transaction = redis_client.multi_exec()
-            dorks_exist = await transaction.exists(self.dorks_key)
-            user_dorks_exist = await transaction.exists(self.user_dorks_key)
+            dorks_exist = transaction.exists(self.dorks_key)
+            user_dorks_exist = transaction.exists(self.user_dorks_key)
 
-            await transaction.exec()
+            await transaction.execute()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
             self.logger.error('Problem with transaction: %s', redis_error)
         else:
@@ -69,9 +69,9 @@ class DorksManager:
         chosen_dorks = []
         max_dorks = 50
         try:
-            transaction = await redis_client.multi_exec()
-            dorks = await transaction.smembers(self.dorks_key)
-            user_dorks = await transaction.smembers(self.user_dorks_key)
+            transaction = redis_client.multi_exec()
+            dorks = transaction.smembers(self.dorks_key, encoding='utf-8')
+            user_dorks = transaction.smembers(self.user_dorks_key, encoding='utf-8')
 
             await transaction.execute()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
