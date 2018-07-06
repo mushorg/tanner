@@ -6,7 +6,7 @@ import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import api, dorks_manager, session_manager, redis_client
+from tanner import dorks_manager, session_manager, redis_client
 from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report

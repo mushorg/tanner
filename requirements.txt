@@ -1,11 +1,12 @@
 aiohttp==2.2
 aiomysql
+pymysql==0.8.1
 aiohttp_jinja2==0.14.0
 docker<2.6
 elizabeth==0.3.27
 yarl<0.14
 redis
-asyncio_redis
+aioredis
 uvloop
 pymongo
 pylibinjection
