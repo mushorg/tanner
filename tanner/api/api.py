@@ -39,10 +39,10 @@ class Api:
 
         return result
 
-    async def return_snare_info(self, uuid, count=-1):
+    async def return_snare_info(self, uuid):
         query_res = []
         try:
-            query_res = await self.redis_client.lrange(uuid, 0, count)
+            query_res = await self.redis_client.smembers(uuid)
         except aioredis.ProtocolError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         else:
