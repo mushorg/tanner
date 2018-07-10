@@ -43,6 +43,7 @@ class SessionAnalyzer:
 
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
+        referer = None
         if sess_duration != 0:
             rps = session['count'] / sess_duration
         else:
@@ -69,7 +70,8 @@ class SessionAnalyzer:
             hidden_links=hidden_links,
             attack_types=attack_types,
             paths=session['paths'],
-            cookies=session['cookies']
+            cookies=session['cookies'],
+            referer=session['referer']
         )
 
         owner = await self.choose_possible_owner(stats)
@@ -139,6 +141,8 @@ class SessionAnalyzer:
             if path['path'] == '/robots.txt':
                 return (1.0, 0.0)
         if stats['requests_in_second'] > 10:
+            if stats['referer'] is not None:
+                return (0.0, 0.5)
             if stats['user_agent'] in bots_owner:
                 return (0.85, 0.15)
             return (0.5, 0.85)

@@ -9,6 +9,7 @@ from tanner.session_analyzer import SessionAnalyzer
 
 
 session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
+          b'"referer": "/",' \
           b'"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
           b'Chrome/53.0.2767.4 Safari/537.36", "end_time": 1466091899.9854035, ' \
           b'"snare_uuid": "78e51180-bf0d-4757-8a04-f000e5efa179", "count": 24, ' \
@@ -110,7 +111,8 @@ class TestSessionAnalyzer(unittest.TestCase):
                 'attack_type': 'index'
             }],
             attack_types={'index'},
-            requests_in_second=11.1
+            requests_in_second=11.1,
+            referer=None
         )
 
         async def test():
@@ -148,7 +150,8 @@ class TestSessionAnalyzer(unittest.TestCase):
             requests_in_second=2,
             user_agent='Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
             peer_ip='74.217.37.84',
-            hidden_links=0
+            hidden_links=0,
+            referer='/'
         )
 
         async def test():
@@ -156,6 +159,27 @@ class TestSessionAnalyzer(unittest.TestCase):
         with patch('builtins.open', new_callable=mock_open) as m:
             self.loop.run_until_complete(test())
         self.assertEqual(self.res['possible_owners'], {'attacker': 0.75, 'crawler': 0.25, 'tool': 0.15, 'user': 0.25})
+
+    def test_choose_owner_user(self):
+        stats = dict(
+            paths=[{
+                'path': '/',
+                'timestamp': 1.0, 'response_status': 200,
+                'attack_type': ''
+            }],
+            attack_types='',
+            requests_in_second=2,
+            user_agent='test_user_agent',
+            peer_ip='74.217.37.84',
+            hidden_links=0,
+            referer='/'
+        )
+
+        async def test():
+            self.res = await self.handler.choose_possible_owner(stats)
+        with patch('builtins.open', new_callable=mock_open) as m:
+            self.loop.run_until_complete(test())
+        self.assertEqual(self.res['possible_owners'], {'user': 1.0})
 
     def test_find_location(self):
         location_stats = self.handler.find_location("74.217.37.84")
