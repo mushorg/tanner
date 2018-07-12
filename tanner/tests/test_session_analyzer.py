@@ -98,7 +98,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         redis_mock = Mock()
         redis_mock.get = sess_get
         redis_mock.smembers = set_of_members
-        redis_mock.sadd = set_add
+        redis_mock.zadd = set_add
         with patch('builtins.open', new_callable=mock_open) as m:
             stats = self.loop.run_until_complete(self.handler.create_stats(self.session, redis_mock))
         self.assertEqual(stats['possible_owners'], {'attacker': 1.0})

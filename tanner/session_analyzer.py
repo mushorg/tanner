@@ -34,7 +34,7 @@ class SessionAnalyzer:
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.sadd(s_key, *[json.dumps(session)])
+                await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
                 await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
                 self.logger.error('Error with redis. Session will be returned to the queue: %s',
