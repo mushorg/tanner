@@ -42,7 +42,9 @@ class Api:
     async def return_snare_info(self, uuid, count=-1):
         query_res = []
         try:
-            query_res = await self.redis_client.lrange(uuid, 0, count)
+            query_res = await self.redis_client.zrevrangebyscore(
+                uuid, offset=0, count=count
+            )
         except aioredis.ProtocolError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         else:

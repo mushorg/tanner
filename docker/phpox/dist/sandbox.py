@@ -29,6 +29,7 @@ from asyncio.subprocess import PIPE
 
 from pprint import pprint
 
+
 class PHPSandbox(object):
     @classmethod
     def php_tag_check(cls, script):
