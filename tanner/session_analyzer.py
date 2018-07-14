@@ -20,7 +20,7 @@ class SessionAnalyzer:
         await asyncio.sleep(1, loop=self._loop)
         try:
             session = await redis_client.execute('get', session_key)
-            session = json.loads(session)
+            session = json.loads(session.decode("utf-8"))
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.error('Can\'t get session for analyze: %s', error)
         else:
@@ -143,16 +143,17 @@ class SessionAnalyzer:
         if stats['requests_in_second'] > 10:
             if stats['referer'] is not None:
                 return (0.0, 0.5)
-            if stats['user_agent'] in bots_owner:
+            if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
                 return (0.85, 0.15)
             return (0.5, 0.85)
-        if stats['user_agent'] in bots_owner:
+        if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
             hostname, _, _ = await self._loop.run_in_executor(
                 None, socket.gethostbyaddr, stats['peer_ip']
             )
-            for crawler_host in crawler_hosts:
-                if crawler_host in hostname:
-                    return (0.75, 0.15)
+            if hostname is not None:
+                for crawler_host in crawler_hosts:
+                    if crawler_host in hostname:
+                        return (0.75, 0.15)
             return (0.25, 0.15)
         return (0.0, 0.0)
 
@@ -161,13 +162,14 @@ class SessionAnalyzer:
             return 1.0
         if stats['requests_in_second'] > 10:
             return 0.0
-        if stats['user_agent'] in bots_owner:
+        if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
             hostname, _, _ = await self._loop.run_in_executor(
                 None, socket.gethostbyaddr, stats['peer_ip']
             )
-            for crawler_host in crawler_hosts:
-                if crawler_host in hostname:
-                    return 0.25
+            if hostname is not None:
+                for crawler_host in crawler_hosts:
+                    if crawler_host in hostname:
+                        return 0.25
             return 0.75
         if stats['hidden_links'] > 0:
             return 0.5
