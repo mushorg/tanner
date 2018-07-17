@@ -6,7 +6,7 @@ LFI_ATTACK = re.compile(r'.*(/\.\.)*(home|proc|usr|etc)/.*')
 LFI_FILEPATH = re.compile(r'((\.\.|/).*)')
 XSS_ATTACK = re.compile(r'.*<(.|\n)*?>')
 CMD_ATTACK = re.compile(
-    r'.*(alias|cat|cd|cp|echo|exec|find|for|grep|ifconfig|ls|man|mkdir|netstat|ping|ps|pwd|uname|wget|touch|while).*')
+    r'.*(alias|cat|cd|cp|echo|exec|find|for|grep|ifconfig|ls|man|mkdir|netstat|ping|ps|pwd|uname|wget|touch|while)[^A-z:.].*')
 PHP_CODE_INJECTION = re.compile(r'.*(;)*(echo|system|print|phpinfo)(\(.*\)).*')
 CRLF_ATTACK = re.compile(r'.*(\r\n).*')
 REMOTE_FILE_URL = re.compile(r'(.*(http(s){0,1}|ftp(s){0,1}):.*)')
