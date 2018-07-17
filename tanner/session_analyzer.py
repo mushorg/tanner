@@ -19,8 +19,7 @@ class SessionAnalyzer:
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await redis_client.execute('get', session_key)
-            session = json.loads(session.decode("utf-8"))
+            session = await redis_client.get(session_key, encoding='utf-8')
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.error('Can\'t get session for analyze: %s', error)
         else:
