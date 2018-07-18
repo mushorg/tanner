@@ -51,7 +51,7 @@ class Api:
             if not query_res:
                 return 'Invalid SNARE UUID'
             for (i, val) in enumerate(query_res):
-                query_res[i] = json.loads(val.decode("utf-8"))
+                query_res[i] = json.loads(val)
         return query_res
 
     async def return_session_info(self, sess_uuid, snare_uuid=None):
