@@ -1,12 +1,12 @@
 import asyncio
 import json
 import logging
-import operator
 import socket
-
-import asyncio_redis
-
+from geoip2.database import Reader
+import geoip2
+import aioredis
 from tanner.dorks_manager import DorksManager
+from tanner.config import TannerConfig
 
 
 class SessionAnalyzer:
@@ -19,9 +19,9 @@ class SessionAnalyzer:
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await redis_client.get(session_key)
+            session = await redis_client.get(session_key, encoding='utf-8')
             session = json.loads(session)
-        except (asyncio_redis.NotConnectedError, TypeError, ValueError) as error:
+        except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.error('Can\'t get session for analyze: %s', error)
         else:
             result = await self.create_stats(session, redis_client)
@@ -34,16 +34,23 @@ class SessionAnalyzer:
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.lpush(s_key, [json.dumps(session)])
-                await redis_client.delete([del_key])
-            except asyncio_redis.NotConnectedError as redis_error:
+                await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
+                await redis_client.delete(*[del_key])
+            except aioredis.ProtocolError as redis_error:
                 self.logger.error('Error with redis. Session will be returned to the queue: %s',
                                   redis_error)
                 self.queue.put(session)
 
     async def create_stats(self, session, redis_client):
         sess_duration = session['end_time'] - session['start_time']
-        rps = sess_duration / session['count']
+        referer = None
+        if sess_duration != 0:
+            rps = session['count'] / sess_duration
+        else:
+            rps = 0
+        location_info = await self._loop.run_in_executor(
+            None, self.find_location, session['peer']['ip']
+        )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
                                                                            redis_client)
 
@@ -51,6 +58,7 @@ class SessionAnalyzer:
             sess_uuid=session['sess_uuid'],
             peer_ip=session['peer']['ip'],
             peer_port=session['peer']['port'],
+            location=location_info,
             user_agent=session['user_agent'],
             snare_uuid=session['snare_uuid'],
             start_time=session['start_time'],
@@ -62,10 +70,11 @@ class SessionAnalyzer:
             hidden_links=hidden_links,
             attack_types=attack_types,
             paths=session['paths'],
-            cookies=session['cookies']
+            cookies=session['cookies'],
+            referer=session['referer']
         )
 
-        owner = self.choose_possible_owner(stats)
+        owner = await self.choose_possible_owner(stats)
         stats.update(owner)
         return stats
 
@@ -74,7 +83,7 @@ class SessionAnalyzer:
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = await redis_client.smembers_asset(DorksManager.dorks_key)
+        dorks = await redis_client.smembers(DorksManager.dorks_key)
 
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
@@ -92,42 +101,76 @@ class SessionAnalyzer:
                 attack_types.append(path['attack_type'])
         return tbr_average, errors, hidden_links, attack_types
 
-    @staticmethod
-    def choose_possible_owner(stats):
-        possible_owners = dict(
-            user=0,
-            tool=0,
-            crawler=0,
-            attacker=0
+    async def choose_possible_owner(self, stats):
+        owner_names = ['user', 'tool', 'crawler', 'attacker']
+        possible_owners = {k: 0.0 for k in owner_names}
+        attacks = {'sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf'}
+        with open(TannerConfig.get('DATA', 'crawler_stats')) as f:
+            bots_owner = await self._loop.run_in_executor(None, f.read)
+        crawler_hosts = ['googlebot.com', 'baiduspider', 'search.msn.com', 'spider.yandex.com', 'crawl.sogou.com']
+        possible_owners['crawler'], possible_owners['tool'] = await self.detect_crawler(
+            stats, bots_owner, crawler_hosts
         )
-        attacks = {'rfi', 'sqli', 'lfi', 'xss'}
-        bots_owner = ['Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                      'Googlebot/2.1 (+http://www.google.com/bot.html)',
-                      'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-                      'Mozilla/5.0 (iPhone; CPU iPhone OS 7_0 like Mac OS X) AppleWebKit/537.51.1 '
-                      '(KHTML, like Gecko) Version/7.0 Mobile/11A465 Safari/9537.53 (compatible; '
-                      'bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-                      'Mozilla/5.0 (Windows Phone 8.1; ARM; Trident/7.0; Touch; rv:11.0; '
-                      'IEMobile/11.0; NOKIA; Lumia 530) like Gecko (compatible; bingbot/2.0; '
-                      '+http://www.bing.com/bingbot.htm)']
-        if stats['user_agent'] in bots_owner:
-            hostname, _, _ = socket.gethostbyaddr(stats['peer_ip'])
-            if 'search.msn.com' or 'googlebot.com' in hostname:
-                possible_owners['crawler'] += 1
-            else:
-                possible_owners['attacker'] += 1
-        if stats['requests_in_second'] >= 10:
-            possible_owners['tool'] += 1
-            possible_owners['crawler'] += 1
-        else:
-            possible_owners['user'] += 1
-            possible_owners['attacker'] += 1
-        if stats['hidden_links'] > 0:
-            possible_owners['crawler'] += 1
-            possible_owners['attacker'] += 1
-        if set(stats['attack_types']).intersection(attacks):
-            possible_owners['attacker'] += 1
+        possible_owners['attacker'] = await self.detect_attacker(
+            stats, bots_owner, crawler_hosts, attacks
+        )
+        maxcf = max([possible_owners['crawler'], possible_owners['attacker'], possible_owners['tool']])
 
-        maxval = max(possible_owners.items(), key=operator.itemgetter(1))[1]
-        owners = [k for k, v in possible_owners.items() if v == maxval]
+        possible_owners['user'] = round(1 - maxcf, 2)
+
+        owners = {k: v for k, v in possible_owners.items() if v != 0}
         return {'possible_owners': owners}
+
+    @staticmethod
+    def find_location(ip):
+        reader = Reader(TannerConfig.get('DATA', 'geo_db'))
+        try:
+            location = reader.city(ip)
+            info = dict(
+                country=location.country.name,
+                country_code=location.country.iso_code,
+                city=location.city.name,
+                zip_code=location.postal.code,
+            )
+        except geoip2.errors.AddressNotFoundError:
+            info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
+        return info
+
+    async def detect_crawler(self, stats, bots_owner, crawler_hosts):
+        for path in stats['paths']:
+            if path['path'] == '/robots.txt':
+                return (1.0, 0.0)
+        if stats['requests_in_second'] > 10:
+            if stats['referer'] is not None:
+                return (0.0, 0.5)
+            if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
+                return (0.85, 0.15)
+            return (0.5, 0.85)
+        if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
+            hostname, _, _ = await self._loop.run_in_executor(
+                None, socket.gethostbyaddr, stats['peer_ip']
+            )
+            if hostname is not None:
+                for crawler_host in crawler_hosts:
+                    if crawler_host in hostname:
+                        return (0.75, 0.15)
+            return (0.25, 0.15)
+        return (0.0, 0.0)
+
+    async def detect_attacker(self, stats, bots_owner, crawler_hosts, attacks):
+        if set(stats['attack_types']).intersection(attacks):
+            return 1.0
+        if stats['requests_in_second'] > 10:
+            return 0.0
+        if stats['user_agent'] is not None and stats['user_agent'] in bots_owner:
+            hostname, _, _ = await self._loop.run_in_executor(
+                None, socket.gethostbyaddr, stats['peer_ip']
+            )
+            if hostname is not None:
+                for crawler_host in crawler_hosts:
+                    if crawler_host in hostname:
+                        return 0.25
+            return 0.75
+        if stats['hidden_links'] > 0:
+            return 0.5
+        return 0.0

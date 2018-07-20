@@ -6,7 +6,7 @@ import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import api, dorks_manager, session_manager, redis_client
+from tanner import dorks_manager, session_manager, redis_client
 from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
@@ -51,7 +51,7 @@ class TannerServer:
         data = await request.read()
         try:
             data = json.loads(data.decode('utf-8'))
-            path = yarl.unquote(data['path'])
+            path = yarl.URL(data['path']).human_repr()
         except (TypeError, ValueError, KeyError) as error:
             self.logger.error('error parsing request: %s', data)
             response_msg = self._make_response(msg=type(error).__name__)

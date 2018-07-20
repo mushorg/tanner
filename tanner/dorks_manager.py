@@ -6,7 +6,7 @@ import random
 import re
 import uuid
 
-import asyncio_redis
+import aioredis
 
 from tanner import config
 from tanner.utils import patterns
@@ -31,25 +31,25 @@ class DorksManager:
                 dorks = dorks.split()
             if isinstance(dorks, set):
                 dorks = [x for x in dorks if x is not None]
-            await redis_client.sadd(redis_key, dorks)
+            await redis_client.sadd(redis_key, *dorks)
 
     async def extract_path(self, path, redis_client):
         extracted = re.match(patterns.QUERY, path)
         if extracted:
             extracted = extracted.group(0)
             try:
-                await redis_client.sadd(self.user_dorks_key, [extracted])
-            except asyncio_redis.NotConnectedError as connection_error:
+                await redis_client.sadd(self.user_dorks_key, *[extracted])
+            except aioredis.ProtocolError as connection_error:
                 self.logger.error('Problem with redis connection: %s', connection_error)
 
     async def init_dorks(self, redis_client):
         try:
-            transaction = await redis_client.multi()
-            dorks_exist = await transaction.exists(self.dorks_key)
-            user_dorks_exist = await transaction.exists(self.user_dorks_key)
+            transaction = redis_client.multi_exec()
+            dorks_exist = transaction.exists(self.dorks_key)
+            user_dorks_exist = transaction.exists(self.user_dorks_key)
 
-            await transaction.exec()
-        except (asyncio_redis.TransactionError, asyncio_redis.NotConnectedError) as redis_error:
+            await transaction.execute()
+        except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
             self.logger.error('Problem with transaction: %s', redis_error)
         else:
             dorks_existed = await dorks_exist
@@ -69,12 +69,12 @@ class DorksManager:
         chosen_dorks = []
         max_dorks = 50
         try:
-            transaction = await redis_client.multi()
-            dorks = await transaction.smembers_asset(self.dorks_key)
-            user_dorks = await transaction.smembers_asset(self.user_dorks_key)
+            transaction = redis_client.multi_exec()
+            dorks = transaction.smembers(self.dorks_key, encoding='utf-8')
+            user_dorks = transaction.smembers(self.user_dorks_key, encoding='utf-8')
 
-            await transaction.exec()
-        except (asyncio_redis.TransactionError, asyncio_redis.NotConnectedError) as redis_error:
+            await transaction.execute()
+        except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
             self.logger.error('Problem with transaction: %s', redis_error)
         else:
             dorks = await dorks

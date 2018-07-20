@@ -1,6 +1,7 @@
 import json
 import time
 import uuid
+from urllib.parse import urlparse
 
 from tanner.config import TannerConfig
 from tanner.utils import docker_helper
@@ -19,6 +20,10 @@ class Session:
             self.snare_uuid = data['uuid']
             self.paths = [{'path': data['path'], 'timestamp': time.time(),
                            'response_status': data['status']}]
+            self.referer = None
+            if 'referer' in data['headers']:
+                ref = urlparse(data['headers']['referer'])
+                self.referer = ref.path
             self.cookies = data['cookies']
             self.associated_db = None
             self.associated_env = None
@@ -52,7 +57,8 @@ class Session:
                     end_time=self.timestamp,
                     count=self.count,
                     paths=self.paths,
-                    cookies=self.cookies
+                    cookies=self.cookies,
+                    referer=self.referer
                     )
         return json.dumps(sess)
 

@@ -1,7 +1,7 @@
 import json
 import logging
 import operator
-import asyncio_redis
+import aioredis
 
 
 class Api:
@@ -12,9 +12,8 @@ class Api:
     async def return_snares(self):
         query_res = []
         try:
-            query_res = await self.redis_client.smembers('snare_ids')
-            query_res = await query_res.asset()
-        except asyncio_redis.NotConnectedError as connection_error:
+            query_res = await self.redis_client.smembers('snare_ids', encoding='utf-8')
+        except aioredis.ProtocolError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         return list(query_res)
 
@@ -43,8 +42,10 @@ class Api:
     async def return_snare_info(self, uuid, count=-1):
         query_res = []
         try:
-            query_res = await self.redis_client.lrange_aslist(uuid, 0, count)
-        except asyncio_redis.NotConnectedError as connection_error:
+            query_res = await self.redis_client.zrevrangebyscore(
+                uuid, offset=0, count=count, encoding='utf-8'
+            )
+        except aioredis.ProtocolError as connection_error:
             self.logger.error('Can not connect to redis %s', connection_error)
         else:
             if not query_res:

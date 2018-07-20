@@ -17,6 +17,10 @@
     <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=peer_ip:{{session.peer_ip}}">{{session.peer_ip}}</a></td>
   </tr>
   <tr>
+    <td><b>Location</b></td>
+    <td>{{session.location}}</td>
+  </tr>
+  <tr>
     <td><b>Port</b></td>
     <td>{{session.peer_port}}</td>
   </tr>
@@ -81,10 +85,14 @@
     </td>
   </tr>
   <tr>
+    <td><b>Referer</b></td>
+    <td>{{session.referer}}</td>
+  </tr>
+  <tr>
     <td><b>Possible Owners</b></td>
     <td>
-    {% for owner in session.possible_owners %}
-      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=possible_owners:{{owner}}">{{owner}}</a><br>
+    {% for owner, cf in session.possible_owners.items() %}
+      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=possible_owners:{{owner}}">{{owner}} : {{cf}}</a><br>
     {% endfor %}
     </td>
   </tr>
