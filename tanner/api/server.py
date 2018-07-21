@@ -2,10 +2,14 @@ import asyncio
 import logging
 
 from aiohttp import web
+from aiohttp.web import middleware
 
 from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
+
+import jwt
+from jwt.exceptions import DecodeError, InvalidSignatureError
 
 
 class ApiServer:
@@ -74,6 +78,16 @@ class ApiServer:
     async def on_shutdown(self, app):
         self.redis_client.close()
 
+    @middleware
+    async def auth(self, request, handler):
+        resp = await handler(request)
+        auth_key = request.query.get('key')
+        try:
+            decoded = jwt.decode(auth_key, TannerConfig.get('API', 'auth_signature'), algorithm='HS256')
+        except (DecodeError, InvalidSignatureError):
+            return web.Response(body='401: Unauthorized')
+        return resp
+
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
@@ -83,7 +97,7 @@ class ApiServer:
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
 
     def create_app(self, loop):
-        app = web.Application(loop=loop)
+        app = web.Application(loop=loop, middlewares=[self.auth])
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
