@@ -12,3 +12,4 @@ pylibinjection
 jinja2
 pycodestyle
 geoip2
+pyjwt
