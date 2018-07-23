@@ -2,7 +2,7 @@ Tanner API
 ==========
 Tanner api provides various stats related to traffic captured by snare. It can be accessed at ``locahost:8092/?key=API_KEY``.
 
-where,`API_KEY` is a JWT-token created by a particular tanner-api, which can be found in the terminal during tanner-api startup: 
+where, ``API_KEY`` is a JWT-token created by a particular tanner-api, which can be found in the terminal during tanner-api startup: 
 
 ``API_KEY for full access: 'API_KEY'``
 
