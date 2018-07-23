@@ -8,7 +8,7 @@ where, ``API_KEY`` is a JWT-token created by a particular tanner-api, which can 
 
 How to create an API_KEY with desired signature?
 ~~~~~~~~
-* By default tanner's API_KEY's use the signature: 'tanner_api_auth'
+* By default tanner's API_KEYs use the signature: 'tanner_api_auth'
 * This signature is veryfied on all the API requests.
 * It is highly recommended that every tanner-owner set their own signature.
 * This can be done by modifying tanner.config['API']['auth_signature'] to the desired one.
