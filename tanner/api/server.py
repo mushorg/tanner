@@ -7,6 +7,7 @@ from aiohttp.web import middleware
 from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
+from tanner.utils.api_key_generator import generate
 
 import jwt
 from jwt.exceptions import DecodeError, InvalidSignatureError
@@ -109,4 +110,6 @@ class ApiServer:
         app = self.create_app(loop)
         host = TannerConfig.get('API', 'host')
         port = int(TannerConfig.get('API', 'port'))
+        key = generate()
+        print('API_KEY for full access:', key)
         web.run_app(app, host=host, port=port)
