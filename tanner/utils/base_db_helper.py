@@ -2,7 +2,7 @@ import json
 import logging
 import random
 
-import elizabeth
+import mimesis
 
 from tanner.config import TannerConfig
 
@@ -38,21 +38,22 @@ class BaseDBHelper:
         inserted_data = []
         for i in range(samples_count):
             values = []
+            person = mimesis.Person('en')
             for token in token_list:
                 if token == 'I':
                     values.append(i)
                 if token == 'L':
-                    data = elizabeth.Personal().username()
+                    data = person.username()
                     values.append(data)
                 if token == 'E':
-                    data = elizabeth.Personal().email()
+                    data = person.email()
                     values.append(data)
                 if token == 'P':
-                    data = elizabeth.Personal().password()
+                    data = person.password()
                     values.append(data)
                 if token == 'T':
                     sample_length = random.randint(1, 10)
-                    data = elizabeth.Text().text(quantity=sample_length)
+                    data = mimesis.Text().text(quantity=sample_length)
                     values.append(data)
             inserted_data.append(tuple(values))
 
