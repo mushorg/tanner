@@ -1,12 +1,13 @@
 import asyncio
+import logging
 import aiohttp_jinja2
 import jinja2
-import logging
 
 from aiohttp import web
 from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
+from tanner import __version__ as tanner_version
 
 
 class TannerWebServer:
@@ -17,7 +18,14 @@ class TannerWebServer:
 
     @aiohttp_jinja2.template('index.html')
     async def handle_index(self, request):
-        return
+        snares = await self.api.return_snares()
+        latest_session = await self.api.return_latest_session()
+        count = len(snares)
+        return {
+            'count': count,
+            'l_session': latest_session,
+            'version': tanner_version
+        }
 
     @aiohttp_jinja2.template('snares.html')
     async def handle_snares(self, request):
