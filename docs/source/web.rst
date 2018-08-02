@@ -4,7 +4,14 @@ Tanner WEB provides various stats related to traffic captured by snare in UI for
 
 /
 ~~~~
-This is the index page which shows ``Tanner Web``.
+This is the index page which has a logo (mushorg) with ``Tanner web`` written below it.
+
+Below that we can find general info of the tanner instance:
+
+* **Tanner version** -- Which shows the version of tanner instance
+* **No. of snares connected** -- Which shows the number of snares connected to the tanner instance
+* **Latest session** -- Which will navigate you to the latest session's info page
+Below that we can find a clickable which states, ``Click here to navigate to snares list``, clicking which will move you to the ``/snares`` page.
 
 /snares
 ~~~~~~~~~~ 
