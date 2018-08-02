@@ -38,6 +38,7 @@ class BaseDBHelper:
         inserted_data = []
         for i in range(samples_count):
             values = []
+            person = mimesis.Person('en')
             for token in token_list:
                 person = mimesis.Person()
                 if token == 'I':
