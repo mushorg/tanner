@@ -117,7 +117,8 @@ class Api:
                              'possible_owners': operator.contains,
                              'start_time': operator.le,
                              'end_time': operator.ge,
-                             'snare_uuid': operator.eq
+                             'snare_uuid': operator.eq,
+                             'location': operator.contains
                              }
 
         try:
