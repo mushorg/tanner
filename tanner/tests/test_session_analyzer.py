@@ -112,7 +112,8 @@ class TestSessionAnalyzer(unittest.TestCase):
             }],
             attack_types={'index'},
             requests_in_second=11.1,
-            referer=None
+            referer=None,
+            peer_ip='ip'
         )
 
         async def test():
@@ -130,7 +131,8 @@ class TestSessionAnalyzer(unittest.TestCase):
             }],
             attack_types={'rfi', 'lfi'},
             requests_in_second=2,
-            user_agent='user'
+            user_agent='user',
+            peer_ip='ip'
         )
 
         async def test():

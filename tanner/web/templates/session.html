@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Session({{session.sess_uuid}}){% endblock %}
 {% block content %}
+
 <body>
 <h3 align="center">SESSION INFO</h3>
 <table align="center">
@@ -18,7 +19,7 @@
   </tr>
   <tr>
     <td><b>Location</b></td>
-    <td>{{session.location}}</td>
+    <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=location:{{session.location}}">{{session.location}}</a></td>
   </tr>
   <tr>
     <td><b>Port</b></td>
@@ -61,10 +62,10 @@
     <td>{{session.hidden_links}}</td>
   </tr>
   <tr>
-    <td><b>Attack types</b></td>
+    <td><b>Attacks</b></td>
     <td>
-    {% for attack in session.attack_types %}
-      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=attack_types:{{attack}}">{{attack}}</a><br>
+    {% for attack, v in session.attack_count.items() %}
+      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=attack_types:{{attack}}">{{attack}}</a> - {{v}}<br>
     {% endfor %}
     </td>
   </tr>
