@@ -21,7 +21,7 @@ See the docs for more filters.">How?</i>
     <td>{{loop.index}}</td>
     <td><a href="/session/{{sess.sess_uuid}}">{{sess.sess_uuid}}</a></td>
     <td>{{sess.peer_ip}}</td>
-    <td>{{sess.possible_owners|join(',')}}</td>
+    <td>{{sess.possible_owners|join(', ')}}</td>
   </tr>
   {% endfor %}
 </table>

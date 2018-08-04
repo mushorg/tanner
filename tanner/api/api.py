@@ -19,11 +19,7 @@ class Api:
 
     async def return_snare_stats(self, snare_uuid):
         result = {}
-        sessions = await self.return_snare_info(snare_uuid)
-        if sessions == 'Invalid SNARE UUID':
-            return result
-
-        result['total_sessions'] = len(sessions)
+        result['total_sessions'] = 0
         result['total_duration'] = 0
         result['attack_frequency'] = {'sqli': 0,
                                       'lfi': 0,
@@ -31,6 +27,11 @@ class Api:
                                       'rfi': 0,
                                       'cmd_exec': 0}
 
+        sessions = await self.return_snare_info(snare_uuid)
+        if sessions == 'Invalid SNARE UUID':
+            return result
+
+        result['total_sessions'] = len(sessions)
         for sess in sessions:
             result['total_duration'] += sess['end_time'] - sess['start_time']
             for attack in sess['attack_types']:
@@ -91,6 +92,22 @@ class Api:
 
         return matching_sessions
 
+    async def return_latest_session(self):
+        latest_time = -1
+        latest_session = None
+        snares = await self.return_snares()
+        try:
+            for snare in snares:
+                filters = {'snare_uuid': snare}
+                sessions = await self.return_sessions(filters)
+                for session in sessions:
+                    if latest_time < session['end_time']:
+                        latest_time = session['end_time']
+                        latest_session = session['sess_uuid']
+        except TypeError:
+            return None
+        return latest_session
+
     def apply_filter(self, filter_name, filter_value, sess):
         available_filters = {'user_agent': operator.contains,
                              'peer_ip': operator.eq,
@@ -98,7 +115,8 @@ class Api:
                              'possible_owners': operator.contains,
                              'start_time': operator.le,
                              'end_time': operator.ge,
-                             'snare_uuid': operator.eq
+                             'snare_uuid': operator.eq,
+                             'location': operator.contains
                              }
 
         try:

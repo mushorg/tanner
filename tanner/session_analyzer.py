@@ -14,6 +14,7 @@ class SessionAnalyzer:
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.queue = asyncio.Queue(loop=self._loop)
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
+        self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
     async def analyze(self, session_key, redis_client):
         session = None
@@ -52,6 +53,7 @@ class SessionAnalyzer:
         )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
                                                                            redis_client)
+        attack_count = self.set_attack_count(attack_types)
 
         stats = dict(
             sess_uuid=session['sess_uuid'],
@@ -68,6 +70,7 @@ class SessionAnalyzer:
             errors=errors,
             hidden_links=hidden_links,
             attack_types=attack_types,
+            attack_count=attack_count,
             paths=session['paths'],
             cookies=session['cookies'],
             referer=session['referer']
@@ -100,10 +103,20 @@ class SessionAnalyzer:
                 attack_types.append(path['attack_type'])
         return tbr_average, errors, hidden_links, attack_types
 
+    def set_attack_count(self, attack_types):
+        attacks = self.attacks.copy()
+        attacks.append('index')
+        attack_count = {k: 0 for k in attacks}
+        for attack in attacks:
+            attack_count[attack] = attack_types.count(attack)
+        count = {k: v for k, v in attack_count.items() if v != 0}
+        return count
+
     async def choose_possible_owner(self, stats):
-        owner_names = ['user', 'tool', 'crawler', 'attacker']
+        owner_names = ['user', 'tool', 'crawler', 'attacker', 'admin']
         possible_owners = {k: 0.0 for k in owner_names}
-        attacks = {'sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf'}
+        if stats['peer_ip'] == '127.0.0.1' or stats['peer_ip'] == '::1':
+            possible_owners['admin'] = 1.0
         with open(TannerConfig.get('DATA', 'crawler_stats')) as f:
             bots_owner = await self._loop.run_in_executor(None, f.read)
         crawler_hosts = ['googlebot.com', 'baiduspider', 'search.msn.com', 'spider.yandex.com', 'crawl.sogou.com']
@@ -111,7 +124,7 @@ class SessionAnalyzer:
             stats, bots_owner, crawler_hosts
         )
         possible_owners['attacker'] = await self.detect_attacker(
-            stats, bots_owner, crawler_hosts, attacks
+            stats, bots_owner, crawler_hosts
         )
         maxcf = max([possible_owners['crawler'], possible_owners['attacker'], possible_owners['tool']])
 
@@ -156,8 +169,8 @@ class SessionAnalyzer:
             return (0.25, 0.15)
         return (0.0, 0.0)
 
-    async def detect_attacker(self, stats, bots_owner, crawler_hosts, attacks):
-        if set(stats['attack_types']).intersection(attacks):
+    async def detect_attacker(self, stats, bots_owner, crawler_hosts):
+        if set(stats['attack_types']).intersection(self.attacks):
             return 1.0
         if stats['requests_in_second'] > 10:
             return 0.0
