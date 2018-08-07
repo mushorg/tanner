@@ -8,6 +8,8 @@ RUN apk -U --no-cache add \
                build-base \
                git \
                libcap \
+               libffi-dev \
+               libressl-dev \
                linux-headers \
                py3-yarl \
                python3 \
@@ -16,7 +18,6 @@ RUN apk -U --no-cache add \
 # Setup Tanner
     git clone --depth=1 https://github.com/mushorg/tanner /opt/tanner && \
     cp /root/dist/config.py /opt/tanner/tanner/ && \
-    cp /root/dist/requirements.txt /opt/tanner/ && \
     cd /opt/tanner/ && \
     pip3 install --no-cache-dir --upgrade pip setuptools && \
     pip3 install --no-cache-dir -r requirements.txt && \

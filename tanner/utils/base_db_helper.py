@@ -2,7 +2,7 @@ import json
 import logging
 import random
 
-import elizabeth
+import mimesis
 
 from tanner.config import TannerConfig
 
