@@ -24,7 +24,7 @@ class SessionManager:
             try:
                 new_session = Session(valid_data)
             except KeyError as key_error:
-                self.logger.error('Error during session creation: %s', key_error)
+                self.logger.exception('Error during session creation: %s', key_error)
                 return
             self.sessions.append(new_session)
             return new_session
@@ -89,7 +89,7 @@ class SessionManager:
             await redis_client.set(sess.get_uuid(), sess.to_json())
             await self.analyzer.analyze(sess.get_uuid(), redis_client)
         except aioredis.ProtocolError as redis_error:
-            self.logger.error('Error connect to redis, session stay in memory. %s', redis_error)
+            self.logger.exception('Error connect to redis, session stay in memory. %s', redis_error)
             return False
         else:
             return True

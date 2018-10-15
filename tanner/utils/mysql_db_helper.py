@@ -87,7 +87,7 @@ class MySQLDBHelper(BaseDBHelper):
                 dump_db_process.wait()
                 restore_db_process.wait()
             except subprocess.CalledProcessError as e:
-                self.logger.error('Error during copying sql database : %s' % e)
+                self.logger.exception('Error during copying sql database : %s' % e)
         return attacker_db
 
     async def insert_dummy_data(self, table_name, data_tokens, cursor):
@@ -116,7 +116,7 @@ class MySQLDBHelper(BaseDBHelper):
             for row in result:
                 tables.append(row[0])
         except Exception as e:
-            self.logger.error('Error during query map creation')
+            self.logger.exception('Error during query map creation')
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
@@ -134,5 +134,5 @@ class MySQLDBHelper(BaseDBHelper):
                             columns.append(dict(name=row[3], type='TEXT'))
                     query_map[table] = columns
                 except Exception:
-                    self.logger.error('Error during query map creation')
+                    self.logger.exception('Error during query map creation')
         return query_map

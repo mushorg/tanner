@@ -14,7 +14,7 @@ class Api:
         try:
             query_res = await self.redis_client.smembers('snare_ids', encoding='utf-8')
         except aioredis.ProtocolError as connection_error:
-            self.logger.error('Can not connect to redis %s', connection_error)
+            self.logger.exception('Can not connect to redis %s', connection_error)
         return list(query_res)
 
     async def return_snare_stats(self, snare_uuid):
@@ -46,7 +46,7 @@ class Api:
                 uuid, offset=0, count=count, encoding='utf-8'
             )
         except aioredis.ProtocolError as connection_error:
-            self.logger.error('Can not connect to redis %s', connection_error)
+            self.logger.exception('Can not connect to redis %s', connection_error)
         else:
             if not query_res:
                 return 'Invalid SNARE UUID'

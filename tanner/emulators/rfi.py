@@ -43,7 +43,7 @@ class RfiEmulator:
                     async with await client.get(url) as resp:
                         data = await resp.text()
             except aiohttp.ClientError as client_error:
-                self.logger.error('Error during downloading the rfi script %s', client_error)
+                self.logger.exception('Error during downloading the rfi script %s', client_error)
             else:
                 tmp_filename = url.name + str(time.time())
                 file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
@@ -64,7 +64,7 @@ class RfiEmulator:
             with open(os.path.join(self.script_dir, file_name), 'wb') as ftp_script:
                 ftp.retrbinary('RETR %s' % name, ftp_script.write)
         except ftplib.all_errors as ftp_errors:
-            self.logger.error("Problem with ftp download %s", ftp_errors)
+            self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
         else:
             return file_name
@@ -85,7 +85,7 @@ class RfiEmulator:
                 async with session.post(phpox_address, data=script_data) as resp:
                     rfi_result = await resp.json()
         except aiohttp.ClientError as client_error:
-            self.logger.error('Error during connection to php sandbox %s', client_error)
+            self.logger.exception('Error during connection to php sandbox %s', client_error)
         else:
             await resp.release()
             await session.close()
