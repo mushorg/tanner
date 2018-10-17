@@ -37,8 +37,7 @@ class SessionAnalyzer:
                 await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
                 await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
-                self.logger.exception('Error with redis. Session will be returned to the queue: %s',
-                                  redis_error)
+                self.logger.exception('Error with redis. Session will be returned to the queue: %s', redis_error)
                 self.queue.put(session)
 
     async def create_stats(self, session, redis_client):
