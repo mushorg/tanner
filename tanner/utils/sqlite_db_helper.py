@@ -74,7 +74,7 @@ class SQLITEDBHelper(BaseDBHelper):
             for row in cursor.execute(select_tables):
                 tables.append(row[0])
         except sqlite3.OperationalError as sqlite_error:
-            self.logger.error('Error during query map creation: %s', sqlite_error)
+            self.logger.exception('Error during query map creation: %s', sqlite_error)
         else:
             query_map = dict.fromkeys(tables)
             for table in tables:
@@ -85,5 +85,5 @@ class SQLITEDBHelper(BaseDBHelper):
                         columns.append(dict(name=row[1], type=row[2]))
                     query_map[table] = columns
                 except sqlite3.OperationalError as sqlite_error:
-                    self.logger.error('Error during query map creation: %s', sqlite_error)
+                    self.logger.exception('Error during query map creation: %s', sqlite_error)
         return query_map

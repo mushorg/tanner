@@ -56,7 +56,7 @@ class TannerWebServer:
                 if 'end_time' in applied_filters:
                     applied_filters['end_time'] = float(applied_filters['end_time'])
         except Exception as e:
-            self.logger.error('Filter error : %s' % e)
+            self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
