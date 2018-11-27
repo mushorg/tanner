@@ -11,6 +11,7 @@ RUN apk -U --no-cache add \
                make \
                php7 \
                php7-dev \
+               php7-tokenizer \
                python3 \
                python3-dev \
                re2c && \
