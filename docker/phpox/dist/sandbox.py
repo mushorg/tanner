@@ -23,6 +23,7 @@ import json
 import asyncio
 import hashlib
 import argparse
+import functools
 
 from aiohttp import web
 from asyncio.subprocess import PIPE
@@ -81,6 +82,7 @@ class EchoServer(asyncio.Protocol):
         # print('data received: {}'.format(data.decode()))
         self.transport.write(data)
 
+_pretty_dumps = functools.partial(json.dumps, sort_keys=True, indent=4)
 
 @asyncio.coroutine
 def api(request):
@@ -97,7 +99,7 @@ def api(request):
         except KeyboardInterrupt:
             pass
         ret['file_md5'] = file_md5
-        return web.Response(body=json.dumps(ret, sort_keys=True, indent=4).encode('utf-8'))
+        return web.json_response(ret, dumps=_pretty_dumps)
 
 
 if __name__ == '__main__':
