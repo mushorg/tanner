@@ -30,6 +30,8 @@ from asyncio.subprocess import PIPE
 
 from pprint import pprint
 
+_pretty_dumps = functools.partial(json.dumps, sort_keys=True, indent=4)
+
 
 class PHPSandbox(object):
     @classmethod
@@ -82,7 +84,6 @@ class EchoServer(asyncio.Protocol):
         # print('data received: {}'.format(data.decode()))
         self.transport.write(data)
 
-_pretty_dumps = functools.partial(json.dumps, sort_keys=True, indent=4)
 
 @asyncio.coroutine
 def api(request):
