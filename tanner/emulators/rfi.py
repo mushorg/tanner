@@ -83,7 +83,7 @@ class RfiEmulator:
         try:
             async with aiohttp.ClientSession(loop=self._loop) as session:
                 async with session.post(phpox_address, data=script_data) as resp:
-                    rfi_result = await resp.json()
+                    rfi_result = await resp.json(content_type=None)
         except aiohttp.ClientError as client_error:
             self.logger.exception('Error during connection to php sandbox %s', client_error)
         else:
