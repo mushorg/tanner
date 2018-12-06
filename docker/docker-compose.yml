@@ -9,6 +9,9 @@ services:
   tanner_redis:
     build: ./redis
     container_name: tanner_redis
+    privileged: true
+    sysctls:
+      net.core.somaxconn: '511'
     restart: always
     stop_signal: SIGKILL
     tty: true
