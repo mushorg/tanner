@@ -28,6 +28,7 @@ services:
      - tanner_local
     image: "mushorg/phpox:latest"
     read_only: true
+    tmpfs: "/tmp"
 
 # Tanner API Service
   tanner_api:
@@ -59,6 +60,8 @@ services:
     tty: true
     networks:
      - tanner_local
+    ports:
+     - "8091:8091"
     image: "mushorg/tanner:latest"
     command: tannerweb
     read_only: true
