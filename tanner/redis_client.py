@@ -15,6 +15,7 @@ class RedisClient:
         try:
             host = TannerConfig.get('REDIS', 'host')
             port = TannerConfig.get('REDIS', 'port')
+            expiry_time = TannerConfig.get('REDIS', 'expiry_time')
             if poolsize is None:
                 poolsize = TannerConfig.get('REDIS', 'poolsize')
             timeout = TannerConfig.get('REDIS', 'timeout')
