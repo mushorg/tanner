@@ -20,7 +20,7 @@ class RedisClient:
                 poolsize = TannerConfig.get('REDIS', 'poolsize')
             timeout = TannerConfig.get('REDIS', 'timeout')
             redis_client = await asyncio.wait_for(aioredis.create_redis_pool(
-                (host, int(port)), maxsize=int(poolsize)), timeout=int(timeout))
+                (host, int(port)), maxsize=int(poolsize)), timeout=int(timeout), parser=expiry_time)
         except asyncio.TimeoutError as timeout_error:
             LOGGER.exception('Problem with redis connection. Please, check your redis server. %s', timeout_error)
             exit()
