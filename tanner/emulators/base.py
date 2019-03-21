@@ -88,7 +88,7 @@ class BaseHandler:
         # dummy for wp-content
         if re.match(patterns.WORD_PRESS_CONTENT, path):
             detection = {'name': 'wp-content', 'order': 1}
-        if re.match(patterns.INDEX, path):
+        elif re.match(patterns.INDEX, path):
             detection = {'name': 'index', 'order': 1}
         # check attacks against get parameters
         possible_get_detection = await self.get_emulation_result(session, get_data, self.get_emulators)

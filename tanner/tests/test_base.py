@@ -84,16 +84,16 @@ class TestBase(unittest.TestCase):
 
         detection = self.loop.run_until_complete(self.handler.handle_get(self.session, data))
 
-        assert_detection = detection = {'name': 'index', 'order': 1}
+        assert_detection = {'name': 'index', 'order': 1}
         self.assertDictEqual(detection, assert_detection)
 
     def test_handle_wp_content(self):
-        data = dict(path='/wp-content',
+        data = dict(path='/wp-content/',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
         detection = self.loop.run_until_complete(self.handler.handle_get(self.session, data))
 
-        assert_detection = detection = {'name': 'wp-content', 'order': 1}
+        assert_detection = {'name': 'wp-content', 'order': 1}
         self.assertDictEqual(detection, assert_detection)
 
     def test_handle_rfi(self):
