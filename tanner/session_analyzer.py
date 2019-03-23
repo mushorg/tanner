@@ -103,7 +103,7 @@ class SessionAnalyzer:
     async def choose_possible_owner(self, stats):
         owner_names = ['user', 'tool', 'crawler', 'attacker']
         possible_owners = {k: 0.0 for k in owner_names}
-        attacks = {'sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf'}
+        attacks = {'sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf', 'pad_oracle'}
         with open(TannerConfig.get('DATA', 'crawler_stats')) as f:
             bots_owner = await self._loop.run_in_executor(None, f.read)
         crawler_hosts = ['googlebot.com', 'baiduspider', 'search.msn.com', 'spider.yandex.com', 'crawl.sogou.com']
