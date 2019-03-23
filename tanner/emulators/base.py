@@ -21,8 +21,8 @@ class BaseHandler:
             'cmd_exec': cmd_exec.CmdExecEmulator() if self.emulator_enabled['cmd_exec'] else None,
             'php_code_injection': php_code_injection.PHPCodeInjection(loop) if self.emulator_enabled[
                 'php_code_injection'] else None,
-            'crlf': crlf.CRLFEmulator() if self.emulator_enabled['crlf'] else None
-	    'pad_oracle': pad_oracle.PadOracleEmulator() if self.emulator_enabled['pad_oracle'] else None
+            'crlf': crlf.CRLFEmulator() if self.emulator_enabled['crlf'] else None,
+            'pad_oracle': pad_oracle.PadOracleEmulator() if self.emulator_enabled['pad_oracle'] else None
         }
 
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf', 'pad_oracle']
