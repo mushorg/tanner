@@ -6,7 +6,7 @@ from tanner.emulators import mysqli, sqlite
 
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
-        if (TannerConfig.get('SQLI', 'type') == 'MySQL'):
+        if TannerConfig.get('SQLI', 'type') == 'MySQL':
             self.sqli_emulator = mysqli.MySQLIEmulator(db_name)
         else:
             self.sqli_emulator = sqlite.SQLITEEmulator(db_name, working_dir)

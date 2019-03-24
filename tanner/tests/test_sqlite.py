@@ -11,9 +11,9 @@ class SqliteTest(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
-        self.filename = '/tmp/db/test_db'
+        self.filename = '/tmp/db/test_db_1'
         os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-        open('/tmp/db/test_db', 'a').close()
+        open('/tmp/db/test_db_1', 'a').close()
         # Insert some testing data
         conn = sqlite3.connect(self.filename)
         self.cursor = conn.cursor()
@@ -21,7 +21,7 @@ class SqliteTest(unittest.TestCase):
         self.cursor.execute('INSERT INTO TEST VALUES(0, "test0")')
         conn.commit()
 
-        self.handler = sqlite.SQLITEEmulator('test_db', '/tmp/')
+        self.handler = sqlite.SQLITEEmulator('test_db_1', '/tmp/')
 
     def tearDown(self):
         if os.path.exists(self.filename):
@@ -34,7 +34,7 @@ class SqliteTest(unittest.TestCase):
         self.assertTrue(os.path.exists('/tmp/db/attacker_d877339ec415484987b279469167af3d'))
 
     def test_create_query_map(self):
-        result = self.handler.helper.create_query_map('/tmp/db', 'test_db')
+        result = self.handler.helper.create_query_map('/tmp/db', 'test_db_1')
         assert_result = {'test': [{'name': 'id', 'type': 'INTEGER'}, {'name': 'username', 'type': 'TEXT'}]}
         self.assertEqual(result, assert_result)
 

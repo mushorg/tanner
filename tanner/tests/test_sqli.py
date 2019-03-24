@@ -19,6 +19,21 @@ class SqliTest(unittest.TestCase):
         }
         self.handler = sqli.SqliEmulator('test_db', '/tmp/')
         self.handler.query_map = query_map
+        self.sess = mock.Mock()
+        self.sess.sess_uuid.hex = 'd877339ec415484987b279469167af3d'
+
+    def test_scan(self):
+        attack = '1 UNION SELECT 1,2,3,4'
+        assert_result = dict(name='sqli', order=2)
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_handle(self):
+        self.handler.query_map = None
+        attack_params = [dict(id='id', value='1 UNION SELECT 1,2,3,4')]
+        assert_result = dict(value="[1, 2, 3, 4] [1, 'going.1894', 'winterberry2002@yandex.com', 'iFa(|Hs^']", page=True)
+        result = self.loop.run_until_complete(self.handler.handle(attack_params, self.sess))
+        self.assertEqual(assert_result, result)
 
     def test_map_query_id(self):
         attack_value = dict(id='id', value='1\'UNION SELECT 1,2,3,4')
