@@ -16,6 +16,12 @@ class TestLfiEmulator(unittest.TestCase):
         result = self.handler.scan(attack)
         self.assertEqual(result, assert_result)
 
+    def test_scan_negative(self):
+        attack = '/root/flag.txt'
+        assert_result = None
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
     def test_handle_abspath_lfi(self):
         attack_params = [dict(id='foo', value='/etc/passwd')]
         result = self.loop.run_until_complete(self.handler.handle(attack_params))
