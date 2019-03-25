@@ -13,6 +13,18 @@ class TestCmdExecEmulator(unittest.TestCase):
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'e86d20b858224e239d3991c1a2650bc7'
 
+    def test_scan(self):
+        attack = 'id; uname'
+        assert_result = dict(name='cmd_exec', order=3)
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_scan_negative(self):
+        attack = 'id; curl'
+        assert_result = None
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
     def test_handle_simple_command(self):
         attack_params = [dict(id='foo', value='id')]
         result = self.loop.run_until_complete(self.handler.handle(attack_params, self.sess))
