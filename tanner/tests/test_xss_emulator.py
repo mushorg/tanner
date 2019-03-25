@@ -17,6 +17,12 @@ class TestXSSEmulator(unittest.TestCase):
         result = self.handler.scan(attack)
         self.assertEqual(result, assert_result)
 
+    def test_scan_negative(self):
+        attack = 'alert(1);'
+        assert_result = None
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
     def test_multiple_xss(self):
         attack_params = [dict(id='comment', value='<script>alert(\'comment\');</script>'),
                          dict(id='name', value='<script>alert(\'name\');</script>'),
