@@ -29,7 +29,7 @@ class Api:
                                       'lfi': 0,
                                       'xss': 0,
                                       'rfi': 0,
-                                      'cmd_exec': 0
+                                      'cmd_exec': 0,
                                       'pad_oracle': 0}
 
         for sess in sessions:
