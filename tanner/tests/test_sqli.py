@@ -20,6 +20,8 @@ class SqliTest(unittest.TestCase):
         }
         self.handler = sqli.SqliEmulator('test_db', '/tmp/')
         self.filename = '/tmp/db/test_db'
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        open('/tmp/db/test_db', 'a').close()
         self.handler.query_map = query_map
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'd877339ec415484987b279469167af3d'
@@ -27,6 +29,12 @@ class SqliTest(unittest.TestCase):
     def test_scan(self):
         attack = '1 UNION SELECT 1,2,3,4'
         assert_result = dict(name='sqli', order=2)
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_scan_negative(self):
+        attack = '1 UNION 1,2,3,4'
+        assert_result = None
         result = self.handler.scan(attack)
         self.assertEqual(result, assert_result)
 
