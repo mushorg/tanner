@@ -5,34 +5,40 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
-                            'dorks': '/opt/tanner/data/dorks.pickle',
-                            'user_dorks': '/opt/tanner/data/user_dorks.pickle',
-                            'crawler_stats': '/opt/tanner/data/crawler_user_agents.txt',
-                            'geo_db': '/opt/tanner/db/GeoLite2-City.mmdb'
-                            },
-                   'TANNER': {'host': '0.0.0.0', 'port': 8090},
-                   'WEB': {'host': '0.0.0.0', 'port': 8091},
-                   'API': {'host': '0.0.0.0', 'port': 8092},
-                   'PHPOX': {'host': '0.0.0.0', 'port': 8088},
-                   'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
-                   'EMULATORS': {'root_dir': '/opt/tanner'},
-                   'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True,
-                                        'php_code_injection': True, "crlf": True},
-                   'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
-                            'password': 'user_pass'},
-                   'DOCKER': {'host_image': 'busybox:latest'},
-                   'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
-                   'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
-                   'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '',
-                               'CHANNEL': 'tanner.events'},
-                   'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
-                   'CLEANLOG': {'enabled': False}
-                   }
+config_template = None
 
 
 class TannerConfig():
     config = None
+
+    @staticmethod
+    def set_config_template(base_dir):
+        global config_template
+        config_template = {
+            'DATA': {'db_config': f'{base_dir}/db/db_config.json',
+                     'dorks': f'{base_dir}/data/dorks.pickle',
+                     'user_dorks': f'{base_dir}/data/user_dorks.pickle',
+                     'crawler_stats': f'{base_dir}/data/crawler_user_agents.txt',
+                     'geo_db': f'{base_dir}/db/GeoLite2-City.mmdb'
+                     },
+            'TANNER': {'host': '0.0.0.0', 'port': 8090},
+            'WEB': {'host': '0.0.0.0', 'port': 8091},
+            'API': {'host': '0.0.0.0', 'port': 8092},
+            'PHPOX': {'host': '0.0.0.0', 'port': 8088},
+            'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
+            'EMULATORS': {'root_dir': f'{base_dir}'},
+            'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True,
+                                 'php_code_injection': True, "crlf": True},
+            'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
+                     'password': 'user_pass'},
+            'DOCKER': {'host_image': 'busybox:latest'},
+            'LOGGER': {'log_debug': f'{base_dir}/tanner.log', 'log_err': f'{base_dir}/tanner.err'},
+            'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
+            'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '',
+                        'CHANNEL': 'tanner.events'},
+            'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
+            'CLEANLOG': {'enabled': False}
+        }
 
     @staticmethod
     def set_config(config_path):
