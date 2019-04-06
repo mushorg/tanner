@@ -8,7 +8,9 @@ from tanner.config import TannerConfig
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config")
+    parser.add_argument("--base-dir", help="tanner base directory", default='/opt/tanner')
     args = parser.parse_args()
+    TannerConfig.set_config_template(args.base_dir)
     if args.config:
         TannerConfig.set_config(args.config)
 

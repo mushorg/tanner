@@ -5,14 +5,12 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-config_template = None
 
-
-class TannerConfig():
+class TannerConfig:
     config = None
 
     @staticmethod
-    def set_config_template(base_dir):
+    def set_config_template(base_dir='/opt/tanner'):
         global config_template
         config_template = {
             'DATA': {'db_config': '{}/db/db_config.json'.format(base_dir),
@@ -88,3 +86,6 @@ class TannerConfig():
             res = config_template[section]
 
         return res
+
+
+TannerConfig.set_config_template()
