@@ -44,3 +44,11 @@ Run Tanner WebUI
 """"""""""""""""
 
 #. Run ``sudo tannerweb``
+
+Docker build instructions
+"""""""""""""""""""""""""
+1. Change current directory to ``tanner/docker``
+2. ``docker-compose build``
+3. ``docker-compose up``
+
+More information about running ``docker-compose`` can be found `here <https://docs.docker.com/compose/gettingstarted/>`_.
