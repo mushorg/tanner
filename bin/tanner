@@ -1,7 +1,5 @@
 #!/usr/bin/python3.5
 import argparse
-import os
-import sys
 
 from tanner.config import TannerConfig
 from tanner import server
@@ -17,9 +15,6 @@ def main():
     /_/ /_/  |_/_/ |_/_/ |_/_____/_/ |_|
 
     """)
-    if os.getuid() != 0:
-        print('Tanner has to be run as root!')
-        sys.exit(1)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config")
     args = parser.parse_args()
