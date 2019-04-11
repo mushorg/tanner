@@ -74,6 +74,14 @@ You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a
 
 More information about running `docker-compose` can be found [here.](https://docs.docker.com/compose/gettingstarted/)
 
+## Testing
+
+In order to run the tests and receive a test coverage report, we recommend running `pytest`:
+
+
+    pip install pytest pytest-cov
+    sudo pytest --cov-report term-missing --cov=tanner tanner/tests/
+
 ## Sample Output
 
 
