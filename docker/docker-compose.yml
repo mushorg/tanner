@@ -1,4 +1,4 @@
-version: '2.3'
+version: '3'
 
 networks:
   tanner_local:
@@ -9,6 +9,9 @@ services:
   tanner_redis:
     build: ./redis
     container_name: tanner_redis
+    privileged: true
+    sysctls:
+      net.core.somaxconn: '511'
     restart: always
     stop_signal: SIGKILL
     tty: true
@@ -26,6 +29,8 @@ services:
     tty: true
     networks:
      - tanner_local
+    ports:
+     - "8088:8088"
     image: "mushorg/phpox:latest"
     read_only: true
 
@@ -41,6 +46,8 @@ services:
     tty: true
     networks:
      - tanner_local
+    ports:
+     - "8092:8092"
     image: "mushorg/tanner:latest"
     read_only: true
     command: tannerapi 
@@ -59,6 +66,8 @@ services:
     tty: true
     networks:
      - tanner_local
+    ports:
+     - "8091:8091"
     image: "mushorg/tanner:latest"
     command: tannerweb
     read_only: true
