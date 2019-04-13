@@ -33,6 +33,7 @@ services:
      - "8088:8088"
     image: "mushorg/phpox:latest"
     read_only: true
+    tmpfs: "/tmp"
 
 # Tanner API Service
   tanner_api:

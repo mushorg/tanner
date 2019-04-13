@@ -1,4 +1,4 @@
-TANNER 
+TANNER
 ======
 [![Documentation Status](https://readthedocs.org/projects/tanner/badge/?version=latest)](http://tanner.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/mushorg/tanner.svg?branch=master)](https://travis-ci.org/mushorg/tanner)
@@ -52,7 +52,7 @@ Getting Started
 
 
 1. Get TANNER: `git clone https://github.com/mushorg/tanner.git`
-2. Go to the TANNER source  directory: ``cd tanner`` 
+2. Go to the TANNER source  directory: ``cd tanner``
 3. Install requirements: `pip3 install -r requirements.txt`
 4. Install TANNER: ``sudo python3 setup.py install``
 5. Run TANNER: ``sudo tanner``
@@ -67,22 +67,37 @@ Run ``sudo tannerweb``
 
 You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
 
+## Docker build instructions
+1. Change current directory to `tanner/docker`
+2. `docker-compose build`
+3. `docker-compose up`
+
+More information about running `docker-compose` can be found [here.](https://docs.docker.com/compose/gettingstarted/)
+
+## Testing
+
+In order to run the tests and receive a test coverage report, we recommend running `pytest`:
+
+
+    pip install pytest pytest-cov
+    sudo pytest --cov-report term-missing --cov=tanner tanner/tests/
+
 ## Sample Output
 
 
 ```shell
     # sudo tanner
-    
+
            _________    _   ___   ____________
           /_  __/   |  / | / / | / / ____/ __ \
            / / / /| | /  |/ /  |/ / __/ / /_/ /
           / / / ___ |/ /|  / /|  / /___/ _, _/
          /_/ /_/  |_/_/ |_/_/ |_/_____/_/ |_|
 
-    
+
      Debug logs will be stored in /opt/tanner/tanner.log
      Error logs will be stored in /opt/tanner/tanner.err
      ======== Running on http://0.0.0.0:8090 ========
      (Press CTRL+C to quit)
-     
+
 ```

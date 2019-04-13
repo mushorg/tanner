@@ -11,6 +11,18 @@ class TestXSSEmulator(unittest.TestCase):
         asyncio.set_event_loop(None)
         self.handler = xss.XssEmulator()
 
+    def test_scan(self):
+        attack = '<script>alert(1);</script>'
+        assert_result = dict(name='xss', order=3)
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_scan_negative(self):
+        attack = 'alert(1);'
+        assert_result = None
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
     def test_multiple_xss(self):
         attack_params = [dict(id='comment', value='<script>alert(\'comment\');</script>'),
                          dict(id='name', value='<script>alert(\'name\');</script>'),

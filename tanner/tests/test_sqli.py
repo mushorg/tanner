@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+import os
 from unittest import mock
 
 from tanner.emulators import sqli
@@ -18,7 +19,30 @@ class SqliTest(unittest.TestCase):
             'comments': [{'name': 'comment', 'type': 'text'}]
         }
         self.handler = sqli.SqliEmulator('test_db', '/tmp/')
+        self.filename = '/tmp/db/test_db'
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        open('/tmp/db/test_db', 'a').close()
         self.handler.query_map = query_map
+        self.sess = mock.Mock()
+        self.sess.sess_uuid.hex = 'd877339ec415484987b279469167af3d'
+
+    def test_scan(self):
+        attack = '1 UNION SELECT 1,2,3,4'
+        assert_result = dict(name='sqli', order=2)
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_scan_negative(self):
+        attack = '1 UNION 1,2,3,4'
+        assert_result = None
+        result = self.handler.scan(attack)
+        self.assertEqual(result, assert_result)
+
+    def test_handle(self):
+        attack_params = [dict(id='id', value='1 UNION SELECT 1,2,3,4')]
+        assert_result = dict(value="no such table: users", page=True)
+        result = self.loop.run_until_complete(self.handler.handle(attack_params, self.sess))
+        self.assertEqual(assert_result, result)
 
     def test_map_query_id(self):
         attack_value = dict(id='id', value='1\'UNION SELECT 1,2,3,4')
@@ -57,3 +81,7 @@ class SqliTest(unittest.TestCase):
                         right syntax to use near foo at line 1'
         result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
         self.assertEqual(assert_result, result['value'])
+
+    def tearDown(self):
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
