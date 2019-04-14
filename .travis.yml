@@ -7,11 +7,13 @@ language: python
 python:
   - "3.5"
 # command to install dependencies
-install: 
+install:
   - "pip install -r requirements.txt"
   - pip install coveralls
+  - docker-compose -f ./docker/docker-compose.yml up -d
 # command to run tests
 script:
     - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
     - pycodestyle . --max-line-length=120
+    - test $(docker ps -f name=tanner -q | wc --lines) -eq 5
 after_success: coveralls
