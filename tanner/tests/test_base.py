@@ -125,25 +125,52 @@ class TestBase(unittest.TestCase):
         injectable_page = self.handler.set_injectable_page(sess)
         self.assertEqual(injectable_page, '/python.html')
 
-    def test_emulate(self):
+    def test_emulate_type_1(self):
+        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
+        data = dict(method='GET', path='/index.html',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        async def mock_handle_get(session, data):
+            return {'name': 'index', 'order': 2}
+
+        self.handler.handle_get = mock_handle_get
+        detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        assert_detection = {'name': 'index', 'order': 2, 'type': 1, 'version': '0.6.0'}
+        self.assertEqual(detection, assert_detection)
+        self.handler.set_injectable_page.assert_not_called()
+
+    def test_emulate_type_2(self):
         data = dict(method='GET', path='/path.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
-        async def mock_lfi_handle(attack_value, session):
-            return {'page': '/something.html'}
-
-        def mock_lfi_scan(value):
-            return dict(name='lfi', order=2)
+        async def mock_handle_get(session, data):
+            return {'name': 'lfi', 'order': 2, 'payload': {'page': '/something.html'}}
 
         def mock_injectable_path(session):
             return '/path.html'
 
-        self.handler.emulators['lfi'] = mock.Mock()
-        self.handler.emulators['lfi'].handle = mock_lfi_handle
-        self.handler.emulators['lfi'].scan = mock_lfi_scan
+        self.handler.handle_get = mock_handle_get
         self.handler.set_injectable_page = mock_injectable_path
 
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
         assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'page': '/path.html'},
                             'type': 2, 'version': '0.6.0'}
         self.assertEqual(detection, assert_detection)
+
+        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
+        self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        self.handler.set_injectable_page.assert_called_with(self.session)
+
+    def test_emulate_type_3(self):
+        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
+        data = dict(method='GET', path='/index.html?file=/etc/passwd',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        async def mock_handle_get(session, data):
+            return {'name': 'lfi', 'order': 2, 'payload': {'status_code': 200}}
+
+        self.handler.handle_get = mock_handle_get
+        detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'status_code': 200}, 'type': 3, 'version': '0.6.0'}
+        self.assertEqual(detection, assert_detection)
+        self.handler.set_injectable_page.assert_not_called()
