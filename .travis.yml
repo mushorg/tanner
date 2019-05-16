@@ -1,5 +1,6 @@
 sudo: required
 services:
+  - mysql
   - docker
   - redis-server
 before_install:

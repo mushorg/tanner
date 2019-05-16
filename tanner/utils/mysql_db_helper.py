@@ -18,7 +18,7 @@ class MySQLDBHelper(BaseDBHelper):
                                       )
         return conn
 
-    async def check_db_exists(self, db_name, ):
+    async def check_db_exists(self, db_name):
         conn = await self.connect_to_db()
         cursor = await conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
@@ -128,7 +128,7 @@ class MySQLDBHelper(BaseDBHelper):
                     await cursor.execute(query.format(table_name=table, db_name=db_name))
                     result = await cursor.fetchall()
                     for row in result:
-                        if (row[7] == 'int'):
+                        if row[7] == 'int':
                             columns.append(dict(name=row[3], type='INTEGER'))
                         else:
                             columns.append(dict(name=row[3], type='TEXT'))
