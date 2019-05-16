@@ -2,8 +2,10 @@ import asyncio
 import unittest
 from unittest import mock
 
+from tanner.utils.asyncmock import AsyncMock
 from tanner import session
 from tanner.emulators import base
+from tanner import __version__ as tanner_version
 
 
 class TestBase(unittest.TestCase):
@@ -20,6 +22,7 @@ class TestBase(unittest.TestCase):
             return dict(name='lfi', order=0)
 
         self.handler.emulators['lfi'].scan = mock_lfi_scan
+        self.detection = None
 
     def test_handle_sqli(self):
         data = dict(path='/index.html?id=1 UNION SELECT 1',
@@ -130,47 +133,46 @@ class TestBase(unittest.TestCase):
         data = dict(method='GET', path='/index.html',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
-        async def mock_handle_get(session, data):
-            return {'name': 'index', 'order': 2}
+        self.handler.handle_get = AsyncMock(return_value={'name': 'index', 'order': 1})
 
-        self.handler.handle_get = mock_handle_get
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
-        assert_detection = {'name': 'index', 'order': 2, 'type': 1, 'version': '0.6.0'}
+        assert_detection = {'name': 'index', 'order': 1, 'type': 1, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
         self.handler.set_injectable_page.assert_not_called()
 
     def test_emulate_type_2(self):
+        self.handler.handle_get = AsyncMock(return_value={'name': 'lfi', 'order': 2,
+                                                          'payload': {'page': '/something.html'}})
+
         data = dict(method='GET', path='/path.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
-
-        async def mock_handle_get(session, data):
-            return {'name': 'lfi', 'order': 2, 'payload': {'page': '/something.html'}}
 
         def mock_injectable_path(session):
             return '/path.html'
 
-        self.handler.handle_get = mock_handle_get
         self.handler.set_injectable_page = mock_injectable_path
 
-        detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        async def test():
+            self.detection = await self.handler.emulate(data, self.session)
+
+        self.loop.run_until_complete(test())
         assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'page': '/path.html'},
-                            'type': 2, 'version': '0.6.0'}
-        self.assertEqual(detection, assert_detection)
+                            'type': 2, 'version': tanner_version}
+        self.assertEqual(self.detection, assert_detection)
 
         self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
-        self.loop.run_until_complete(self.handler.emulate(data, self.session))
-        self.handler.set_injectable_page.assert_called_with(self.session)
+        self.loop.run_until_complete(test())
+        self.handler.set_injectable_page.assert_called()
 
     def test_emulate_type_3(self):
+        self.handler.handle_get = AsyncMock(return_value={'name': 'php_code_injection', 'order': 3,
+                                                          'payload': {'status_code': 504}})
         self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
         data = dict(method='GET', path='/index.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
-        async def mock_handle_get(session, data):
-            return {'name': 'lfi', 'order': 2, 'payload': {'status_code': 200}}
-
-        self.handler.handle_get = mock_handle_get
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
-        assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'status_code': 200}, 'type': 3, 'version': '0.6.0'}
+        assert_detection = {'name': 'php_code_injection', 'order': 3, 'payload': {'status_code': 504},
+                            'type': 3, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
         self.handler.set_injectable_page.assert_not_called()
