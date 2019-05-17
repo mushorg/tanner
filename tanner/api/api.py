@@ -32,8 +32,8 @@ class Api:
                                       'cmd_exec': 0}
 
         for sess in sessions:
-            result['total_duration'] += sess['end_time'] - sess['start_time']
-            for attack in sess['attack_types']:
+            result['total_duration'] += sessions[sess]['end_time'] - sessions[sess]['start_time']
+            for attack in sessions[sess]['attack_types']:
                 if attack in result['attack_frequency']:
                     result['attack_frequency'][attack] += 1
 
@@ -55,7 +55,6 @@ class Api:
         return query_res
 
     async def return_session_info(self, sess_uuid, snare_uuid=None):
-        query_res = []
         if snare_uuid:
             snare_uuids = [snare_uuid]
         else:
@@ -66,11 +65,10 @@ class Api:
             if sessions == 'Invalid SNARE UUID':
                 continue
             for sess in sessions:
-                if sess['sess_uuid'] == sess_uuid:
+                if sessions[sess]['sess_uuid'] == sess_uuid:
                     return sess
 
     async def return_sessions(self, filters):
-        query_res = []
         snare_uuids = await self.return_snares()
 
         matching_sessions = []
@@ -83,7 +81,7 @@ class Api:
                 match_count = 0
                 for filter_name, filter_value in filters.items():
                     try:
-                        if (self.apply_filter(filter_name, filter_value, sess)):
+                        if self.apply_filter(filter_name, filter_value, sessions[sess]):
                             match_count += 1
                     except KeyError:
                         return 'Invalid filter : %s' % filter_name
