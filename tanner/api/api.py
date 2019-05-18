@@ -81,7 +81,7 @@ class Api:
                 match_count = 0
                 for filter_name, filter_value in filters.items():
                     try:
-                        if self.apply_filter(filter_name, filter_value, sessions[sess]):
+                        if self.apply_filter(filter_name, filter_value, sess):
                             match_count += 1
                     except KeyError:
                         return 'Invalid filter : %s' % filter_name

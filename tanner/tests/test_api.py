@@ -111,6 +111,38 @@ class TestApi(unittest.TestCase):
         self.loop.run_until_complete(test())
         self.assertEqual(self.returned_content, self.expected_content)
 
+    def test_return_session_info_none(self):
+        self.handler = Api(self.redis_client)
+
+        self.handler.return_snares = AsyncMock(return_value=["8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4",
+                                                             "6ea6aw67-7821-4085-7u6t-q1io3p0i90b1"])
+
+        async def mock_return_snare_info(snare_uuid):
+            sessions = None
+            if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4":
+                sessions = {
+                    "sess1": {
+                        "sess_uuid": "f432785f97f548f98289054f963e972"
+                    }
+                }
+
+            if snare_uuid == "6ea6aw67-7821-4085-7u6t-q1io3p0i90b1":
+                sessions = {
+                    "sess2": {
+                        "sess_uuid": "c546114f97f548f982756495f963e280"
+                    }
+                }
+            return sessions
+
+        self.handler.return_snare_info = mock_return_snare_info
+        self.expected_content = "sess2"
+
+        async def test():
+            self.returned_content = await self.handler.return_session_info(self.uuid)
+
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.returned_content, self.expected_content)
+
     def test_return_sessions(self):
         self.handler = Api(self.redis_client)
         self.handler.return_snares = AsyncMock(return_value=["8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4"])
@@ -141,10 +173,13 @@ class TestApi(unittest.TestCase):
         }
 
         def mock_apply_filter(filter_name, filter_value, session):
-            return True
+            if session == "sess1":
+                return True
+            else:
+                return False
 
         self.handler.apply_filter = mock_apply_filter
-        self.expected_content = ["sess1", "sess2"]
+        self.expected_content = ["sess1"]
 
         async def test():
             self.returned_content = await self.handler.return_sessions(self.filters)
@@ -186,6 +221,18 @@ class TestApi(unittest.TestCase):
 
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
+
+    def test_apply_filter_possible_owner(self):
+        self.handler = Api(self.redis_client)
+        filter_name = 'possible_owners'
+        filter_value = 'crawler'
+
+        session = {
+            'possible_owners': ['user']
+        }
+
+        self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
+        self.assertFalse(self.returned_content)
 
     def test_apply_filter_attack_types(self):
         self.handler = Api(self.redis_client)
