@@ -147,26 +147,21 @@ class TestBase(unittest.TestCase):
         data = dict(method='GET', path='/path.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
-        def mock_injectable_path(session):
-            return '/path.html'
-
-        self.handler.set_injectable_page = mock_injectable_path
+        self.handler.set_injectable_page = mock.MagicMock(return_value='/path.html')
 
         async def test():
             self.detection = await self.handler.emulate(data, self.session)
 
         self.loop.run_until_complete(test())
+        self.handler.set_injectable_page.assert_called()
         assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'page': '/path.html'},
                             'type': 2, 'version': tanner_version}
         self.assertEqual(self.detection, assert_detection)
 
-        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
-        self.loop.run_until_complete(test())
-        self.handler.set_injectable_page.assert_called()
-
     def test_emulate_type_3(self):
         self.handler.handle_get = AsyncMock(return_value={'name': 'php_code_injection', 'order': 3,
                                                           'payload': {'status_code': 504}})
+
         self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
         data = dict(method='GET', path='/index.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
