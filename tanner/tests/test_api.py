@@ -222,6 +222,18 @@ class TestApi(unittest.TestCase):
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
 
+    def test_apply_filter_user_agent_false(self):
+        self.handler = Api(self.redis_client)
+        filter_name = 'user_agent'
+        filter_value = 'Mozilla Firefox'
+
+        session = {
+            'user_agent': 'Mozilla/5.0'
+        }
+
+        self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
+        self.assertFalse(self.returned_content)
+
     def test_apply_filter_possible_owner(self):
         self.handler = Api(self.redis_client)
         filter_name = 'possible_owners'
@@ -245,6 +257,18 @@ class TestApi(unittest.TestCase):
 
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
+
+    def test_apply_filter_attack_types_false(self):
+        self.handler = Api(self.redis_client)
+        filter_name = 'attack_types'
+        filter_value = "lfi"
+
+        session = {
+            "attack_types": ["rfi", "xss"]
+        }
+
+        self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
+        self.assertFalse(self.returned_content)
 
     def test_apply_filter_start_time(self):
         self.handler = Api(self.redis_client)
