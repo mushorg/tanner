@@ -172,19 +172,21 @@ class TestApi(unittest.TestCase):
             'snare_uuid': self.snare_uuid
         }
 
-        def mock_apply_filter(filter_name, filter_value, session):
-            if session == "sess1":
-                return True
-            else:
-                return False
+        self.handler.apply_filter = mock.Mock(return_value=True)
+        self.expected_content = ["sess1", "sess2"]
 
-        self.handler.apply_filter = mock_apply_filter
-        self.expected_content = ["sess1"]
+        calls = [
+            mock.call('user_agent', 'Mozilla', 'sess1'), mock.call('peer_ip', '10.0.0.1', 'sess1'),
+            mock.call('attack_types', 'xss', 'sess2'), mock.call('possible_owners', 'crawler', 'sess2'),
+            mock.call('start_time', 148575, 'sess2'), mock.call('end_time', 148590, 'sess2'),
+            mock.call('snare_uuid', self.snare_uuid, 'sess2')
+        ]
 
         async def test():
             self.returned_content = await self.handler.return_sessions(self.filters)
 
         self.loop.run_until_complete(test())
+        self.handler.apply_filter.assert_has_calls(calls, any_order=True)
         self.assertEqual(self.expected_content, self.returned_content)
 
     def test_return_sessions_error(self):
