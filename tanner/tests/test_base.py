@@ -129,7 +129,6 @@ class TestBase(unittest.TestCase):
         self.assertEqual(injectable_page, '/python.html')
 
     def test_emulate_type_1(self):
-        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
         data = dict(method='GET', path='/index.html',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
@@ -138,7 +137,6 @@ class TestBase(unittest.TestCase):
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
         assert_detection = {'name': 'index', 'order': 1, 'type': 1, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
-        self.handler.set_injectable_page.assert_not_called()
 
     def test_emulate_type_2(self):
         self.handler.handle_get = AsyncMock(return_value={'name': 'lfi', 'order': 2,
@@ -153,7 +151,7 @@ class TestBase(unittest.TestCase):
             self.detection = await self.handler.emulate(data, self.session)
 
         self.loop.run_until_complete(test())
-        self.handler.set_injectable_page.assert_called()
+        self.handler.set_injectable_page.assert_called_with(self.session)
         assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'page': '/path.html'},
                             'type': 2, 'version': tanner_version}
         self.assertEqual(self.detection, assert_detection)
@@ -162,7 +160,6 @@ class TestBase(unittest.TestCase):
         self.handler.handle_get = AsyncMock(return_value={'name': 'php_code_injection', 'order': 3,
                                                           'payload': {'status_code': 504}})
 
-        self.handler.set_injectable_page = mock.create_autospec(self.handler.set_injectable_page)
         data = dict(method='GET', path='/index.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
@@ -170,4 +167,3 @@ class TestBase(unittest.TestCase):
         assert_detection = {'name': 'php_code_injection', 'order': 3, 'payload': {'status_code': 504},
                             'type': 3, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
-        self.handler.set_injectable_page.assert_not_called()
