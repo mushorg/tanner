@@ -284,6 +284,18 @@ class TestApi(unittest.TestCase):
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
 
+    def test_apply_filter_start_time_false(self):
+        self.handler = Api(self.redis_client)
+        filter_name = 'start_time'
+        filter_value = 148560
+
+        session = {
+            'start_time': 148555
+        }
+
+        self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
+        self.assertFalse(self.returned_content)
+
     def test_apply_filter_end_time(self):
         self.handler = Api(self.redis_client)
         filter_name = 'end_time'
@@ -295,3 +307,15 @@ class TestApi(unittest.TestCase):
 
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
+    
+    def test_apply_filter_end_time_false(self):
+        self.handler = Api(self.redis_client)
+        filter_name = 'end_time'
+        filter_value = 148580
+
+        session = {
+            'end_time': 148590
+        }
+
+        self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
+        self.assertFalse(self.returned_content)
