@@ -307,7 +307,7 @@ class TestApi(unittest.TestCase):
 
         self.returned_content = self.handler.apply_filter(filter_name, filter_value, session)
         self.assertTrue(self.returned_content)
-    
+
     def test_apply_filter_end_time_false(self):
         self.handler = Api(self.redis_client)
         filter_name = 'end_time'
