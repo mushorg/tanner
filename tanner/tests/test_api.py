@@ -172,8 +172,17 @@ class TestApi(unittest.TestCase):
             'snare_uuid': self.snare_uuid
         }
 
-        self.handler.apply_filter = mock.Mock(return_value=True)
-        self.expected_content = ["sess1", "sess2"]
+        self.handler.apply_filter = mock.Mock()
+
+        def mock_result(filter_name, filter_value, sess):
+
+            if sess == 'sess1':
+                return True
+            else:
+                return False
+
+        self.handler.apply_filter.side_effect = mock_result
+        self.expected_content = ["sess1"]
 
         calls = [
             mock.call('user_agent', 'Mozilla', 'sess1'), mock.call('peer_ip', '10.0.0.1', 'sess1'),
