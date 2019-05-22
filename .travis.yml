@@ -1,5 +1,6 @@
 sudo: required
 services:
+  - mysql
   - docker
 before_install:
   - docker pull busybox:latest
