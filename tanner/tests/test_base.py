@@ -2,8 +2,10 @@ import asyncio
 import unittest
 from unittest import mock
 
+from tanner.utils.asyncmock import AsyncMock
 from tanner import session
 from tanner.emulators import base
+from tanner import __version__ as tanner_version
 
 
 class TestBase(unittest.TestCase):
@@ -20,6 +22,7 @@ class TestBase(unittest.TestCase):
             return dict(name='lfi', order=0)
 
         self.handler.emulators['lfi'].scan = mock_lfi_scan
+        self.detection = None
 
     def test_handle_sqli(self):
         data = dict(path='/index.html?id=1 UNION SELECT 1',
@@ -124,3 +127,47 @@ class TestBase(unittest.TestCase):
             sess = session.Session(None)
         injectable_page = self.handler.set_injectable_page(sess)
         self.assertEqual(injectable_page, '/python.html')
+
+    def test_emulate_type_1(self):
+        data = dict(method='GET', path='/index.html',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        self.handler.handle_get = AsyncMock(return_value={'name': 'index', 'order': 1})
+        self.handler.set_injectable_page = mock.Mock()
+
+        detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        assert_detection = {'name': 'index', 'order': 1, 'type': 1, 'version': tanner_version}
+        self.assertEqual(detection, assert_detection)
+        assert not self.handler.set_injectable_page.called
+
+    def test_emulate_type_2(self):
+        self.handler.handle_get = AsyncMock(return_value={'name': 'lfi', 'order': 2,
+                                                          'payload': {'page': '/something.html'}})
+
+        data = dict(method='GET', path='/path.html?file=/etc/passwd',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        self.handler.set_injectable_page = mock.MagicMock(return_value='/path.html')
+
+        async def test():
+            self.detection = await self.handler.emulate(data, self.session)
+
+        self.loop.run_until_complete(test())
+        self.handler.set_injectable_page.assert_called_with(self.session)
+        assert_detection = {'name': 'lfi', 'order': 2, 'payload': {'page': '/path.html'},
+                            'type': 2, 'version': tanner_version}
+        self.assertEqual(self.detection, assert_detection)
+
+    def test_emulate_type_3(self):
+        self.handler.handle_get = AsyncMock(return_value={'name': 'php_code_injection', 'order': 3,
+                                                          'payload': {'status_code': 504}})
+
+        data = dict(method='GET', path='/index.html?file=/etc/passwd',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+        self.handler.set_injectable_page = mock.Mock()
+
+        detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
+        assert_detection = {'name': 'php_code_injection', 'order': 3, 'payload': {'status_code': 504},
+                            'type': 3, 'version': tanner_version}
+        self.assertEqual(detection, assert_detection)
+        assert not self.handler.set_injectable_page.called
