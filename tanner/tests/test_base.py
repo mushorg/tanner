@@ -133,10 +133,12 @@ class TestBase(unittest.TestCase):
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
 
         self.handler.handle_get = AsyncMock(return_value={'name': 'index', 'order': 1})
+        self.handler.set_injectable_page = mock.Mock()
 
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
         assert_detection = {'name': 'index', 'order': 1, 'type': 1, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
+        assert not self.handler.set_injectable_page.called
 
     def test_emulate_type_2(self):
         self.handler.handle_get = AsyncMock(return_value={'name': 'lfi', 'order': 2,
@@ -162,8 +164,10 @@ class TestBase(unittest.TestCase):
 
         data = dict(method='GET', path='/index.html?file=/etc/passwd',
                     cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+        self.handler.set_injectable_page = mock.Mock()
 
         detection = self.loop.run_until_complete(self.handler.emulate(data, self.session))
         assert_detection = {'name': 'php_code_injection', 'order': 3, 'payload': {'status_code': 504},
                             'type': 3, 'version': tanner_version}
         self.assertEqual(detection, assert_detection)
+        assert not self.handler.set_injectable_page.called
