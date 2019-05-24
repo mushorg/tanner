@@ -6,7 +6,7 @@ class MySQLIEmulator:
         self.db_name = db_name
         self.helper = mysql_db_helper.MySQLDBHelper()
 
-    async def setup_db(self, query_map):
+    async def setup_db(self):
         db_exists = await self.helper.check_db_exists(self.db_name)
         if not db_exists:
             await self.helper.setup_db_from_config(self.db_name)
