@@ -88,6 +88,8 @@ class TestMySQLi(unittest.TestCase):
             await self.handler.helper.insert_dummy_data('test', 'I,L', self.cursor)
             await self.cursor.execute('SELECT * FROM test;')
             self.returned_result = await self.cursor.fetchall()
+            await self.cursor.close()
+            self.conn.close()
 
         self.loop.run_until_complete(test())
         self.assertEqual(self.returned_result, self.expected_result)
