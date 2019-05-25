@@ -84,7 +84,7 @@ class TestMySQLi(unittest.TestCase):
         self.expected_result = ((0, 'test0'), (1, 'test1'), (2, 'test2'))
 
         async def test():
-    
+
             await self.handler.helper.insert_dummy_data('test', 'I,L', self.cursor)
             await self.cursor.execute('SELECT * FROM test;')
             self.returned_result = await self.cursor.fetchall()
@@ -93,3 +93,14 @@ class TestMySQLi(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.assertEqual(self.returned_result, self.expected_result)
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_execute_query(self, m):
+        query = 'SELECT * FROM test;'
+        self.expected_result = [[0, 'test0']]
+
+        async def test():
+            self.returned_result = await self.handler.execute_query(query, self.db_name)
+
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.expected_result, self.returned_result)
