@@ -26,6 +26,7 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.db_name = 'test_db'
         self.expected_result = None
         self.returned_result = None
+        self.result = None
         self.query_map = []
         self.handler = MySQLDBHelper()
         self.conn = None
@@ -89,6 +90,16 @@ class TestMySQLDBHelper(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         assert self.handler.insert_dummy_data.called
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_copy_db(self, m):
+
+        async def test():
+            self.returned_result = await self.handler.copy_db(self.db_name, "attacker_db")
+            self.result = await self.handler.check_db_exists("attacker_db")
+
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.result, 1)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_query_map(self, m):
