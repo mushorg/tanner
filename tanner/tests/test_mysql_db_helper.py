@@ -2,6 +2,7 @@ import unittest
 import asyncio
 import os
 from unittest import mock
+from tanner.utils.asyncmock import AsyncMock
 from tanner.utils.mysql_db_helper import MySQLDBHelper
 
 
@@ -25,7 +26,7 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.db_name = 'test_db'
         self.expected_result = None
         self.returned_result = None
-        self.query_map = None
+        self.query_map = []
         self.handler = MySQLDBHelper()
         self.conn = None
         self.cursor = None
@@ -67,27 +68,31 @@ class TestMySQLDBHelper(unittest.TestCase):
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_query_map(self, m):
 
-        config = {
-            "name": "test_db",
-            "tables": [
-                {
-                    "schema": "CREATE TABLE TEST (ID INTEGER PRIMARY KEY, USERNAME TEXT)",
-                    "table_name": "TEST",
-                    "data_tokens": "I,L"
-                }
-            ]
-        }
+        self.expected_result_creds = {'COMMON': [{'name': 'NUM', 'type': 'INTEGER'}],
+                                      'CREDS': [{'name': 'ID', 'type': 'INTEGER'}, {'name': 'EMAIL', 'type': 'TEXT'},
+                                                {'name': 'PASSWORD', 'type': 'TEXT'}]}
 
-        def mock_read_config():
-            return config
+        self.expected_result_test = {'COMMON': [{'name': 'PARA', 'type': 'TEXT'}],
+                                     'TEST': [{'name': 'ID', 'type': 'INTEGER'},
+                                              {'name': 'USERNAME', 'type': 'TEXT'}]}
 
-        self.handler.read_config = mock_read_config
-        self.expected_result = {'TEST': [{'name': 'ID', 'type': 'INTEGER'},
-                                         {'name': 'USERNAME', 'type': 'TEXT'}]}
+        self.query = [
+            ['TEST_DB', "CREATE TABLE TEST (ID INTEGER PRIMARY KEY, USERNAME TEXT)", "CREATE TABLE COMMON (PARA TEXT)"],
+            ['CREDS_DB', "CREATE TABLE CREDS (ID INTEGER PRIMARY KEY, EMAIL VARCHAR(15), PASSWORD VARCHAR(15))",
+             'CREATE TABLE COMMON (NUM INTEGER )']
+        ]
 
-        async def test():
-            await self.handler.setup_db_from_config(self.db_name)
-            self.query_map = await self.handler.create_query_map(self.db_name)
+        async def test(data):
+            await self.cursor.execute('CREATE DATABASE {db_name}'.format(db_name=data[0]))
+            await self.cursor.execute('USE {db_name}'.format(db_name=data[0]))
+            await self.cursor.execute(data[1])
+            await self.cursor.execute(data[2])
+            result = await self.handler.create_query_map(data[0])
+            self.query_map.append(result)
+            await self.handler.delete_db(data[0])
 
-        self.loop.run_until_complete(test())
-        self.assertEqual(self.query_map, self.expected_result)
+        for data in self.query:
+            self.loop.run_until_complete(test(data))
+
+        self.assertEqual(self.query_map[0], self.expected_result_test)
+        self.assertEqual(self.query_map[1], self.expected_result_creds)
