@@ -12,7 +12,7 @@ class Api:
     async def return_snares(self):
         query_res = []
         try:
-            query_res = await self.redis_client.smembers('snare_ids', encoding='utf-8')
+            query_res = await self.redis_client.smembers('key:snare_ids', encoding='utf-8')
         except aioredis.ProtocolError as connection_error:
             self.logger.exception('Can not connect to redis %s', connection_error)
         return list(query_res)
