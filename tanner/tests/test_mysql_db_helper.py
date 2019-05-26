@@ -27,22 +27,42 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.returned_result = None
         self.query_map = None
         self.handler = MySQLDBHelper()
+        self.conn = None
+        self.cursor = None
+
+        with mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config) as m:
+            async def connect():
+                self.conn = await self.handler.connect_to_db()
+                self.cursor = await self.conn.cursor()
+
+                # Delete DB if exists
+                self.returned_result = await self.handler.check_db_exists(self.db_name)
+                if self.returned_result == 1:
+                    await self.handler.delete_db(self.db_name)
+
+            self.loop.run_until_complete(connect())
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_check_db_exists(self, m):
+        self.expected_result = 1
+
+        async def test():
+            await self.cursor.execute('CREATE DATABASE test_db')
+            await self.conn.commit()
+            self.returned_result = await self.handler.check_db_exists(self.db_name)
+
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.expected_result, self.returned_result)
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_check_no_db_exists(self, m):
         self.expected_result = 0
 
         async def test():
             self.returned_result = await self.handler.check_db_exists(self.db_name)
 
         self.loop.run_until_complete(test())
-
-        if self.returned_result == 1:
-            async def delete():
-                await self.handler.delete_db(self.db_name)
-            self.loop.run_until_complete(delete())
-        else:
-            self.assertEqual(self.expected_result, self.returned_result)
+        self.assertEqual(self.expected_result, self.returned_result)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_query_map(self, m):
