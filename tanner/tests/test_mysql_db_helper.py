@@ -66,6 +66,31 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.assertEqual(self.expected_result, self.returned_result)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_setup_db_from_config(self, m):
+        config = {
+            "name": "test_db",
+            "tables": [
+                {
+                    "schema": "CREATE TABLE TEST (ID INTEGER PRIMARY KEY, USERNAME TEXT)",
+                    "table_name": "TEST",
+                    "data_tokens": "I,L"
+                }
+            ]
+        }
+
+        def mock_read_config():
+            return config
+
+        self.handler.read_config = mock_read_config
+        self.handler.insert_dummy_data = AsyncMock()
+
+        async def test():
+            await self.handler.setup_db_from_config()
+
+        self.loop.run_until_complete(test())
+        assert self.handler.insert_dummy_data.called
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_query_map(self, m):
 
         self.expected_result_creds = {'COMMON': [{'name': 'NUM', 'type': 'INTEGER'}],
