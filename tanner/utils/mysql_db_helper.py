@@ -72,12 +72,10 @@ class MySQLDBHelper(BaseDBHelper):
             restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
             dump_db_cmd = dump_db_cmd.format(host=TannerConfig.get('SQLI', 'host'),
                                              user=TannerConfig.get('SQLI', 'user'),
-                                             password=TannerConfig.get('SQLI', 'password'),
                                              db_name=user_db
                                              )
             restore_db_cmd = restore_db_cmd.format(host=TannerConfig.get('SQLI', 'host'),
                                                    user=TannerConfig.get('SQLI', 'user'),
-                                                   password=TannerConfig.get('SQLI', 'password'),
                                                    db_name=attacker_db
                                                    )
             try:

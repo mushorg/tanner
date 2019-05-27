@@ -60,7 +60,7 @@ class SQLITEDBHelper(BaseDBHelper):
         cursor.executemany("INSERT INTO " + table_name + " VALUES(" +
                            inserted_string_patt + ")", inserted_data)
 
-    def create_query_map(self, working_dir, db_name):
+    def create_query_map(self, working_dir, db_name, ):
         query_map = {}
         tables = []
 
