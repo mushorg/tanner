@@ -32,8 +32,8 @@ class Api:
                                       'cmd_exec': 0}
 
         for sess in sessions:
-            result['total_duration'] += sessions[sess]['end_time'] - sessions[sess]['start_time']
-            for attack in sessions[sess]['attack_types']:
+            result['total_duration'] += sess['end_time'] - sess['start_time']
+            for attack in sess['attack_types']:
                 if attack in result['attack_frequency']:
                     result['attack_frequency'][attack] += 1
 
@@ -65,7 +65,7 @@ class Api:
             if sessions == 'Invalid SNARE UUID':
                 continue
             for sess in sessions:
-                if sessions[sess]['sess_uuid'] == sess_uuid:
+                if sess['sess_uuid'] == sess_uuid:
                     return sess
 
     async def return_sessions(self, filters):
