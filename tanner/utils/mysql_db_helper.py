@@ -68,8 +68,8 @@ class MySQLDBHelper(BaseDBHelper):
             await cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
             # copy user db to attacker db
-            dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
-            restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
+            dump_db_cmd = 'mysqldump -h {host} -u {user} {db_name}'
+            restore_db_cmd = 'mysql -h {host} -u {user} {db_name}'
             dump_db_cmd = dump_db_cmd.format(host=TannerConfig.get('SQLI', 'host'),
                                              user=TannerConfig.get('SQLI', 'user'),
                                              db_name=user_db
