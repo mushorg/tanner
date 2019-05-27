@@ -62,45 +62,83 @@ class TestMySQLi(unittest.TestCase):
         self.handler.helper.create_query_map.assert_called_with(self.db_name)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_setup_db_not_exists(self, m):
+        self.expected_result = {'comments': [{'name': 'comment_id', 'type': 'INTEGER'}, ],
+                                'users': [{'name': 'id', 'type': 'INTEGER'}, ]}
+
+        self.handler.helper.create_query_map = AsyncMock(
+            return_value={'comments': [{'name': 'comment_id', 'type': 'INTEGER'}, ],
+                          'users': [{'name': 'id', 'type': 'INTEGER'}, ]})
+        self.handler.helper.setup_db_from_config = AsyncMock()
+
+        async def test():
+            await self.handler.helper.delete_db(self.db_name)
+            self.returned_result = await self.handler.setup_db()
+
+        self.loop.run_until_complete(test())
+        self.handler.helper.setup_db_from_config.assert_called_with(self.db_name)
+        self.handler.helper.create_query_map.assert_called_with(self.db_name)
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_attacker_db(self, m):
         session = mock.Mock()
         session.sess_uuid.hex = 'd877339ec415484987b279469167af3d'
         attacker_db = 'attacker_' + session.sess_uuid.hex
         self.handler.helper.copy_db = AsyncMock(return_value=attacker_db)
+        self.expected_result = 'attacker_d877339ec415484987b279469167af3d'
 
         async def test():
-            self.attacker_db = await self.handler.create_attacker_db(session)
-
-        self.loop.run_until_complete(test())
-        self.handler.helper.copy_db.assert_called_with(self.db_name, attacker_db)
-
-    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
-    def test_insert_dummy_data(self, m):
-
-        def mock_generate_dummy_data(data_tokens):
-            return [(1, 'test1'), (2, 'test2')], ['I', 'L']
-
-        self.handler.helper.generate_dummy_data = mock_generate_dummy_data
-        self.expected_result = ((0, 'test0'), (1, 'test1'), (2, 'test2'))
-
-        async def test():
-
-            await self.handler.helper.insert_dummy_data('test', 'I,L', self.cursor)
-            await self.cursor.execute('SELECT * FROM test;')
-            self.returned_result = await self.cursor.fetchall()
-            await self.cursor.close()
-            self.conn.close()
+            self.returned_result = await self.handler.create_attacker_db(session)
 
         self.loop.run_until_complete(test())
         self.assertEqual(self.returned_result, self.expected_result)
+        session.associate_db.assert_called_with(attacker_db)
+        self.handler.helper.copy_db.assert_called_with(self.db_name, attacker_db)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_execute_query(self, m):
-        query = 'SELECT * FROM test;'
-        self.expected_result = [[0, 'test0']]
+
+        self.expected_result_creds = [[0, 'test@domain.com', 'test_pass']]
+        self.expected_result_test = [[0, 'test_name']]
+
+        result = []
+        self.query = [
+            ['TEST_DB', "CREATE TABLE TEST (ID INTEGER PRIMARY KEY, USERNAME TEXT)",
+             'INSERT INTO TEST VALUES(0, "test_name")'],
+            ['CREDS_DB', "CREATE TABLE CREDS (ID INTEGER PRIMARY KEY, EMAIL VARCHAR(15), PASSWORD VARCHAR(15))",
+             'INSERT INTO CREDS VALUES(0, "test@domain.com", "test_pass")']
+        ]
+        test_query = [['TEST_DB', 'SELECT * FROM TEST'], ['CREDS_DB', 'SELECT * FROM CREDS']]
+
+        async def setup(data):
+            await self.cursor.execute('CREATE DATABASE {db_name}'.format(db_name=data[0]))
+            await self.cursor.execute('USE {db_name}'.format(db_name=data[0]))
+            await self.cursor.execute(data[1])
+            await self.cursor.execute(data[2])
+            await self.conn.commit()
+
+        for data in self.query:
+            self.loop.run_until_complete(setup(data))
+
+        async def test(data):
+            self.returned_result = await self.handler.execute_query(data[1], data[0])
+            result.append(self.returned_result)
+            await self.handler.helper.delete_db(data[0])
+
+        for query in test_query:
+            self.loop.run_until_complete(test(query))
+
+        self.assertEqual(self.expected_result_test, result[0])
+        self.assertEqual(self.expected_result_creds, result[1])
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_execute_query_error(self, m):
+        self.cursor.fetchall = mock.Mock(side_effect=Exception)
+        query = ''
+        self.expected_result = "(1065, 'Query was empty')"
 
         async def test():
             self.returned_result = await self.handler.execute_query(query, self.db_name)
 
         self.loop.run_until_complete(test())
-        self.assertEqual(self.expected_result, self.returned_result)
+        self.assertEqual(self.returned_result, self.expected_result)
