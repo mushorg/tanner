@@ -18,7 +18,7 @@ class MySQLDBHelper(BaseDBHelper):
                                       )
         return conn
 
-    async def check_db_exists(self, db_name):
+    async def check_db_exists(self, db_name, ):
         conn = await self.connect_to_db()
         cursor = await conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
@@ -68,14 +68,16 @@ class MySQLDBHelper(BaseDBHelper):
             await cursor.execute('CREATE DATABASE {db_name}'.format(db_name=attacker_db))
             conn.close()
             # copy user db to attacker db
-            dump_db_cmd = 'mysqldump -h {host} -u {user} {db_name}'
-            restore_db_cmd = 'mysql -h {host} -u {user} {db_name}'
+            dump_db_cmd = 'mysqldump -h {host} -u {user} -p{password} {db_name}'
+            restore_db_cmd = 'mysql -h {host} -u {user} -p{password} {db_name}'
             dump_db_cmd = dump_db_cmd.format(host=TannerConfig.get('SQLI', 'host'),
                                              user=TannerConfig.get('SQLI', 'user'),
+                                             password=TannerConfig.get('SQLI', 'password'),
                                              db_name=user_db
                                              )
             restore_db_cmd = restore_db_cmd.format(host=TannerConfig.get('SQLI', 'host'),
                                                    user=TannerConfig.get('SQLI', 'user'),
+                                                   password=TannerConfig.get('SQLI', 'password'),
                                                    db_name=attacker_db
                                                    )
             try:

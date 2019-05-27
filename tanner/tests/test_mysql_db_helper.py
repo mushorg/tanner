@@ -7,12 +7,9 @@ from tanner.utils.mysql_db_helper import MySQLDBHelper
 
 
 def mock_config(section, value):
-    if section == 'SQLI' and value == 'host':
-        return '127.0.0.1'
-    if section == 'SQLI' and value == 'user':
-        return 'root'
-    if section == 'SQLI' and value == 'password':
-        return ''
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': 'user_pass'}
+
+    return config[value]
 
 
 class TestMySQLDBHelper(unittest.TestCase):
@@ -48,11 +45,14 @@ class TestMySQLDBHelper(unittest.TestCase):
     def test_check_db_exists(self, m):
         self.expected_result = 1
 
-        async def test():
+        async def setup():
             await self.cursor.execute('CREATE DATABASE test_db')
             await self.conn.commit()
+
+        async def test():
             self.returned_result = await self.handler.check_db_exists(self.db_name)
 
+        self.loop.run_until_complete(setup())
         self.loop.run_until_complete(test())
         self.assertEqual(self.expected_result, self.returned_result)
 
@@ -103,6 +103,33 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.assertEqual(self.result, self.expected_result)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
+    def test_insert_dummy_data(self, m):
+
+        def mock_generate_dummy_data(data_tokens):
+            return [(1, 'test1'), (2, 'test2')], ['I', 'L']
+
+        self.handler.generate_dummy_data = mock_generate_dummy_data
+        self.expected_result = ((0, 'test0'), (1, 'test1'), (2, 'test2'))
+
+        async def setup():
+            await self.cursor.execute('CREATE DATABASE test_db')
+            await self.cursor.execute('USE {db_name}'.format(db_name='test_db'))
+            await self.cursor.execute('CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, username TEXT)')
+            await self.cursor.execute('INSERT INTO test VALUES(0, "test0")')
+            await self.conn.commit()
+
+        async def test():
+            await self.handler.insert_dummy_data('test', 'I,L', self.cursor)
+            await self.cursor.execute('SELECT * FROM test;')
+            self.returned_result = await self.cursor.fetchall()
+            await self.cursor.close()
+            self.conn.close()
+
+        self.loop.run_until_complete(setup())
+        self.loop.run_until_complete(test())
+        self.assertEqual(self.returned_result, self.expected_result)
+
+    @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_create_query_map(self, m):
 
         self.expected_result_creds = {'COMMON': [{'name': 'NUM', 'type': 'INTEGER'}],
@@ -119,16 +146,19 @@ class TestMySQLDBHelper(unittest.TestCase):
              'CREATE TABLE COMMON (NUM INTEGER )']
         ]
 
-        async def test(data):
+        async def setup(data):
             await self.cursor.execute('CREATE DATABASE {db_name}'.format(db_name=data[0]))
             await self.cursor.execute('USE {db_name}'.format(db_name=data[0]))
             await self.cursor.execute(data[1])
             await self.cursor.execute(data[2])
+
+        async def test(data):
             result = await self.handler.create_query_map(data[0])
             self.query_map.append(result)
             await self.handler.delete_db(data[0])
 
         for data in self.query:
+            self.loop.run_until_complete(setup(data))
             self.loop.run_until_complete(test(data))
 
         self.assertEqual(self.query_map[0], self.expected_result_test)

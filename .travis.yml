@@ -5,6 +5,8 @@ services:
   - redis-server
 before_install:
   - docker pull busybox:latest
+before_script:
+  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('user_pass') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 language: python
 python:
   - "3.6"
