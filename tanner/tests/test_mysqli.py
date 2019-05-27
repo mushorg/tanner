@@ -4,16 +4,11 @@ from unittest import mock
 from tanner.utils.asyncmock import AsyncMock
 from tanner.emulators.mysqli import MySQLIEmulator
 
-config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
-
 
 def mock_config(section, value):
-    if section == 'SQLI' and value == 'host':
-        return config['host']
-    if section == 'SQLI' and value == 'user':
-        return config['user']
-    if section == 'SQLI' and value == 'password':
-        return config['password']
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
+
+    return config[value]
 
 
 class TestMySQLi(unittest.TestCase):
