@@ -4,14 +4,16 @@ from unittest import mock
 from tanner.utils.asyncmock import AsyncMock
 from tanner.emulators.mysqli import MySQLIEmulator
 
+config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
+
 
 def mock_config(section, value):
     if section == 'SQLI' and value == 'host':
-        return '127.0.0.1'
+        return config['host']
     if section == 'SQLI' and value == 'user':
-        return 'root'
+        return config['user']
     if section == 'SQLI' and value == 'password':
-        return ''
+        return config['password']
 
 
 class TestMySQLi(unittest.TestCase):
@@ -55,11 +57,14 @@ class TestMySQLi(unittest.TestCase):
             return_value={'comments': [{'name': 'comment_id', 'type': 'INTEGER'}, ],
                           'users': [{'name': 'id', 'type': 'INTEGER'}, ]})
 
+        self.handler.helper = AsyncMock()
+
         async def test():
             self.returned_result = await self.handler.setup_db()
 
         self.loop.run_until_complete(test())
         self.handler.helper.create_query_map.assert_called_with(self.db_name)
+        assert not self.handler.helper.setup_db_from_config.called
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_setup_db_not_exists(self, m):
