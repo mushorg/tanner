@@ -1,6 +1,7 @@
 sudo: required
 services:
   - docker
+  - redis-server
 before_install:
   - docker pull busybox:latest
 language: python
