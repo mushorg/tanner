@@ -31,10 +31,13 @@ class TestApi(unittest.TestCase):
         self.expected_content = ['9a631aee-2b52-4108-9831-b495ac8afa80']
         self.key = b'snare_ids'
 
-        async def test():
+        async def setup():
             await self.redis_client.sadd(self.key, self.snare_uuid.encode())
+
+        async def test():
             self.returned_content = await self.handler.return_snares()
 
+        self.loop.run_until_complete(setup())
         self.loop.run_until_complete(test())
         self.assertEqual(self.returned_content, self.expected_content)
 
@@ -83,10 +86,13 @@ class TestApi(unittest.TestCase):
 
         self.expected_content = [{'attack_types': ['rfi']}, {'end_time': 2.0, 'start_time': 0.0}]
 
-        async def test():
+        async def setup():
             await self.redis_client.zadd(self.key, *self.pairs)
+
+        async def test():
             self.returned_content = await self.handler.return_snare_info(self.key)
 
+        self.loop.run_until_complete(setup())
         self.loop.run_until_complete(test())
         self.assertEqual(self.expected_content, self.returned_content)
 
