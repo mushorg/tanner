@@ -22,7 +22,7 @@ class MySQLDBHelper(BaseDBHelper):
         return conn
 
     async def check_db_exists(self, db_name, ):
-        
+
         # Checks if DB exists or not, Returns 0 if no such database exists else 1
 
         conn = await self.connect_to_db()
