@@ -9,7 +9,7 @@ from tanner.utils import patterns
 class PHPCodeInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
-        self.logger = logging.getLogger('tanner.php_code_injecton')
+        self.logger = logging.getLogger('tanner.php_code_injection')
 
     async def get_injection_result(self, code):
         code_injection_result = None
