@@ -1,7 +1,9 @@
 import unittest
 import asyncio
 import os
+import subprocess
 from unittest import mock
+from tanner.config import TannerConfig
 from tanner.utils.asyncmock import AsyncMock
 from tanner.utils.mysql_db_helper import MySQLDBHelper
 
@@ -94,13 +96,47 @@ class TestMySQLDBHelper(unittest.TestCase):
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_copy_db(self, m):
         self.expected_result = 1
+        self.expected_outs = b''
 
+        dump1 = 'mysqldump --skip-comments --skip-extended-insert -h {host} -u {user} -p{password} ' \
+                'test_db>/tmp/db/file1.sql'
+        dump1 = dump1.format(host=TannerConfig.get('SQLI', 'host'),
+                             user=TannerConfig.get('SQLI', 'user'),
+                             password=TannerConfig.get('SQLI', 'password'))
+        dump2 = "mysqldump --skip-comments --skip-extended-insert -h {host} -u {user} -p{password} " \
+                "attacker_db>/tmp/db/file2.sql"
+        dump2 = dump2.format(host=TannerConfig.get('SQLI', 'host'),
+                             user=TannerConfig.get('SQLI', 'user'),
+                             password=TannerConfig.get('SQLI', 'password'))
+
+        diff_db = "diff /tmp/db/file1.sql /tmp/db/file2.sql"
+
+        async def setup():
+            await self.cursor.execute('CREATE DATABASE test_db')
+
+        # Checking if new DB exists
         async def test():
             self.returned_result = await self.handler.copy_db(self.db_name, "attacker_db")
             self.result = await self.handler.check_db_exists("attacker_db")
 
+        self.loop.run_until_complete(setup())
         self.loop.run_until_complete(test())
+
+        # Checking if new DB is exactly same as original DB
+        try:
+            dump_db_1 = subprocess.Popen(dump1, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            dump_db_2 = subprocess.Popen(dump2, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            diff_db = subprocess.Popen(diff_db, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+            self.outs, errs = diff_db.communicate(timeout=15)
+            dump_db_1.wait()
+            dump_db_2.wait()
+            diff_db.wait()
+
+        except subprocess.CalledProcessError:
+            pass
+
         self.assertEqual(self.result, self.expected_result)
+        self.assertEqual(self.outs, self.expected_outs)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_insert_dummy_data(self, m):
