@@ -18,7 +18,6 @@ class TestApi(unittest.TestCase):
         self.returned_content = None
         self.expected_content = None
         self.conn = None
-        self.members = None
         self.key = None
 
         async def connect():
@@ -28,11 +27,12 @@ class TestApi(unittest.TestCase):
         self.handler = Api(self.redis_client)
 
     def test_return_snares(self):
-        self.expected_content = ['9a631aee-2b52-4108-9831-b495ac8afa80']
+        self.expected_content = ['9a631aee-2b52-4108-9831-b495ac8afa80', '8b901tyg-2b65-3428-9765-b431vhm4fu76']
         self.key = b'snare_ids'
 
         async def setup():
             await self.redis_client.sadd(self.key, self.snare_uuid.encode())
+            await self.redis_client.sadd(self.key, '8b901tyg-2b65-3428-9765-b431vhm4fu76'.encode())
 
         async def test():
             self.returned_content = await self.handler.return_snares()
@@ -79,21 +79,31 @@ class TestApi(unittest.TestCase):
         self.assertEqual(self.returned_content, self.expected_content)
 
     def test_return_snare_info(self):
-        self.members = ['{"end_time": 2.00, "start_time": 0.00 }', '{"attack_types": ["rfi"]}']
-        self.key = self.snare_uuid.encode()
+        self.member1 = ['{"end_time": 2.00, "start_time": 0.00 }', '{"attack_types": ["rfi"]}']
+        self.keys = [self.snare_uuid.encode(), '4b901tyg-2b65-3428-9765-b431vhm4fu76'.encode()]
         self.scores = [0, 2]
-        self.pairs = list(itertools.chain(*zip(self.scores, self.members)))
+        self.pair1 = list(itertools.chain(*zip(self.scores, self.member1)))
 
-        self.expected_content = [{'attack_types': ['rfi']}, {'end_time': 2.0, 'start_time': 0.0}]
+        self.member2 = ['{"user_agent": "Mozilla", "peer_ip": "127.0.0.1"}']
+        self.pair2 = list(itertools.chain(*zip(self.scores, self.member2)))
+        self.returned_content = []
+
+        self.expected_content = [[{'attack_types': ['rfi']}, {'end_time': 2.0, 'start_time': 0.0}],
+                                 [{'user_agent': 'Mozilla', "peer_ip": "127.0.0.1"}]]
 
         async def setup():
-            await self.redis_client.zadd(self.key, *self.pairs)
-
-        async def test():
-            self.returned_content = await self.handler.return_snare_info(self.key)
+            await self.redis_client.zadd(self.snare_uuid.encode(), *self.pair1)
+            await self.redis_client.zadd('4b901tyg-2b65-3428-9765-b431vhm4fu76'.encode(), *self.pair2)
 
         self.loop.run_until_complete(setup())
-        self.loop.run_until_complete(test())
+
+        async def test(id):
+            result = await self.handler.return_snare_info(id, count=2)
+            self.returned_content.append(result)
+
+        for key in self.keys:
+            self.loop.run_until_complete(test(key))
+
         self.assertEqual(self.expected_content, self.returned_content)
 
     def test_return_snare_info_error(self):
