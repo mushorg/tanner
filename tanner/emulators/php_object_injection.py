@@ -22,8 +22,6 @@ class PHPObjectInjection:
                    "$var = system($this->insert, $ret); " \
                    "print $var[0]; }" \
                    "} " \
-                   "$o = new ObjectInjection(); " \
-                   "$o->insert = \"id\"; " \
                    "$cmd = unserialize(\"%s\");" \
                    "?>" % code
 
