@@ -39,7 +39,9 @@ class TestApi(unittest.TestCase):
 
         self.loop.run_until_complete(setup())
         self.loop.run_until_complete(test())
-        self.assertEqual(self.returned_content, self.expected_content)
+
+        for id in self.returned_content:
+            assert id in self.expected_content
 
     def test_return_snares_error(self):
         self.redis_client.smembers = mock.Mock(side_effect=aioredis.ProtocolError)
