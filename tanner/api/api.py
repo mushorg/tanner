@@ -55,7 +55,6 @@ class Api:
         return query_res
 
     async def return_session_info(self, sess_uuid, snare_uuid=None):
-        query_res = []
         if snare_uuid:
             snare_uuids = [snare_uuid]
         else:
@@ -70,7 +69,6 @@ class Api:
                     return sess
 
     async def return_sessions(self, filters):
-        query_res = []
         snare_uuids = await self.return_snares()
 
         matching_sessions = []
@@ -83,7 +81,7 @@ class Api:
                 match_count = 0
                 for filter_name, filter_value in filters.items():
                     try:
-                        if (self.apply_filter(filter_name, filter_value, sess)):
+                        if self.apply_filter(filter_name, filter_value, sess):
                             match_count += 1
                     except KeyError:
                         return 'Invalid filter : %s' % filter_name
