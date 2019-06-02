@@ -1,8 +1,7 @@
-import aiohttp
 import asyncio
 import logging
 
-from tanner import config
+from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
 
 
@@ -10,32 +9,25 @@ class PHPObjectInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.php_object_injection')
+        self.handler = PHPSandboxHelper(self._loop)
 
     async def get_injection_result(self, code):
-        object_injection_result = None
 
         vul_code = "<?php " \
-                   "class ObjectInjection {" \
+                   "class ObjectInjection { " \
                    "public $insert; " \
-                   "public function __destruct() " \
-                   "{ " \
-                   "$var = system($this->insert, $ret); " \
-                   "print $var[0]; }" \
-                   "} " \
-                   "$cmd = unserialize(\"%s\");" \
+                   "public function __destruct() { " \
+                   "$var = system($this->insert, $ret);" \
+                   "print $var[0];" \
+                   "$this->date = date('d-m-y');" \
+                   "$this->filename = '/tmp/logs/' . $this->date;" \
+                   "file_put_contents($this->filename, $var[0], FILE_APPEND);" \
+                   "}} " \
+                   "$cmd = unserialize(\'%s\');" \
                    "?>" % code
 
-        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
-                                                      port=config.TannerConfig.get('PHPOX', 'port')
-                                                      )
-        try:
-            async with aiohttp.ClientSession(loop=self._loop) as session:
-                async with session.post(phpox_address, data=vul_code) as resp:
-                    object_injection_result = await resp.json()
-        except aiohttp.ClientError as client_error:
-            self.logger.error('Error during connection to php sandbox %s', client_error)
-        else:
-            await session.close()
+        object_injection_result = await self.handler.injection_result(vul_code)
+
         return object_injection_result
 
     def scan(self, value):
