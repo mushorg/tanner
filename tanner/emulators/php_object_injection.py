@@ -9,7 +9,7 @@ class PHPObjectInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.php_object_injection')
-        self.handler = PHPSandboxHelper(self._loop)
+        self.helper = PHPSandboxHelper(self._loop)
 
     async def get_injection_result(self, code):
 
@@ -26,7 +26,7 @@ class PHPObjectInjection:
                    "$cmd = unserialize(\'%s\');" \
                    "?>" % code
 
-        object_injection_result = await self.handler.injection_result(vul_code)
+        object_injection_result = await self.helper.get_result(vul_code)
 
         return object_injection_result
 
