@@ -84,13 +84,18 @@ class TestMySQLDBHelper(unittest.TestCase):
         def mock_read_config():
             return config
 
+        self.expected_result = (('ID', 'int(11)', 'NO', 'PRI', None, ''), ('USERNAME', 'text', 'YES', '', None, ''))
         self.handler.read_config = mock_read_config
         self.handler.insert_dummy_data = AsyncMock()
 
         async def test():
             await self.handler.setup_db_from_config()
+            await self.cursor.execute('USE test_db')
+            await self.cursor.execute('DESCRIBE TEST')
+            self.result = await self.cursor.fetchall()
 
         self.loop.run_until_complete(test())
+        assert self.result == self.expected_result
         assert self.handler.insert_dummy_data.called
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
@@ -128,8 +133,11 @@ class TestMySQLDBHelper(unittest.TestCase):
             dump_db_2 = subprocess.Popen(dump2, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             diff_db = subprocess.Popen(diff_db, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             self.outs, errs = diff_db.communicate(timeout=15)
+            dump_db_1.stdout.close()
             dump_db_1.wait()
+            dump_db_2.stdout.close()
             dump_db_2.wait()
+            diff_db.stdout.close()
             diff_db.wait()
 
         except subprocess.CalledProcessError:
