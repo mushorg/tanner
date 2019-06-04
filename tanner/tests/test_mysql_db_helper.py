@@ -89,11 +89,10 @@ class TestMySQLDBHelper(unittest.TestCase):
         def mock_read_config():
             return config
 
-        self.expected_result_test = (('ID', 'int(11)', 'NO', 'PRI', None, ''),
-                                     ('USERNAME', 'text', 'YES', '', None, ''))
-        self.expected_result_creds = (('ID', 'int(11)', 'NO', 'PRI', None, ''),
-                                      ('EMAIL', 'varchar(15)', 'YES', '', None, ''),
-                                      ('PASSWORD', 'varchar(15)', 'YES', '', None, ''))
+        self.expected_result = [(('ID', 'int(11)', 'NO', 'PRI', None, ''), ('USERNAME', 'text', 'YES', '', None, '')),
+                                (('ID', 'int(11)', 'NO', 'PRI', None, ''),
+                                 ('EMAIL', 'varchar(15)', 'YES', '', None, ''),
+                                 ('PASSWORD', 'varchar(15)', 'YES', '', None, ''))]
 
         self.result = []
         self.handler.read_config = mock_read_config
@@ -109,8 +108,7 @@ class TestMySQLDBHelper(unittest.TestCase):
                 self.result.append(result)
 
         self.loop.run_until_complete(test())
-        self.assertEqual(self.result[0], self.expected_result_test)
-        self.assertEqual(self.result[1], self.expected_result_creds)
+        self.assertEqual(self.result, self.expected_result)
         assert self.handler.insert_dummy_data.called
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
