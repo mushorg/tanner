@@ -11,6 +11,7 @@ import aiohttp
 import yarl
 
 from tanner import config
+from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
 
 
@@ -19,6 +20,7 @@ class RfiEmulator:
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
+        self.helper = PHPSandboxHelper(self._loop)
 
     async def download_file(self, path):
         file_name = None
@@ -77,18 +79,9 @@ class RfiEmulator:
             return rfi_result
         with open(os.path.join(self.script_dir, file_name), 'br') as script:
             script_data = script.read()
-        phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
-                                                      port=config.TannerConfig.get('PHPOX', 'port')
-                                                      )
-        try:
-            async with aiohttp.ClientSession(loop=self._loop) as session:
-                async with session.post(phpox_address, data=script_data) as resp:
-                    rfi_result = await resp.json(content_type=None)
-        except aiohttp.ClientError as client_error:
-            self.logger.exception('Error during connection to php sandbox %s', client_error)
-        else:
-            await resp.release()
-            await session.close()
+
+        rfi_result = await self.helper.get_result(script_data)
+
         return rfi_result
 
     def scan(self, value):
