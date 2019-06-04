@@ -77,6 +77,11 @@ class TestMySQLDBHelper(unittest.TestCase):
                     "schema": "CREATE TABLE TEST (ID INTEGER PRIMARY KEY, USERNAME TEXT)",
                     "table_name": "TEST",
                     "data_tokens": "I,L"
+                },
+                {
+                    "schema": "CREATE TABLE CREDS (ID INTEGER PRIMARY KEY, EMAIL VARCHAR(15), PASSWORD VARCHAR(15))",
+                    "table_name": "CREDS",
+                    "data_tokens": "I,E,P"
                 }
             ]
         }
@@ -84,18 +89,27 @@ class TestMySQLDBHelper(unittest.TestCase):
         def mock_read_config():
             return config
 
-        self.expected_result = (('ID', 'int(11)', 'NO', 'PRI', None, ''), ('USERNAME', 'text', 'YES', '', None, ''))
+        self.expected_result_test = (('ID', 'int(11)', 'NO', 'PRI', None, ''), ('USERNAME', 'text', 'YES', '', None, ''))
+        self.expected_result_creds = (('ID', 'int(11)', 'NO', 'PRI', None, ''),
+                                      ('EMAIL', 'varchar(15)', 'YES', '', None, ''),
+                                      ('PASSWORD', 'varchar(15)', 'YES', '', None, ''))
+
+        self.result = []
         self.handler.read_config = mock_read_config
         self.handler.insert_dummy_data = AsyncMock()
 
         async def test():
             await self.handler.setup_db_from_config()
-            await self.cursor.execute('USE test_db')
-            await self.cursor.execute('DESCRIBE TEST')
-            self.result = await self.cursor.fetchall()
+
+            for table in config["tables"]:
+                await self.cursor.execute('USE test_db')
+                await self.cursor.execute('DESCRIBE {table_name}'.format(table_name=table["table_name"]))
+                result = await self.cursor.fetchall()
+                self.result.append(result)
 
         self.loop.run_until_complete(test())
-        self.assertEqual(self.result, self.expected_result)
+        self.assertEqual(self.result[0], self.expected_result_test)
+        self.assertEqual(self.result[1], self.expected_result_creds)
         assert self.handler.insert_dummy_data.called
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
