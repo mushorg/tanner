@@ -89,7 +89,8 @@ class TestMySQLDBHelper(unittest.TestCase):
         def mock_read_config():
             return config
 
-        self.expected_result_test = (('ID', 'int(11)', 'NO', 'PRI', None, ''), ('USERNAME', 'text', 'YES', '', None, ''))
+        self.expected_result_test = (('ID', 'int(11)', 'NO', 'PRI', None, ''),
+                                     ('USERNAME', 'text', 'YES', '', None, ''))
         self.expected_result_creds = (('ID', 'int(11)', 'NO', 'PRI', None, ''),
                                       ('EMAIL', 'varchar(15)', 'YES', '', None, ''),
                                       ('PASSWORD', 'varchar(15)', 'YES', '', None, ''))
