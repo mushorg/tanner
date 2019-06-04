@@ -109,7 +109,7 @@ class TestMySQLDBHelper(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.assertEqual(self.result, self.expected_result)
-        assert self.handler.insert_dummy_data.called
+        self.handler.insert_dummy_data.assert_called_with('CREDS', 'I,E,P', mock.ANY)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_copy_db(self, m):
