@@ -95,7 +95,7 @@ class TannerWebServer:
         session = await self.api.return_session_info(sess_uuid)
         if session:
             return aiohttp_jinja2.render_template('session.html', request, {'session': session})
-        return aiohttp_jinja2.render_template('404.html', request, {})
+        return web.Response(text='')
 
     async def on_shutdown(self, app):
         self.redis_client.close()
