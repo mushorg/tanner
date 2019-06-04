@@ -95,7 +95,7 @@ class TestMySQLDBHelper(unittest.TestCase):
             self.result = await self.cursor.fetchall()
 
         self.loop.run_until_complete(test())
-        assert self.result == self.expected_result
+        self.assertEqual(self.result, self.expected_result)
         assert self.handler.insert_dummy_data.called
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
@@ -103,12 +103,12 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.expected_result = 1
         self.expected_outs = b''
 
-        dump1 = 'mysqldump --skip-comments --skip-extended-insert -h {host} -u {user} -p{password} ' \
+        dump1 = 'mysqldump --compact --skip-extended-insert -h {host} -u {user} -p{password} ' \
                 'test_db>/tmp/db/file1.sql'
         dump1 = dump1.format(host=TannerConfig.get('SQLI', 'host'),
                              user=TannerConfig.get('SQLI', 'user'),
                              password=TannerConfig.get('SQLI', 'password'))
-        dump2 = "mysqldump --skip-comments --skip-extended-insert -h {host} -u {user} -p{password} " \
+        dump2 = "mysqldump --compact --skip-extended-insert -h {host} -u {user} -p{password} " \
                 "attacker_db>/tmp/db/file2.sql"
         dump2 = dump2.format(host=TannerConfig.get('SQLI', 'host'),
                              user=TannerConfig.get('SQLI', 'user'),
@@ -133,11 +133,8 @@ class TestMySQLDBHelper(unittest.TestCase):
             dump_db_2 = subprocess.Popen(dump2, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             diff_db = subprocess.Popen(diff_db, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
             self.outs, errs = diff_db.communicate(timeout=15)
-            dump_db_1.stdout.close()
             dump_db_1.wait()
-            dump_db_2.stdout.close()
             dump_db_2.wait()
-            diff_db.stdout.close()
             diff_db.wait()
 
         except subprocess.CalledProcessError:
