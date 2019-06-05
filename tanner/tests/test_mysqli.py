@@ -6,7 +6,7 @@ from tanner.emulators.mysqli import MySQLIEmulator
 
 
 def mock_config(section, value):
-    config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': 'user_pass'}
 
     return config[value]
 
@@ -98,8 +98,7 @@ class TestMySQLi(unittest.TestCase):
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_execute_query(self, m):
 
-        self.expected_result_creds = [[0, 'test@domain.com', 'test_pass']]
-        self.expected_result_test = [[0, 'test_name']]
+        self.expected_result = [[[0, 'test_name']], [[0, 'test@domain.com', 'test_pass']]]
 
         result = []
         self.query = [
@@ -128,8 +127,7 @@ class TestMySQLi(unittest.TestCase):
         for query in test_query:
             self.loop.run_until_complete(test(query))
 
-        self.assertEqual(self.expected_result_test, result[0])
-        self.assertEqual(self.expected_result_creds, result[1])
+        self.assertEqual(self.expected_result, result)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_execute_query_error(self, m):
