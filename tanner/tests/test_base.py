@@ -118,6 +118,25 @@ class TestBase(unittest.TestCase):
         assert_detection = {'name': 'rfi', 'order': 2, 'payload': 'rfi_test_payload'}
         self.assertDictEqual(detection, assert_detection)
 
+    def test_handle_php_object_injection(self):
+        data = dict(path='/page.php?insert=\'O:15:"ObjectInjection":1:{s:6:"insert";s:2:"id";}\'',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        async def mock_php_object_injection_handle(path, session):
+            return 'php_object_injection_test_payload'
+
+        def mock_php_object_injection_scan(value):
+            return dict(name='php_object_injection', order=3)
+
+        self.handler.emulators['php_object_injection'] = mock.Mock()
+        self.handler.emulators['php_object_injection'].handle = mock_php_object_injection_handle
+        self.handler.emulators['php_object_injection'].scan = mock_php_object_injection_scan
+
+        detection = self.loop.run_until_complete(self.handler.handle_get(self.session, data))
+
+        assert_detection = {'name': 'php_object_injection', 'order': 3, 'payload': 'php_object_injection_test_payload'}
+        self.assertDictEqual(detection, assert_detection)
+
     def test_set_injectable_page(self):
         paths = [{'path': '/python.html', 'timestamp': 1465851064.2740946},
                  {'path': '/python.php/?foo=bar', 'timestamp': 1465851065.2740946},
