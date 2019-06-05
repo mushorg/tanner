@@ -98,6 +98,10 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.handler.read_config = mock_read_config
         self.handler.insert_dummy_data = AsyncMock()
 
+        calls = [
+            mock.call('TEST', 'I,L', mock.ANY), mock.call('CREDS', 'I,E,P', mock.ANY)
+        ]
+
         async def test():
             await self.handler.setup_db_from_config()
 
@@ -109,7 +113,7 @@ class TestMySQLDBHelper(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.assertEqual(self.result, self.expected_result)
-        self.handler.insert_dummy_data.assert_called_with('CREDS', 'I,E,P', mock.ANY)
+        self.handler.insert_dummy_data.assert_has_calls(calls, any_order=True)
 
     @mock.patch('tanner.config.TannerConfig.get', side_effect=mock_config)
     def test_copy_db(self, m):
