@@ -7,6 +7,9 @@ from tanner.utils.base_db_helper import BaseDBHelper
 
 
 class MySQLDBHelper(BaseDBHelper):
+
+    # Helper Utility of basic functions for mysqli emulator
+
     def __init__(self):
         super(MySQLDBHelper, self).__init__()
         self.logger = logging.getLogger('tanner.db_helper.MySQLDBHelper')
@@ -19,16 +22,21 @@ class MySQLDBHelper(BaseDBHelper):
         return conn
 
     async def check_db_exists(self, db_name, ):
+
+        # Checks if DB exists or not, Returns 0 if no such database exists else 1
+
         conn = await self.connect_to_db()
         cursor = await conn.cursor()
         check_DB_exists_query = 'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA '
         check_DB_exists_query += 'WHERE SCHEMA_NAME=\'{db_name}\''.format(db_name=db_name)
         await cursor.execute(check_DB_exists_query)
         result = await cursor.fetchall()
-        # return 0 if no such database exists else 1
         return len(result)
 
     async def setup_db_from_config(self, name=None):
+
+        # Helper function to setup DB from db_config.json and inserts dummy data in the created DB.
+
         config = self.read_config()
         if name is not None:
             db_name = name
@@ -91,6 +99,9 @@ class MySQLDBHelper(BaseDBHelper):
         return attacker_db
 
     async def insert_dummy_data(self, table_name, data_tokens, cursor):
+
+        # Inserts dummy data in the table based on input data tokens for ex: 'I,L'
+
         inserted_data, token_list = self.generate_dummy_data(data_tokens)
 
         inserted_string_patt = '%s'
@@ -103,6 +114,9 @@ class MySQLDBHelper(BaseDBHelper):
                                  inserted_string_patt + ")", inserted_data)
 
     async def create_query_map(self, db_name):
+
+        # Returns a query map (type `dict`) of the tables and its columns present in the database
+
         query_map = {}
         tables = []
         conn = await self.connect_to_db()
@@ -128,7 +142,7 @@ class MySQLDBHelper(BaseDBHelper):
                     await cursor.execute(query.format(table_name=table, db_name=db_name))
                     result = await cursor.fetchall()
                     for row in result:
-                        if (row[7] == 'int'):
+                        if row[7] == 'int':
                             columns.append(dict(name=row[3], type='INTEGER'))
                         else:
                             columns.append(dict(name=row[3], type='TEXT'))
