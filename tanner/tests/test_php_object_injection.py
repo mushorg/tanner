@@ -21,6 +21,13 @@ class TestPHPCodeInjection(unittest.TestCase):
         self.returned_result = self.handler.scan(payload)
         self.assertEqual(self.returned_result, self.expected_result)
 
+    def test_scan_negative(self):
+        payload = 'O:"ObjectInjection":1:{s:6:"insert";s:2:"id";}'
+
+        self.expected_result = None
+        self.returned_result = self.handler.scan(payload)
+        self.assertEqual(self.returned_result, self.expected_result)
+
     def test_handle_status_code(self):
         self.handler.get_injection_result = AsyncMock(return_value=None)
 
