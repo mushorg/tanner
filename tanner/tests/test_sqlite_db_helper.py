@@ -72,6 +72,12 @@ class TestSQLiteDBHelper(unittest.TestCase):
         self.expected_result = '/tmp/db/attacker_db'
         self.assertEqual(self.returned_result, self.expected_result)
 
+    def test_get_abs_path_2(self):
+        self.path = '../tmp/db/test_db'
+        self.returned_result = self.handler.get_abs_path(self.path, '/tmp/')
+        self.expected_result = '/tmp/db/test_db'
+        self.assertEqual(self.returned_result, self.expected_result)
+
     def test_copy_db(self):
         self.attacker_db = '/tmp/db/attacker_db'
 
