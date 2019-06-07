@@ -10,7 +10,7 @@ class SQLITEEmulator:
         self.working_dir = os.path.join(working_dir, 'db/')
         self.helper = sqlite_db_helper.SQLITEDBHelper()
 
-    async def setup_db(self, query_map):
+    async def setup_db(self):
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
         db = os.path.join(self.working_dir, self.db_name)

@@ -55,7 +55,7 @@ class SqliEmulator:
 
     async def handle(self, attack_params, session):
         if self.query_map is None:
-            self.query_map = await self.sqli_emulator.setup_db(self.query_map)
+            self.query_map = await self.sqli_emulator.setup_db()
         attacker_db = await self.sqli_emulator.create_attacker_db(session)
         result = await self.get_sqli_result(attack_params[0], attacker_db)
         return result
