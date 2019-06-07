@@ -51,8 +51,8 @@ class TestSQLiteDBHelper(unittest.TestCase):
             mock.call('CREDS', 'I,E,P', mock.ANY)
         ]
 
-        self.expected_result = [[('CREATE TABLE CREDS (ID INTEGER PRIMARY KEY, EMAIL VARCHAR(15), PASSWORD VARCHAR(15))'
-                                  ,), ('CREATE TABLE TEST (id INTEGER PRIMARY KEY, username TEXT)',)]]
+        self.expected_result = [[('CREATE TABLE CREDS (ID INTEGER PRIMARY KEY, EMAIL VARCHAR(15), PASSWORD '
+                                  'VARCHAR(15))',), ('CREATE TABLE TEST (id INTEGER PRIMARY KEY, username TEXT)',)]]
 
         async def test():
             await self.handler.setup_db_from_config('/tmp/', self.filename)
