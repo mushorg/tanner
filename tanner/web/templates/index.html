@@ -46,7 +46,9 @@
 			<div class="box">
 				<p>Tanner version - {{version}}</p>
 				<p>No. of snares connected - {{count}}</p>
-				<p>Latest session - <a href="/session/{{l_session}}">{{l_session}}</a></p>
+        {% if l_session is not none %}
+          <p>Latest session - <a href="/session/{{l_session}}">{{l_session}}</a></p>
+        {% endif %}
 			</div>
 			<div class="align">
 				<br>
