@@ -2,10 +2,11 @@ import configparser
 import os
 import unittest
 
+from unittest import mock
 from tanner import config
 
 
-class TestCongif(unittest.TestCase):
+class TestConfig(unittest.TestCase):
     def setUp(self):
         config.TannerConfig.config = None
         self.d = {
@@ -15,7 +16,7 @@ class TestCongif(unittest.TestCase):
             'WEB': {'host': '0.0.0.0', 'port': '9001'},
             'API': {'host': '0.0.0.0', 'port': '9002'},
             'PHPOX': {'host': '0.0.0.0', 'port': '8088'},
-            'REDIS': {'host': 'localhost', 'port': '1337', 'poolsize': '40', 'timeout': '5'},
+            'REDIS': {'host': 'localhost', 'port': '6379', 'poolsize': '80', 'timeout': '5'},
             'EMULATORS': {'root_dir': '/opt/tanner'},
             'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
             'SQLI': {'type': 'SQLITE', 'db_name': 'user_tanner_db', 'host': 'localhost', 'user': 'user_name',
@@ -41,7 +42,8 @@ class TestCongif(unittest.TestCase):
 
         self.invalid_config_path = '/random/random_name'
 
-    def test_set_config_when_file_exists(self):
+    @mock.patch('tanner.tests.test_config.config')
+    def test_set_config_when_file_exists(self, m):
         config.TannerConfig.set_config(self.valid_config_path)
         self.assertIsNotNone(config.TannerConfig.config)
 
