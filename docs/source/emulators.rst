@@ -92,8 +92,8 @@ PHP Object Injection Emulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It emulates `PHP object injection`_ vuln. PHP allows object serialization So, this type of vulnerability occurs when not
 properly sanitized input is passed to unserialize() PHP function. Exploiting this vulnerability involves Magic methods like
-``__destruct or __construct`` which are called automatically when an object is created or destroyed and methods like
-``__sleep or __wakeup`` are called when an object is serialized and unserialized. The input serialized object is
+``__construct and __destruct`` which are called automatically when an object is created or destroyed and methods like
+``__sleep and __wakeup`` are called when an object is serialized or unserialized. The input serialized object is
 detected with regex pattern.
 
 ::
@@ -102,6 +102,9 @@ detected with regex pattern.
 
 To mimic this functionality the user input is injected to a vulnerable custom class with magic methods and then it
 is passed to php sandbox to get the injection results.
+
+**Important Note:** You will need to expose the vulnerable code to the attacker using your own suitable method. The
+default vulnerable code is `here`_. But you can always add your own custom class if needed.
 
 CRLF Emulator
 ~~~~~~~~~~~~~
@@ -118,3 +121,4 @@ is injected as a header with parameter name as header name and param value as he
 .. _PHP object injection: https://www.owasp.org/index.php/PHP_Object_Injection
 .. _CRLF: https://www.owasp.org/index.php/CRLF_Injection
 .. _manual: https://github.com/client9/libinjection/wiki/doc-sqli-python
+.. _here: https://github.com/mushorg/tanner/blob/8ce13d1f7d4423ddaf0e7910781199be9b90ce40/tanner/emulators/php_object_injection.py#L16
