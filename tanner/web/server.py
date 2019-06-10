@@ -94,7 +94,9 @@ class TannerWebServer:
     async def handle_session_info(self, request):
         sess_uuid = request.match_info['sess_uuid']
         session = await self.api.return_session_info(sess_uuid)
-        return {'session': session}
+        return {
+            'session': session
+        }
 
     async def on_shutdown(self, app):
         self.redis_client.close()
