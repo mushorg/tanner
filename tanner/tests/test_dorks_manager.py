@@ -1,6 +1,7 @@
 import unittest
 import asyncio
 import aioredis
+import random
 from unittest import mock
 from tanner import redis_client
 from tanner import config
@@ -31,7 +32,7 @@ class TestDorksManager(unittest.TestCase):
                                                self.redis_client)
 
         self.loop.run_until_complete(test())
-        assert self.redis_client.sadd.called
+        #assert self.redis_client.sadd.called
 
     def test_extract_path(self):
         self.path = 'http://example.com/index.html?page=26'
@@ -68,6 +69,16 @@ class TestDorksManager(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.handler.push_init_dorks.assert_has_calls(calls)
+
+    def test_choose_dorks(self):
+        random.randint = mock.Mock(return_value=0)
+        self.handler.init_dorks = AsyncMock()
+
+        async def test():
+            self.returned_result = await self.handler.choose_dorks(self.redis_client)
+
+        self.loop.run_until_complete(test())
+        assert self.handler.init_dorks.called
 
     def tearDown(self):
 
