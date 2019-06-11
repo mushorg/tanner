@@ -32,7 +32,7 @@ class TestDorksManager(unittest.TestCase):
                                                self.redis_client)
 
         self.loop.run_until_complete(test())
-        assert self.redis_client.sadd.called
+        self.redis_client.sadd.assert_called()
 
     def test_extract_path(self):
         self.path = 'http://example.com/index.html?page=26'
