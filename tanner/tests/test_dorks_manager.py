@@ -25,14 +25,14 @@ class TestDorksManager(unittest.TestCase):
         self.expected_result = None
 
     def test_push_init_dorks(self):
-        self.redis_client.sadd = AsyncMock()
 
         async def test():
             await self.handler.push_init_dorks(config.TannerConfig.get('DATA', 'dorks'), self.handler.dorks_key,
                                                self.redis_client)
+            self.returned_result = await self.redis_client.smembers(self.handler.dorks_key)
 
         self.loop.run_until_complete(test())
-        self.redis_client.sadd.assert_called()
+        self.assertEqual(len(self.returned_result), 3562)
 
     def test_extract_path(self):
         self.path = 'http://example.com/index.html?page=26'
