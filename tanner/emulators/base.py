@@ -5,7 +5,8 @@ import yarl
 
 from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, \
+    xxe_injection
 from tanner.utils import patterns
 
 
@@ -23,13 +24,14 @@ class BaseHandler:
                 'php_code_injection'] else None,
             'php_object_injection': php_object_injection.PHPObjectInjection(loop) if self.emulator_enabled[
                 'php_object_injection'] else None,
-            'crlf': crlf.CRLFEmulator() if self.emulator_enabled['crlf'] else None
+            'crlf': crlf.CRLFEmulator() if self.emulator_enabled['crlf'] else None,
+            'xxe_injection': xxe_injection.XXEInjection(loop) if self.emulator_enabled['xxe_injection'] else None
         }
 
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'php_object_injection',
-                              'cmd_exec', 'crlf']
+                              'cmd_exec', 'crlf', 'xxe_injection']
         self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'php_object_injection',
-                               'cmd_exec', 'crlf']
+                               'cmd_exec', 'crlf', 'xxe_injection']
         self.cookie_emulators = ['sqli', 'php_object_injection']
 
     def extract_get_data(self, path):
