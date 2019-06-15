@@ -20,7 +20,7 @@ class XXEInjection:
                         $dom = new DOMDocument();
                         $dom->loadXML($xml, LIBXML_NOENT | LIBXML_DTDLOAD);
                         $creds = simplexml_import_dom($dom);
-                        
+
                         $user = $creds->user;
                         $pass = $creds->pass;
                         echo "You have logged in as $user";
