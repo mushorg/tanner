@@ -10,6 +10,11 @@ class PHPSandboxHelper:
         self._loop = loop if loop is not None else asyncio.get_event_loop()
 
     async def get_result(self, code):
+        """
+        Helper utility to get injection results from PHPOX
+        :param code: Payload from the attacker to be injected in vulnerable code
+        :return: Dict object containing file_md5 and stdout - contains injection results
+        """
         result = None
 
         phpox_address = 'http://{host}:{port}'.format(host=config.TannerConfig.get('PHPOX', 'host'),
