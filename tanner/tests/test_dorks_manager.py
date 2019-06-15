@@ -69,6 +69,8 @@ class TestDorksManager(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.handler.push_init_dorks.assert_has_calls(calls)
+        assert self.handler.dorks_key is not None
+        assert self.handler.user_dorks_key is not None
 
     def test_choose_dorks(self):
         random.randint = mock.Mock(return_value=0)
