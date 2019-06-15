@@ -5,8 +5,7 @@ import yarl
 
 from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, \
-    xxe_injection
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, xxe_injection   # noqa
 from tanner.utils import patterns
 
 

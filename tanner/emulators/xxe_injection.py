@@ -14,20 +14,21 @@ class XXEInjection:
 
     async def get_injection_result(self, code):
 
-        vul_code = '<?php ' \
-                   'libxml_disable_entity_loader (false); ' \
-                   '$xml = \'%s\'; ' \
-                   '$dom = new DOMDocument(); ' \
-                   '$dom->loadXML($xml, LIBXML_NOENT | LIBXML_DTDLOAD); ' \
-                   '$creds = simplexml_import_dom($dom); ' \
-                   '$user = $creds->user; ' \
-                   '$pass = $creds->pass; ' \
-                   'echo "You have logged in as $user";' \
-                   '?> ' % code
+        vul_code = '''<?php
+                        libxml_disable_entity_loader (false);
+                        $xml = \'%s\';
+                        $dom = new DOMDocument();
+                        $dom->loadXML($xml, LIBXML_NOENT | LIBXML_DTDLOAD);
+                        $creds = simplexml_import_dom($dom);
+                        
+                        $user = $creds->user;
+                        $pass = $creds->pass;
+                        echo "You have logged in as $user";
+                      ?>''' % code
 
-        object_injection_result = await self.helper.get_result(vul_code)
+        xxe_injection_result = await self.helper.get_result(vul_code)
 
-        return object_injection_result
+        return xxe_injection_result
 
     def scan(self, value):
         detection = None
@@ -39,6 +40,6 @@ class XXEInjection:
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
             return dict(status_code=504)
-        if TannerConfig.get('OUT_OF_BAND', 'xxe_injection'):
+        if TannerConfig.get('XXE_INJECTION', 'OUT_OF_BAND'):
             return dict(value='', page=False)
         return dict(value=result['stdout'], page=False)
