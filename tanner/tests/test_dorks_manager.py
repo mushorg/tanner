@@ -25,14 +25,14 @@ class TestDorksManager(unittest.TestCase):
         self.expected_result = None
 
     def test_push_init_dorks(self):
+        self.redis_client.sadd = AsyncMock()
 
         async def test():
             await self.handler.push_init_dorks(config.TannerConfig.get('DATA', 'dorks'), self.handler.dorks_key,
                                                self.redis_client)
-            self.returned_result = await self.redis_client.smembers(self.handler.dorks_key)
 
         self.loop.run_until_complete(test())
-        self.assertEqual(len(self.returned_result), 3562)
+        assert self.redis_client.sadd.called
 
     def test_extract_path(self):
         self.path = 'http://example.com/index.html?page=26'
@@ -69,8 +69,17 @@ class TestDorksManager(unittest.TestCase):
 
         self.loop.run_until_complete(test())
         self.handler.push_init_dorks.assert_has_calls(calls)
-        assert self.handler.dorks_key is not None
-        assert self.handler.user_dorks_key is not None
+
+    def test_init_dorks_none(self):
+        self.handler.dorks_key = None
+        self.handler.user_dorks_key = None
+        self.handler.push_init_dorks = AsyncMock()
+
+        async def test():
+            await self.handler.init_dorks(self.redis_client)
+
+        self.loop.run_until_complete(test())
+        self.handler.push_init_dorks.assert_not_called()
 
     def test_choose_dorks(self):
         random.randint = mock.Mock(return_value=0)
