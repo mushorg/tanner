@@ -63,7 +63,7 @@ class SQLITEDBHelper(BaseDBHelper):
         """
         Inserts Dummy data in the current sqlite database
         :param table_name (str): Table to inject dummy data
-        :param data_tokens (str): Tokens to generate dummy data, ex: 'I,L' to get ID and username data
+        :param data_tokens (str): Tokens to generate dummy data, eg: 'I,L' to get integer ID and username data
         :param cursor (object): Cursor attached with current DB
         """
         inserted_data, token_list = self.generate_dummy_data(data_tokens)
