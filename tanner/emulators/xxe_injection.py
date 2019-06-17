@@ -40,6 +40,7 @@ class XXEInjection:
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
             return dict(status_code=504)
+
         if TannerConfig.get('XXE_INJECTION', 'OUT_OF_BAND'):
             return dict(value='', page=False)
         return dict(value=result['stdout'], page=False)
