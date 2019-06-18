@@ -19,11 +19,9 @@ class XXEInjection:
                         $xml = \'%s\';
                         $dom = new DOMDocument();
                         $dom->loadXML($xml, LIBXML_NOENT | LIBXML_DTDLOAD);
-                        $creds = simplexml_import_dom($dom);
+                        $data = simplexml_import_dom($dom);
 
-                        $user = $creds->user;
-                        $pass = $creds->pass;
-                        echo "You have logged in as $user";
+                        echo $data;
                       ?>''' % code
 
         xxe_injection_result = await self.helper.get_result(vul_code)

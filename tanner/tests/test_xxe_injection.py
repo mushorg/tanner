@@ -49,10 +49,7 @@ class TestPHPCodeInjection(unittest.TestCase):
         code = '<?xml version="1.0" encoding="ISO-8859-1"?>' \
                '<!DOCTYPE foo [ <!ELEMENT foo ANY >' \
                '<!ENTITY xxe SYSTEM "file:///etc/passwd" >]>' \
-               '<creds>' \
-               '<user>&xxe;</user>' \
-               '<pass>mypass</pass>' \
-               '</creds>'
+               '<data>&xxe;</data>'
 
         attack_params = [dict(id='foo', value=code)]
         self.handler.helper.get_result = AsyncMock(return_value={'file_md5': 'a43deb0f2d7904cbb6c27c02ed7c2593',
