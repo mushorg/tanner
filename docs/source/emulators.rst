@@ -91,7 +91,7 @@ functions like eval, assert. To mimic the functionality, user input is converted
 PHP Object Injection Emulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It emulates `PHP object injection`_ vuln. PHP allows object serialization So, this type of vulnerability occurs when not
-properly sanitized input is passed to unserialize() PHP function. Exploiting this vulnerability involves Magic methods like
+properly sanitized input is passed to ``unserialize()`` PHP function. Exploiting this vulnerability involves Magic methods like
 ``__construct and __destruct`` which are called automatically when an object is created or destroyed and methods like
 ``__sleep and __wakeup`` are called when an object is serialized or unserialized. The input serialized object is
 detected with regex pattern.
@@ -111,6 +111,21 @@ CRLF Emulator
 It emulates `CRLF`_ vuln. The attack is detected using ``\r\n`` pattern in the input. The parameter which looks suspicious
 is injected as a header with parameter name as header name and param value as header value.
 
+XXE Injection Emulator
+~~~~~~~~~~~~~~~~~~~~~~
+It emulates `External Entity Injection`_ vulnerability. This type of vulnerability occurs when XML input with reference
+to an external entity is parsed by a weakly configured parser. It is exploited by putting specially crafted DTDs with malicious
+entities defined in it. The XML input is detected by regex pattern.
+
+::
+
+.*<(\?xml|(!DOCTYPE.*)).*>
+
+To mimic this functionality attacker's input will be injected into a vulnerable PHP code which parses the XML data
+and then it gets the injection results from php sandbox.
+
+**Note:** You can customize the vulnerable PHP code and can make it more intuitive. for eg: emulating a submit form with user, password fields.
+
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
 .. _LFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Local_File_Inclusion
@@ -120,5 +135,6 @@ is injected as a header with parameter name as header name and param value as he
 .. _PHP Code Injection: https://www.owasp.org/index.php/Code_Injection
 .. _PHP object injection: https://www.owasp.org/index.php/PHP_Object_Injection
 .. _CRLF: https://www.owasp.org/index.php/CRLF_Injection
+.. _External Entity Injection: https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Processing
 .. _manual: https://github.com/client9/libinjection/wiki/doc-sqli-python
 .. _here: https://github.com/mushorg/tanner/blob/8ce13d1f7d4423ddaf0e7910781199be9b90ce40/tanner/emulators/php_object_injection.py#L16
