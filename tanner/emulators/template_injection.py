@@ -46,6 +46,6 @@ class TemplateInjection:
         return detection
 
     async def handle(self, attack_params):
-        result = await self.get_injection_result(attack_params[0]['value'])
+        result = self.get_injection_result(attack_params[0]['value'])
 
         return dict(value=result, page=False)
