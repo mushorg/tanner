@@ -110,7 +110,7 @@ class ApiServer:
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
-        set_auth = TannerConfig.get('API', 'auth_enable')
+        set_auth = TannerConfig.get('API', 'auth')
         app = self.create_app(loop, set_auth)
         host = TannerConfig.get('API', 'host')
         port = int(TannerConfig.get('API', 'port'))
