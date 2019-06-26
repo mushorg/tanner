@@ -159,6 +159,25 @@ class TestBase(unittest.TestCase):
         assert_detection = {'name': 'xxe_injection', 'order': 3, 'payload': 'xxe_injection_test_payload'}
         self.assertDictEqual(detection, assert_detection)
 
+    def test_handle_template_injection(self):
+        data = dict(path='/index.php?p={{7*7}}',
+                    cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'})
+
+        async def mock_template_injection_handle(path, session):
+            return 'template_injection_test_payload'
+
+        def mock_template_injection_scan(value):
+            return dict(name='template_injection', order=3)
+
+        self.handler.emulators['template_injection'] = mock.Mock()
+        self.handler.emulators['template_injection'].handle = mock_template_injection_handle
+        self.handler.emulators['template_injection'].scan = mock_template_injection_scan
+
+        detection = self.loop.run_until_complete(self.handler.handle_get(self.session, data))
+
+        assert_detection = {'name': 'template_injection', 'order': 3, 'payload': 'template_injection_test_payload'}
+        self.assertDictEqual(detection, assert_detection)
+
     def test_set_injectable_page(self):
         paths = [{'path': '/python.html', 'timestamp': 1465851064.2740946},
                  {'path': '/python.php/?foo=bar', 'timestamp': 1465851065.2740946},
