@@ -1,51 +1,50 @@
 import asyncio
 import logging
-import tornado
+import os
 
+from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
-from tornado.template import Template
-from mako.template import Template
 from jinja2 import Environment
 
 Jinja2 = Environment()
 
 
 class TemplateInjection:
-    """
-        This emulator covers Jinja2, Mako and Tornado template engines.
-    """
 
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.template_injection')
+        self.helper = PHPSandboxHelper(self._loop)
 
-    def get_injection_result(self, payload):
+    async def get_injection_result_twig(self, payload):
 
-        template_injection_result = None
-        base_template = """<html><head><title>Welcome %s !!</title></head></html>""" % payload
+        path_to_vendor = os.getcwd() + '/vendor'
 
-        if patterns.TEMPLATE_INJECTION_MAKO.match(payload):
-            mako_template = Template(base_template)
-            template_injection_result = mako_template.render()
+        twig_template = """<?php
+                            require '%s/autoload.php';
 
-        elif patterns.TEMPLATE_INJECTION_JINJA2.match(payload):
-            template_injection_result = Jinja2.from_string(base_template).render()
+                            use Twig\Environment;
+                            use \Twig\Loader\ArrayLoader;
+ 
+                            $name = '%s';
+                            $loader = new ArrayLoader(array('index' => $name,));
+                            $twig = new Environment($loader);
+                            echo $twig->render('index');
+                           ?>""" % (path_to_vendor, payload)
 
-        elif patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
-            result = tornado.template.Template(base_template)
-            template_injection_result = result.generate()
+        template_injection_result = await self.helper.get_result(twig_template)
 
         return template_injection_result
 
     def scan(self, value):
         detection = None
 
-        if patterns.TEMPLATE_INJECTION_JINJA2.match(value) or patterns.TEMPLATE_INJECTION_MAKO.match(value) or \
-                patterns.TEMPLATE_INJECTION_TORNADO.match(value):
+        if patterns.TEMPLATE_INJECTION_TWIG.match(value):
             detection = dict(name='template_injection', order=3)
         return detection
 
     async def handle(self, attack_params, session=None):
-        result = self.get_injection_result(attack_params[0]['value'])
-
-        return dict(value=result, page=False)
+        result = await self.get_injection_result_twig(attack_params[0]['value'])
+        if not result or 'stdout' not in result:
+            return dict(status_code=504)
+        return dict(value=result['stdout'], page=False)
