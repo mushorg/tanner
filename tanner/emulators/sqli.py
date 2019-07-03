@@ -42,9 +42,13 @@ class SqliEmulator:
     async def get_sqli_result(self, attack_value, attacker_db):
         db_query = self.map_query(attack_value)
         if db_query is None:
-            error_result = 'You have an error in your SQL syntax; check the manual\
-                        that corresponds to your MySQL server version for the\
-                        right syntax to use near {} at line 1'.format(attack_value['id'])
+            if TannerConfig.get('SQLI', 'type') == 'MySQL':
+                error_result = 'You have an error in your SQL syntax; check the manual\
+                                that corresponds to your MySQL server version for the\
+                                right syntax to use near {} at line 1'.format(attack_value['id'])
+            else:
+                error_result = 'SQL ERROR: near {}: syntax error'.format(attack_value['id'])
+
             result = dict(value=error_result, page=True)
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)
