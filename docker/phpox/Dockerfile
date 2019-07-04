@@ -48,4 +48,4 @@ RUN apk -U --no-cache add \
 # Set workdir and start phpsandbox
 USER nobody:nobody
 WORKDIR /opt/phpox
-CMD ["python3.6", "sandbox.py"]
+CMD ["python3", "sandbox.py"]
