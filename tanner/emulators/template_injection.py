@@ -70,7 +70,7 @@ class TemplateInjection:
         value = unquote(value)
 
         if patterns.TEMPLATE_INJECTION_TWIG.match(value) or patterns.TEMPLATE_INJECTION_TORNADO.match(value) \
-                or patterns.TEMPLATE_INJECTION_MAKO:
+                or patterns.TEMPLATE_INJECTION_MAKO.match(value):
             detection = dict(name='template_injection', order=3)
 
         return detection
