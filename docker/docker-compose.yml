@@ -90,3 +90,15 @@ services:
      - tanner_api
      - tanner_web
      - tanner_phpox
+
+# Template Injection Emulator
+  template_injection:
+    build: ./tanner/template injection
+    container_name: template_injection
+    restart: always
+    stop_signal: SIGKILL
+    tty: true
+    networks:
+      - tanner_local
+    image: "mushorg/template_injection:latest"
+    read_only: true

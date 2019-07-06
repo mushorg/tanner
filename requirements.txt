@@ -1,7 +1,7 @@
 aiohttp                                                                                                                                                                                                                    
 aiomysql                                                                                                                                                                                                                   
 aiohttp_jinja2==1.1.0
-docker<2.6                                                                                                                                                                                                                 
+docker
 mimesis<3.0.0                                                                                                                                                                                                                    
 yarl                                                                                                                                                                                                                       
 redis                                                                                                                                                                                                                      
