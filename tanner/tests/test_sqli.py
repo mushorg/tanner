@@ -76,9 +76,7 @@ class SqliTest(unittest.TestCase):
 
     def test_get_sqli_result_error(self):
         attack_value = dict(id='foo', value='bar\'UNION SELECT 1,2')
-        assert_result = 'You have an error in your SQL syntax; check the manual\
-                        that corresponds to your MySQL server version for the\
-                        right syntax to use near foo at line 1'
+        assert_result = 'SQL ERROR: near foo: syntax error'
         result = self.loop.run_until_complete(self.handler.get_sqli_result(attack_value, 'foo.db'))
         self.assertEqual(assert_result, result['value'])
 
