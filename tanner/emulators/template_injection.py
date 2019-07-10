@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import docker
 
 from urllib.parse import unquote
 from tanner.utils.php_sandbox_helper import PHPSandboxHelper
@@ -36,11 +35,14 @@ class TemplateInjection:
         template_injection_result = await self.helper.get_result(twig_template)
         return template_injection_result
 
-    def get_injection_result_docker(self, payload):
+    async def get_injection_result_docker(self, payload):
         execute_result = None
 
-        client = docker.from_env()
-        docker_image = 'mushorg/template_injection:latest'
+        file_path = os.getcwd()
+        file_path = os.path.join(file_path, 'docker/tanner/template_injection/')
+
+        # Build the custom image
+        await self.docker_helper.setup_host_image(path_to_file=file_path, tag='template_injection:latest')
 
         if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
 
@@ -51,7 +53,8 @@ class TemplateInjection:
                                'template_injection_result = result.generate()\n' \
                                'print(template_injection_result)' % payload
 
-            execute_result = client.containers.run(docker_image, "python3 -c \'%s\'" % tornado_template).decode('utf-8')
+            execute_result = self.docker_helper.docker_client.containers.run(
+                'template_injection:latest', "python3 -c \'%s\'" % tornado_template).decode('utf-8')
 
         elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
 
@@ -60,7 +63,8 @@ class TemplateInjection:
                             'template_injection_result = mako_template.render()\n' \
                             'print(template_injection_result)' % payload
 
-            execute_result = client.containers.run(docker_image, "python3 -c \'%s\'" % mako_template).decode('utf-8')
+            execute_result = self.docker_helper.docker_client.containers.run(
+                'template_injection:latest', "python3 -c \'%s\'" % mako_template).decode('utf-8')
 
         result = dict(value=execute_result, page=True)
         return result
@@ -86,5 +90,5 @@ class TemplateInjection:
             return dict(value=result['stdout'], page=True)
 
         else:
-            result = self.get_injection_result_docker(attack_params[0]['value'])
+            result = await self.get_injection_result_docker(attack_params[0]['value'])
             return result
