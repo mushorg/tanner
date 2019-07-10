@@ -23,9 +23,9 @@ class TemplateInjection:
         twig_template = """<?php
                             require '%s/autoload.php';
 
-                            use Twig\Environment;
-                            use \Twig\Loader\ArrayLoader;
- 
+                            use Twig\\Environment;
+                            use \\Twig\\Loader\\ArrayLoader;
+
                             $name = '%s';
                             $loader = new ArrayLoader(array('index' => $name,));
                             $twig = new Environment($loader);
