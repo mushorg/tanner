@@ -7,7 +7,7 @@ from tanner.utils.asyncmock import AsyncMock
 from tanner.emulators.xxe_injection import XXEInjection
 
 
-class TestPHPCodeInjection(unittest.TestCase):
+class TestXXEInjection(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
