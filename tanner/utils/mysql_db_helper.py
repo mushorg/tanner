@@ -15,6 +15,11 @@ class MySQLDBHelper(BaseDBHelper):
         self.logger = logging.getLogger('tanner.db_helper.MySQLDBHelper')
 
     async def connect_to_db(self):
+        """
+        Creates a aiomysql connection
+        :return: connection object
+        """
+
         conn = await aiomysql.connect(host=TannerConfig.get('SQLI', 'host'),
                                       user=TannerConfig.get('SQLI', 'user'),
                                       password=TannerConfig.get('SQLI', 'password')
@@ -22,8 +27,11 @@ class MySQLDBHelper(BaseDBHelper):
         return conn
 
     async def check_db_exists(self, db_name, ):
-
-        # Checks if DB exists or not, Returns 0 if no such database exists else 1
+        """
+        Checks if DB exists or not
+        :param db_name (str): mysql db name
+        :return: result (integer): 0 if no such database exists else 1
+        """
 
         conn = await self.connect_to_db()
         cursor = await conn.cursor()
@@ -34,8 +42,10 @@ class MySQLDBHelper(BaseDBHelper):
         return len(result)
 
     async def setup_db_from_config(self, name=None):
-
-        # Helper function to setup DB from db_config.json and inserts dummy data in the created DB.
+        """
+        Helper function to setup DB from db_config.json and inserts dummy data in the created DB.
+        :param name (str): database name
+        """
 
         config = self.read_config()
         if name is not None:
@@ -58,6 +68,11 @@ class MySQLDBHelper(BaseDBHelper):
         conn.close()
 
     async def delete_db(self, db):
+        """
+        Deletes the database
+        :param db: db name to be deleted
+        """
+
         conn = await self.connect_to_db()
         cursor = await conn.cursor()
         delete_db_query = 'DROP DATABASE {db_name}'
@@ -66,6 +81,13 @@ class MySQLDBHelper(BaseDBHelper):
         conn.close()
 
     async def copy_db(self, user_db, attacker_db):
+        """
+        Copies the user database to new attacker database
+        :param user_db (str): existing user db
+        :param attacker_db (str): new db to be created
+        :return: new created db (str)
+        """
+
         db_exists = await self.check_db_exists(attacker_db)
         if db_exists:
             self.logger.info('Attacker db already exists')
@@ -99,8 +121,12 @@ class MySQLDBHelper(BaseDBHelper):
         return attacker_db
 
     async def insert_dummy_data(self, table_name, data_tokens, cursor):
-
-        # Inserts dummy data in the table based on input data tokens for ex: 'I,L'
+        """
+        Inserts dummy data in the table based on input data tokens for ex: 'I,L'
+        :param table_name (str): table in which data to be inserted
+        :param data_tokens (str): input data format tokens
+        :param cursor (object): current db cursor
+        """
 
         inserted_data, token_list = self.generate_dummy_data(data_tokens)
 
@@ -114,8 +140,11 @@ class MySQLDBHelper(BaseDBHelper):
                                  inserted_string_patt + ")", inserted_data)
 
     async def create_query_map(self, db_name):
-
-        # Returns a query map (type `dict`) of the tables and its columns present in the database
+        """
+        Returns a query map of the tables and its columns present in the database
+        :param db_name (str): current database
+        :return: query_map (dict): Created Query Map
+        """
 
         query_map = {}
         tables = []
