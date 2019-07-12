@@ -16,25 +16,6 @@ class TemplateInjection:
         self.helper = PHPSandboxHelper(self._loop)
         self.docker_helper = docker_helper.DockerHelper()
 
-    async def get_injection_result_twig(self, payload):
-
-        path_to_vendor = os.getcwd() + '/vendor'
-
-        twig_template = """<?php
-                            require '%s/autoload.php';
-
-                            use Twig\\Environment;
-                            use \\Twig\\Loader\\ArrayLoader;
-
-                            $name = '%s';
-                            $loader = new ArrayLoader(array('index' => $name,));
-                            $twig = new Environment($loader);
-                            echo $twig->render('index');
-                           ?>""" % (path_to_vendor, payload)
-
-        template_injection_result = await self.helper.get_result(twig_template)
-        return template_injection_result
-
     async def get_injection_result_docker(self, payload):
         execute_result = None
 
@@ -53,8 +34,11 @@ class TemplateInjection:
                                'template_injection_result = result.generate()\n' \
                                'print(template_injection_result)' % payload
 
-            execute_result = self.docker_helper.docker_client.containers.run(
-                'template_injection:latest', "python3 -c \'%s\'" % tornado_template).decode('utf-8')
+            execute_result = await self.docker_helper.execute_cmd(
+                "python3 -c \'%s\'" % tornado_template, 'template_injection:latest')
+
+            if execute_result:
+                execute_result = execute_result[2:-2]
 
         elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
 
@@ -63,8 +47,11 @@ class TemplateInjection:
                             'template_injection_result = mako_template.render()\n' \
                             'print(template_injection_result)' % payload
 
-            execute_result = self.docker_helper.docker_client.containers.run(
-                'template_injection:latest', "python3 -c \'%s\'" % mako_template).decode('utf-8')
+            execute_result = await self.docker_helper.execute_cmd(
+                "python3 -c \'%s\'" % mako_template, 'template_injection:latest')
+
+        if execute_result is not None:
+            execute_result = execute_result.decode('utf-8')
 
         result = dict(value=execute_result, page=True)
         return result
@@ -83,12 +70,5 @@ class TemplateInjection:
 
         attack_params[0]['value'] = unquote(attack_params[0]['value'])
 
-        if patterns.TEMPLATE_INJECTION_TWIG.match(attack_params[0]['value']):
-            result = await self.get_injection_result_twig(attack_params[0]['value'])
-            if not result or 'stdout' not in result:
-                return dict(status_code=504)
-            return dict(value=result['stdout'], page=True)
-
-        else:
-            result = await self.get_injection_result_docker(attack_params[0]['value'])
-            return result
+        result = await self.get_injection_result_docker(attack_params[0]['value'])
+        return result

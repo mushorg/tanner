@@ -58,12 +58,12 @@ class DockerHelper:
         except docker.errors.APIError as server_error:
             self.logger.exception('Error while removing container %s', server_error)
 
-    async def execute_cmd(self, container, cmd):
+    async def execute_cmd(self, cmd, image=None):
         execute_result = None
         try:
-            container.start()
-            execute_result = container.exec_run(['sh', '-c', cmd])
-            container.kill()
-        except docker.errors.APIError as server_error:
-            self.logger.exception('Error while executing command %s in container %s', cmd, server_error)
-        return execute_result.output.decode('utf-8')
+            if image is None:
+                image = self.host_image
+            execute_result = self.docker_client.containers.run(image, cmd)
+        except docker.errors.ContainerError or docker.errors.APIError as server_error:
+            self.logger.error('Error while executing command %s in container %s', cmd, server_error)
+        return execute_result
