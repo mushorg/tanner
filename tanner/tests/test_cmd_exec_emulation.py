@@ -7,7 +7,7 @@ from tanner.emulators import cmd_exec
 class TestCmdExecEmulator(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
+        asyncio.set_event_loop(self.loop)
         self.handler = cmd_exec.CmdExecEmulator()
         self.handler.helper.host_image = 'busybox:latest'
         self.sess = mock.Mock()
@@ -45,6 +45,11 @@ class TestCmdExecEmulator(unittest.TestCase):
 
     def test_handle_invalid_commands(self):
         attack_params = [dict(id='foo', value='foo')]
+
         result = self.loop.run_until_complete(self.handler.handle(attack_params, self.sess))
-        assert_result = 'foo: not found'
+        assert_result = 'sh: foo: not found'
         self.assertIn(assert_result, result['value'])
+
+    def tearDown(self):
+        self.loop.run_until_complete(self.handler.helper.close_docker())
+        self.loop.close()
