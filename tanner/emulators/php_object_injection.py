@@ -15,7 +15,7 @@ class PHPObjectInjection:
         """
         Injects the code from attacker to vulnerable code and get emulation results from php sandbox.
         :param code (str): Input payload from attacker
-        :return: object_injection_result (dict): Keys - file_md5 (md5 hash), stdout (injection result)
+        :return: object_injection_result (dict): file_md5 (md5 hash), stdout (injection result) as keys.
         """
 
         vul_code = "<?php " \
@@ -51,7 +51,7 @@ class PHPObjectInjection:
         """
         Handler of emulator
         :param attack_params (list): contains dicts as elements with id and value (payload from attacker) as keys
-        :return: dict: value (result of emulator), page (if set to true the payload will be injected to index.html
+        :return: (dict): value (result of emulator), page (if set to true the payload will be injected to index.html
         itself) as keys.
         """
 

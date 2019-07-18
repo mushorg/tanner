@@ -30,7 +30,7 @@ class MySQLDBHelper(BaseDBHelper):
         """
         Checks if DB exists or not
         :param db_name (str): mysql db name
-        :return: result (integer): 0 if no such database exists else 1
+        :return: result (int): 0 if no such database exists else 1
         """
 
         conn = await self.connect_to_db()
@@ -70,7 +70,7 @@ class MySQLDBHelper(BaseDBHelper):
     async def delete_db(self, db):
         """
         Deletes the database
-        :param db: db name to be deleted
+        :param db (str): db name to be deleted
         """
 
         conn = await self.connect_to_db()
