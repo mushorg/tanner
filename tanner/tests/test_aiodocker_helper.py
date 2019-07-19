@@ -30,6 +30,7 @@ class TestAioDockerHelper(unittest.TestCase):
         async def test():
             await self.handler.create_container(container_name)
             self.returned_result = await self.handler.get_container(container_name)
+            await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
         self.assertTrue(self.returned_result._id)
@@ -41,6 +42,7 @@ class TestAioDockerHelper(unittest.TestCase):
             container = await self.handler.create_container(container_name=container_name)
             await container.start()
             self.returned_result = await container.show()
+            await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
         self.assertTrue(self.returned_result["State"]["Running"])

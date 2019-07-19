@@ -66,6 +66,9 @@ class AIODockerHelper:
             if result_exists:
                 execute_result = ''.join(result_exists)
 
+            # Deleting the used container
+            await container.delete(force=True)
+
         except (aiodocker.exceptions.DockerError or aiodocker.exceptions.DockerContainerError) as server_error:
             self.logger.error('Error while executing command %s in container %s', cmd, server_error)
         return execute_result
