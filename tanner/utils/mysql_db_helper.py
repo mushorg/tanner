@@ -26,7 +26,7 @@ class MySQLDBHelper(BaseDBHelper):
                                       )
         return conn
 
-    async def check_db_exists(self, db_name, ):
+    async def check_db_exists(self, db_name):
         """
         Checks if DB exists or not
         :param db_name (str): mysql db name
