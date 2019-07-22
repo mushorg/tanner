@@ -44,5 +44,5 @@ class TestLfiEmulator(unittest.TestCase):
         self.assertIn(assert_result, result['value'])
 
     def tearDown(self):
-        self.loop.run_until_complete(self.handler.helper.close_docker())
+        self.loop.run_until_complete(self.handler.helper.docker_client.close())
         self.loop.close()

@@ -80,6 +80,3 @@ class AIODockerHelper:
                 await container.delete(force=True)
         except aiodocker.exceptions.DockerError as server_error:
             self.logger.exception('Error while removing %s container %s', container_name, server_error)
-
-    async def close_docker(self):
-        await self.docker_client.close()

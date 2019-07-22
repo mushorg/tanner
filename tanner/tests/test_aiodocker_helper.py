@@ -69,5 +69,5 @@ class TestAioDockerHelper(unittest.TestCase):
         self.assertEqual(self.returned_result, None)
 
     def tearDown(self):
-        self.loop.run_until_complete(self.handler.close_docker())
+        self.loop.run_until_complete(self.handler.docker_client.close())
         self.loop.close()
