@@ -11,7 +11,7 @@ from tanner import __version__ as tanner_version
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
+        asyncio.set_event_loop(self.loop)
         self.session = mock.Mock()
         self.session.associate_db = mock.Mock()
         self.data = mock.Mock()

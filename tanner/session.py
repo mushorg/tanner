@@ -4,7 +4,7 @@ import uuid
 from urllib.parse import urlparse
 
 from tanner.config import TannerConfig
-from tanner.utils import docker_helper
+from tanner.utils import aiodocker_helper
 from tanner.utils.mysql_db_helper import MySQLDBHelper
 from tanner.utils.sqlite_db_helper import SQLITEDBHelper
 
@@ -80,7 +80,7 @@ class Session:
         self.associated_env = env
 
     async def remove_associated_env(self):
-        await docker_helper.DockerHelper().delete_env(self.associated_env)
+        await aiodocker_helper.AIODockerHelper().delete_container(self.associated_env)
 
     def get_uuid(self):
         return str(self.sess_uuid)
