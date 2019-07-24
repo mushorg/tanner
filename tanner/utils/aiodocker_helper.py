@@ -13,6 +13,11 @@ class AIODockerHelper:
         self.host_image = TannerConfig.get('DOCKER', 'host_image')
 
     async def setup_host_image(self, remote_path=None, tag=None):
+        """
+        Helper to pull host image or build an image with remote Dockerfile
+        :param remote_path (str): remote path of Dockerfile
+        :param tag (str): tag to be given to new image build ex: 'myimage:latest'
+        """
 
         try:
             if remote_path and tag is not None:
@@ -27,6 +32,11 @@ class AIODockerHelper:
             self.logger.exception('Error while pulling %s image %s', self.host_image, docker_error)
 
     async def get_container(self, container_name):
+        """
+        Gets the container object having specified name
+        :param container_name (str): name of the target container
+        :return: container (object)
+        """
         container = None
         try:
             container = await self.docker_client.containers.get(container=container_name)
@@ -36,6 +46,13 @@ class AIODockerHelper:
         return container
 
     async def create_container(self, container_name, cmd=None, image=None):
+        """
+        Helper to create or replace a container (initially pulls the given image)
+        :param container_name (str): name to be given to new container or replace existing if any
+        :param cmd (list): contains commands to run in the container. ex: ["sh", "-c", "echo 'Hello'"]
+        :param image (str): name of image to be used
+        :return: container (object): newly created container object
+        """
         await self.setup_host_image()
         container = None
         if image is None:
@@ -53,6 +70,12 @@ class AIODockerHelper:
         return container
 
     async def execute_cmd(self, cmd, image=None):
+        """
+        Creates a new container, runs the cmd in it and deletes the used container
+        :param cmd (list): contains commands to run in the container. ex: ["sh", "-c", "echo 'Hello'"]
+        :param image (str): name of image to be used
+        :return: execute_result (str): execution output/errors of cmd from the container
+        """
         execute_result = None
         try:
             if image is None:
@@ -74,6 +97,10 @@ class AIODockerHelper:
         return execute_result
 
     async def delete_container(self, container_name):
+        """
+        Delete an existing container
+        :param container_name (str): name of container to be deleted
+        """
         container = await self.get_container(container_name)
         try:
             if container:
