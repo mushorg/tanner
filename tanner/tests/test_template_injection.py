@@ -3,7 +3,7 @@ import unittest
 import os
 
 from unittest import mock
-from tanner.utils.docker_helper import DockerHelper
+from tanner.utils.aiodocker_helper import AIODockerHelper
 from tanner.emulators.template_injection import TemplateInjection
 
 
@@ -17,8 +17,7 @@ class TestTemplateInjection(unittest.TestCase):
         self.returned_result = None
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'e86d20b858224e239d3991c1a2650bc7'
-        self.docker_helper = DockerHelper()
-        self.docker_helper.host_image = 'template_injection:latest'
+        self.docker_helper = AIODockerHelper()
 
     def test_scan(self):
         payload = '{{7*7}}'
