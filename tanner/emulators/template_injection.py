@@ -1,11 +1,9 @@
 import asyncio
 import logging
-import os
 
 from urllib.parse import unquote
-from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
-from tanner.utils import docker_helper
+from tanner.utils.aiodocker_helper import AIODockerHelper
 
 
 class TemplateInjection:
@@ -13,17 +11,16 @@ class TemplateInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.template_injection')
-        self.helper = PHPSandboxHelper(self._loop)
-        self.docker_helper = docker_helper.DockerHelper()
+        self.docker_helper = AIODockerHelper()
 
-    async def get_injection_result_docker(self, payload):
+    async def get_injection_result(self, payload):
         execute_result = None
-
-        file_path = os.getcwd()
-        file_path = os.path.join(file_path, 'docker/tanner/template_injection/')
+        github_remote_path = 'https://raw.githubusercontent.com/mushorg/tanner/master/docker/tanner/' \
+                             'template_injection/Dockerfile'
 
         # Build the custom image
-        await self.docker_helper.setup_host_image(path_to_file=file_path, tag='template_injection:latest')
+        await self.docker_helper.setup_host_image(
+            remote_path=github_remote_path, tag='template_injection:latest')
 
         if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
 
@@ -34,9 +31,11 @@ class TemplateInjection:
                                'template_injection_result = result.generate()\n' \
                                'print(template_injection_result)' % payload
 
-            execute_result = await self.docker_helper.execute_cmd(
-                "python3 -c \'%s\'" % tornado_template, 'template_injection:latest')
+            cmd = ["python3", "-c", tornado_template]
 
+            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
+
+            # Removing string "b''" from results
             if execute_result:
                 execute_result = execute_result[2:-2]
 
@@ -47,11 +46,9 @@ class TemplateInjection:
                             'template_injection_result = mako_template.render()\n' \
                             'print(template_injection_result)' % payload
 
-            execute_result = await self.docker_helper.execute_cmd(
-                "python3 -c \'%s\'" % mako_template, 'template_injection:latest')
+            cmd = ["python3", "-c", mako_template]
 
-        if execute_result is not None:
-            execute_result = execute_result.decode('utf-8')
+            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
 
         result = dict(value=execute_result, page=True)
         return result
@@ -60,15 +57,12 @@ class TemplateInjection:
         detection = None
         value = unquote(value)
 
-        if patterns.TEMPLATE_INJECTION_TWIG.match(value) or patterns.TEMPLATE_INJECTION_TORNADO.match(value) \
-                or patterns.TEMPLATE_INJECTION_MAKO.match(value):
+        if patterns.TEMPLATE_INJECTION_TORNADO.match(value) or patterns.TEMPLATE_INJECTION_MAKO.match(value):
             detection = dict(name='template_injection', order=3)
 
         return detection
 
     async def handle(self, attack_params, session=None):
-
         attack_params[0]['value'] = unquote(attack_params[0]['value'])
-
-        result = await self.get_injection_result_docker(attack_params[0]['value'])
+        result = await self.get_injection_result(attack_params[0]['value'])
         return result

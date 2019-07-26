@@ -10,7 +10,7 @@ from tanner.emulators.template_injection import TemplateInjection
 class TestTemplateInjection(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
+        asyncio.set_event_loop(self.loop)
         self.handler = TemplateInjection(loop=self.loop)
         self.result = None
         self.expected_result = None
@@ -50,3 +50,7 @@ class TestTemplateInjection(unittest.TestCase):
         self.returned_result = self.loop.run_until_complete(self.handler.handle(attack_params, self.sess))
         self.expected_result = os.uname()
         self.assertIn(self.expected_result[0], self.returned_result['value'])
+
+    def tearDown(self):
+        self.loop.run_until_complete(self.handler.docker_helper.docker_client.close())
+        self.loop.close()
