@@ -18,7 +18,6 @@ class TestTemplateInjection(unittest.TestCase):
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'e86d20b858224e239d3991c1a2650bc7'
         self.docker_helper = AIODockerHelper()
-        self.docker_helper.host_image = 'template_injection:latest'
 
     def test_scan(self):
         payload = '{{7*7}}'
