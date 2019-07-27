@@ -29,11 +29,11 @@ class TemplateInjection:
                 tornado_template = f.read() % payload
 
             cmd = ["python3", "-c", tornado_template]
-            # execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
-            container = await self.docker_helper.create_container(container_name, cmd, 'template_injection:latest')
+            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
+            """container = await self.docker_helper.create_container(container_name, cmd, 'template_injection:latest')
             await container.start()
             await container.wait()
-            execute_result = await container.log(stderr=True, stdout=True)
+            execute_result = await container.log(stderr=True, stdout=True)"""
 
             # Removing string "b''" from results
             if execute_result:
