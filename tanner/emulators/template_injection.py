@@ -3,6 +3,7 @@ import logging
 
 from urllib.parse import unquote
 from tanner.utils import patterns
+from tanner.config import TannerConfig
 from tanner.utils.aiodocker_helper import AIODockerHelper
 
 
@@ -15,8 +16,8 @@ class TemplateInjection:
 
     async def get_injection_result(self, payload):
         execute_result = None
-        github_remote_path = 'https://raw.githubusercontent.com/mushorg/tanner/master/docker/tanner/' \
-                             'template_injection/Dockerfile'
+        container_name = 'template_injection'
+        github_remote_path = TannerConfig.get('REMOTE_DOCKERFILE', 'GITHUB')
 
         # Build the custom image
         await self.docker_helper.setup_host_image(
@@ -24,16 +25,15 @@ class TemplateInjection:
 
         if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
 
-            tornado_template = 'import tornado\n' \
-                               'from tornado.template import Template\n' \
-                               'code = "%s"\n' \
-                               'result = tornado.template.Template(code)\n' \
-                               'template_injection_result = result.generate()\n' \
-                               'print(template_injection_result)' % payload
+            with open('tanner/files/engines/tornado.py', 'r') as f:
+                tornado_template = f.read() % payload
 
             cmd = ["python3", "-c", tornado_template]
-
-            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
+            # execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
+            container = await self.docker_helper.create_container(container_name, cmd, 'template_injection:latest')
+            await container.start()
+            await container.wait()
+            execute_result = await container.log(stderr=True, stdout=True)
 
             # Removing string "b''" from results
             if execute_result:
@@ -41,13 +41,10 @@ class TemplateInjection:
 
         elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
 
-            mako_template = 'from mako.template import Template\n' \
-                            'mako_template = Template("""%s""")\n' \
-                            'template_injection_result = mako_template.render()\n' \
-                            'print(template_injection_result)' % payload
+            with open('tanner/files/engines/mako.py', 'r') as f:
+                mako_template = f.read() % payload
 
             cmd = ["python3", "-c", mako_template]
-
             execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
 
         result = dict(value=execute_result, page=True)

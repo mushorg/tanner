@@ -29,7 +29,9 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                    'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '',
                                'CHANNEL': 'tanner.events'},
                    'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
-                   'CLEANLOG': {'enabled': False}
+                   'CLEANLOG': {'enabled': False},
+                   'REMOTE_DOCKERFILE': {'GITHUB': 'https://raw.githubusercontent.com/mushorg/tanner/master/docker/'
+                                                   'tanner/template_injection/Dockerfile'}
                    }
 
 
