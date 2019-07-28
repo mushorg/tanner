@@ -16,7 +16,6 @@ class TemplateInjection:
 
     async def get_injection_result(self, payload):
         execute_result = None
-        container_name = 'template_injection'
         github_remote_path = TannerConfig.get('REMOTE_DOCKERFILE', 'GITHUB')
 
         # Build the custom image
@@ -30,10 +29,6 @@ class TemplateInjection:
 
             cmd = ["python3", "-c", tornado_template]
             execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
-            """container = await self.docker_helper.create_container(container_name, cmd, 'template_injection:latest')
-            await container.start()
-            await container.wait()
-            execute_result = await container.log(stderr=True, stdout=True)"""
 
             # Removing string "b''" from results
             if execute_result:
