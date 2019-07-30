@@ -3,7 +3,7 @@ import unittest
 import os
 
 from unittest import mock
-from tanner.utils.aiodocker_helper import AIODockerHelper
+from tanner.utils.asyncmock import AsyncMock
 from tanner.emulators.template_injection import TemplateInjection
 
 
@@ -17,7 +17,6 @@ class TestTemplateInjection(unittest.TestCase):
         self.returned_result = None
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'e86d20b858224e239d3991c1a2650bc7'
-        self.docker_helper = AIODockerHelper()
         self.handler.remote_path = 'https://raw.githubusercontent.com/mushorg/tanner/master/docker/' \
                                    'tanner/template_injection/Dockerfile'
 
@@ -36,6 +35,7 @@ class TestTemplateInjection(unittest.TestCase):
         self.assertEqual(self.returned_result, self.expected_result)
 
     def test_handle_tornado(self):
+        self.handler.docker_helper.execute_cmd = AsyncMock(return_value='posix.uname_result(sysname="Linux")')
         payload = '{%import os%}{{os.uname()}}'
 
         attack_params = [dict(id='foo', value=payload)]
@@ -45,6 +45,7 @@ class TestTemplateInjection(unittest.TestCase):
         self.assertIn(self.expected_result[0], self.returned_result['value'])
 
     def test_handle_mako(self):
+        self.handler.docker_helper.execute_cmd = AsyncMock(return_value='posix.uname_result(sysname="Linux")')
         payload = '<%\nimport os\nx=os.uname()\n%>\n${x}'
 
         attack_params = [dict(id='foo', value=payload)]

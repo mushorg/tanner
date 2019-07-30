@@ -61,7 +61,7 @@ class AIODockerHelper:
 
         config = {
             "Cmd": cmd,
-            "Image": image,
+            "Image": image
         }
         try:
             container = await self.docker_client.containers.create_or_replace(config=config, name=container_name)
