@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import aiodocker
+import os
 
 from urllib.parse import unquote
 from tanner.utils import patterns
@@ -18,38 +18,34 @@ class TemplateInjection:
 
     async def get_injection_result(self, payload):
         execute_result = None
+        work_dir = os.getcwd()
 
-        try:
+        # Build the custom image
+        await self.docker_helper.setup_host_image(
+            remote_path=self.remote_path, tag='template_injection:latest')
 
-            # Build the custom image
-            await self.docker_helper.setup_host_image(
-                remote_path=self.remote_path, tag='template_injection:latest')
+        if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
 
-            if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
+            with open(work_dir + '/tanner/files/engines/tornado.py', 'r') as f:
+                tornado_template = f.read() % payload
 
-                with open('tanner/files/engines/tornado.py', 'r') as f:
-                    tornado_template = f.read() % payload
+            cmd = ["python3", "-c", tornado_template]
+            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
 
-                cmd = ["python3", "-c", tornado_template]
-                execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
+            # Removing string "b''" from results
+            if execute_result:
+                execute_result = execute_result[2:-2]
 
-                # Removing string "b''" from results
-                if execute_result:
-                    execute_result = execute_result[2:-2]
+        elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
 
-            elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
+            with open(work_dir + '/tanner/files/engines/mako.py', 'r') as f:
+                mako_template = f.read() % payload
 
-                with open('tanner/files/engines/mako.py', 'r') as f:
-                    mako_template = f.read() % payload
+            cmd = ["python3", "-c", mako_template]
+            execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
 
-                cmd = ["python3", "-c", mako_template]
-                execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
-
-        except (aiodocker.exceptions.DockerError or aiodocker.exceptions.DockerContainerError) as docker_error:
-            self.logger.exception('Error while executing command %s', docker_error)
-        finally:
-            result = dict(value=execute_result, page=True)
-            return result
+        result = dict(value=execute_result, page=True)
+        return result
 
     def scan(self, value):
         detection = None

@@ -3,7 +3,6 @@ import unittest
 import os
 
 from unittest import mock
-from tanner.config import TannerConfig
 from tanner.utils.aiodocker_helper import AIODockerHelper
 from tanner.emulators.template_injection import TemplateInjection
 
