@@ -14,16 +14,16 @@ class TemplateInjection:
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger('tanner.template_injection')
         self.docker_helper = AIODockerHelper()
+        self.remote_path = TannerConfig.get('REMOTE_DOCKERFILE', 'GITHUB')
 
     async def get_injection_result(self, payload):
         execute_result = None
-        github_remote_path = TannerConfig.get('REMOTE_DOCKERFILE', 'GITHUB')
 
         try:
 
             # Build the custom image
             await self.docker_helper.setup_host_image(
-                remote_path=github_remote_path, tag='template_injection:latest')
+                remote_path=self.remote_path, tag='template_injection:latest')
 
             if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
 

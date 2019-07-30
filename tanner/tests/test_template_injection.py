@@ -3,6 +3,7 @@ import unittest
 import os
 
 from unittest import mock
+from tanner.config import TannerConfig
 from tanner.utils.aiodocker_helper import AIODockerHelper
 from tanner.emulators.template_injection import TemplateInjection
 
@@ -18,6 +19,8 @@ class TestTemplateInjection(unittest.TestCase):
         self.sess = mock.Mock()
         self.sess.sess_uuid.hex = 'e86d20b858224e239d3991c1a2650bc7'
         self.docker_helper = AIODockerHelper()
+        self.handler.remote_path = 'https://raw.githubusercontent.com/mushorg/tanner/master/docker/' \
+                                   'tanner/template_injection/Dockerfile'
 
     def test_scan(self):
         payload = '{{7*7}}'
