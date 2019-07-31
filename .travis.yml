@@ -17,6 +17,7 @@ install:
   - docker-compose -f ./docker/docker-compose.yml up -d
 # command to run tests
 script:
+    - sudo python setup.py install
     - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
     - pycodestyle . --max-line-length=120
     - test $(docker ps -f name=tanner -q | wc --lines) -eq 5
