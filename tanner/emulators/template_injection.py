@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 
 from urllib.parse import unquote
 from tanner.utils import patterns
@@ -18,16 +17,17 @@ class TemplateInjection:
 
     async def get_injection_result(self, payload):
         execute_result = None
-        work_dir = os.getcwd()
 
         # Build the custom image
         await self.docker_helper.setup_host_image(
             remote_path=self.remote_path, tag='template_injection:latest')
 
         if patterns.TEMPLATE_INJECTION_TORNADO.match(payload):
+            work_dir = TannerConfig.get('DATA', 'tornado')
 
-            with open(work_dir + '/tanner/files/engines/tornado.py', 'r') as f:
-                tornado_template = f.read() % payload
+            with open(work_dir, 'r') as f:
+                tornado_template = f.read().format(payload)
+            print(tornado_template)
 
             cmd = ["python", "-c", tornado_template]
             execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
@@ -37,9 +37,10 @@ class TemplateInjection:
                 execute_result = execute_result[2:-2]
 
         elif patterns.TEMPLATE_INJECTION_MAKO.match(payload):
+            work_dir = TannerConfig.get('DATA', 'mako')
 
-            with open(work_dir + '/tanner/files/engines/mako.py', 'r') as f:
-                mako_template = f.read() % payload
+            with open(work_dir, 'r') as f:
+                mako_template = f.read().format(payload)
 
             cmd = ["python", "-c", mako_template]
             execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
