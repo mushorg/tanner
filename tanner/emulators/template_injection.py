@@ -27,7 +27,6 @@ class TemplateInjection:
 
             with open(work_dir, 'r') as f:
                 tornado_template = f.read().format(payload)
-            print(tornado_template)
 
             cmd = ["python", "-c", tornado_template]
             execute_result = await self.docker_helper.execute_cmd(cmd, 'template_injection:latest')
