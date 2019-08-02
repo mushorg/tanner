@@ -10,7 +10,6 @@ from concurrent.futures import ThreadPoolExecutor
 import aiohttp
 import yarl
 
-from tanner import config
 from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
 
@@ -50,6 +49,7 @@ class RfiEmulator:
                 tmp_filename = url.name + str(time.time())
                 file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
                 with open(os.path.join(self.script_dir, file_name), 'bw') as rfile:
+                    self.logger.debug('Saving the RFI script %s', os.path.join(self.script_dir, file_name))
                     rfile.write(data.encode('utf-8'))
         return file_name
 
@@ -64,6 +64,7 @@ class RfiEmulator:
             tmp_filename = name + str(time.time())
             file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
             with open(os.path.join(self.script_dir, file_name), 'wb') as ftp_script:
+                self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
                 ftp.retrbinary('RETR %s' % name, ftp_script.write)
         except ftplib.all_errors as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
@@ -74,6 +75,7 @@ class RfiEmulator:
     async def get_rfi_result(self, path):
         rfi_result = None
         await asyncio.sleep(1, loop=self._loop)
+        self.logger.info('Downloading the file has started..')
         file_name = await self.download_file(path)
         if file_name is None:
             return rfi_result

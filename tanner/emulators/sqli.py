@@ -1,3 +1,4 @@
+import logging
 import pylibinjection
 
 from tanner.config import TannerConfig
@@ -6,6 +7,7 @@ from tanner.emulators import mysqli, sqlite
 
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
+        self.logger = logging.getLogger('tanner.sqli_emulator')
         if TannerConfig.get('SQLI', 'type') == 'MySQL':
             self.sqli_emulator = mysqli.MySQLIEmulator(db_name)
         else:
@@ -46,8 +48,10 @@ class SqliEmulator:
                 error_result = 'You have an error in your SQL syntax; check the manual\
                                 that corresponds to your MySQL server version for the\
                                 right syntax to use near {} at line 1'.format(attack_value['id'])
+                self.logger.exception('Error while executing MySQL %s', error_result)
             else:
                 error_result = 'SQL ERROR: near {}: syntax error'.format(attack_value['id'])
+                self.logger.exception('Error while executing SQL %s', error_result)
 
             result = dict(value=error_result, page=True)
         else:

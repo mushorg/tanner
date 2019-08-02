@@ -29,6 +29,7 @@ class XXEInjection:
                         echo $data;
                       ?>''' % code
 
+        self.logger.debug('Getting the XXE injection results of %s from php sandbox', code)
         xxe_injection_result = await self.helper.get_result(vul_code)
 
         return xxe_injection_result
@@ -55,8 +56,10 @@ class XXEInjection:
 
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
+            self.logger.exception('Error while getting the injection results from php sandbox..')
             return dict(status_code=504)
 
         if TannerConfig.get('XXE_INJECTION', 'OUT_OF_BAND'):
+            self.logger.debug('Out of Band XXE injection detected..')
             return dict(value='', page=False)
         return dict(value=result['stdout'], page=False)
