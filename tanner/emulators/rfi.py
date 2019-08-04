@@ -75,7 +75,7 @@ class RfiEmulator:
     async def get_rfi_result(self, path):
         rfi_result = None
         await asyncio.sleep(1, loop=self._loop)
-        self.logger.info('Downloading the file has started..')
+        self.logger.info('Downloading the file has started from %s', path)
         file_name = await self.download_file(path)
         if file_name is None:
             return rfi_result
