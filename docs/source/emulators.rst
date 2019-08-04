@@ -126,6 +126,24 @@ and then it gets the injection results from php sandbox.
 
 **Note:** You can customize the vulnerable PHP code and can make it more intuitive. for eg: emulating a submit form with user, password fields.
 
+Template Injection Emulator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This emulates `Template Injection`_ vulnerability. This is exploited by using specially crafted payloads for different template engines.
+For now we are covering ``tornado`` and ``mako`` python templating engines. The injection formats are different for every engine
+for ex ``tornado: {{7*7}} -> 49`` and ``mako: <% x=7*7 %>${x} -> 49``.
+
+The payload is detected using regex pattern:
+
+::
+
+.*({{.*}}).* - Tornado
+.*(<%.*|\s%>).* - Mako
+
+To mimic this functionality vulnerable template renderers are stored in `files/engines` directory for every engine in which the payload will be injected.
+These vulnerable templates are executed safely using custom docker image to get the injection results.
+
+
+.. _Template Injection: https://portswigger.net/blog/server-side-template-injection
 .. _RFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Remote_File_Inclusion
 .. _PHPox: https://github.com/mushorg/phpox
 .. _LFI: https://en.wikipedia.org/wiki/File_inclusion_vulnerability#Local_File_Inclusion
