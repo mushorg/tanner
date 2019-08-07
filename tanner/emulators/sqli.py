@@ -48,11 +48,10 @@ class SqliEmulator:
                 error_result = 'You have an error in your SQL syntax; check the manual\
                                 that corresponds to your MySQL server version for the\
                                 right syntax to use near {} at line 1'.format(attack_value['id'])
-                self.logger.exception('Error while executing MySQL %s', error_result)
             else:
                 error_result = 'SQL ERROR: near {}: syntax error'.format(attack_value['id'])
-                self.logger.exception('Error while executing SQL %s', error_result)
 
+            self.logger.debug('Error while executing: %s', error_result)
             result = dict(value=error_result, page=True)
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)

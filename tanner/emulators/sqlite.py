@@ -1,11 +1,13 @@
 import os
 import sqlite3
+import logging
 
 from tanner.utils import sqlite_db_helper
 
 
 class SQLITEEmulator:
     def __init__(self, db_name, working_dir):
+        self.logger = logging.getLogger('tanner.sqlite_emulator')
         self.db_name = db_name
         self.working_dir = os.path.join(working_dir, 'db/')
         self.helper = sqlite_db_helper.SQLITEDBHelper()
@@ -36,5 +38,6 @@ class SQLITEEmulator:
             for row in cursor.execute(query):
                 result.append(list(row))
         except sqlite3.OperationalError as sqlite_error:
+            self.logger.debug('Error while executing query: %s', sqlite_error)
             result = str(sqlite_error)
         return result
