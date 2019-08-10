@@ -24,9 +24,10 @@ class AIODockerHelper:
                 params = {"tag": tag, "remote": remote_path}
                 await self.docker_client.images.build(**params)
 
-            image = await self.docker_client.images.list(filter=self.host_image)
-            if not image:
-                await self.docker_client.images.pull(self.host_image)
+            else:
+                image = await self.docker_client.images.list(filter=self.host_image)
+                if not image:
+                    await self.docker_client.images.pull(self.host_image)
 
         except aiodocker.exceptions.DockerError as docker_error:
             self.logger.exception('Error while pulling %s image %s', self.host_image, docker_error)
@@ -60,7 +61,7 @@ class AIODockerHelper:
 
         config = {
             "Cmd": cmd,
-            "Image": image,
+            "Image": image
         }
         try:
             container = await self.docker_client.containers.create_or_replace(config=config, name=container_name)

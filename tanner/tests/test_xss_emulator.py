@@ -1,8 +1,8 @@
 import asyncio
-
 import unittest
 
 from tanner.emulators import xss
+from tanner.utils import patterns
 
 
 class TestXSSEmulator(unittest.TestCase):
@@ -22,6 +22,15 @@ class TestXSSEmulator(unittest.TestCase):
         assert_result = None
         result = self.handler.scan(attack)
         self.assertEqual(result, assert_result)
+
+    def test_xxs_mako_regex(self):
+        # Mako payloads can be matched with XSS but not vice versa
+        test_mako = '<% x=7*7 %>${x}'        # basic mako injection payload
+        verify_mako = patterns.TEMPLATE_INJECTION_MAKO.match(test_mako)
+        assert_result = dict(name='xss', order=3)
+        result = self.handler.scan(test_mako)
+        self.assertEqual(result, assert_result)
+        self.assertTrue(verify_mako)
 
     def test_multiple_xss(self):
         attack_params = [dict(id='comment', value='<script>alert(\'comment\');</script>'),

@@ -13,3 +13,5 @@ jinja2
 pycodestyle                                                                                                                                                                                                                
 geoip2
 aiodocker
+tornado
+mako

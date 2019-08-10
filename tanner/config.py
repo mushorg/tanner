@@ -9,7 +9,9 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                             'dorks': '/opt/tanner/data/dorks.pickle',
                             'user_dorks': '/opt/tanner/data/user_dorks.pickle',
                             'crawler_stats': '/opt/tanner/data/crawler_user_agents.txt',
-                            'geo_db': '/opt/tanner/db/GeoLite2-City.mmdb'
+                            'geo_db': '/opt/tanner/db/GeoLite2-City.mmdb',
+                            'tornado': '/opt/tanner/data/tornado.py',
+                            'mako': '/opt/tanner/data/mako.py'
                             },
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'WEB': {'host': '0.0.0.0', 'port': 8091},
@@ -19,7 +21,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                    'EMULATORS': {'root_dir': '/opt/tanner'},
                    'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True,
                                         'php_code_injection': True, 'php_object_injection': True, "crlf": True,
-                                        "xxe_injection": True},
+                                        "xxe_injection": True, "template_injection": True},
                    'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
                             'password': 'user_pass'},
                    'XXE_INJECTION': {'OUT_OF_BAND': False},
@@ -29,7 +31,9 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                    'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '',
                                'CHANNEL': 'tanner.events'},
                    'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
-                   'CLEANLOG': {'enabled': False}
+                   'CLEANLOG': {'enabled': False},
+                   'REMOTE_DOCKERFILE': {'GITHUB': "https://raw.githubusercontent.com/mushorg/tanner/master/docker/"
+                                                   "tanner/template_injection/Dockerfile"}
                    }
 
 
