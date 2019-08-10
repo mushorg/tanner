@@ -167,7 +167,7 @@ class TestBase(unittest.TestCase):
             return 'template_injection_test_payload'
 
         def mock_template_injection_scan(value):
-            return dict(name='template_injection', order=3)
+            return dict(name='template_injection', order=4)
 
         self.handler.emulators['template_injection'] = mock.Mock()
         self.handler.emulators['template_injection'].handle = mock_template_injection_handle
@@ -175,7 +175,7 @@ class TestBase(unittest.TestCase):
 
         detection = self.loop.run_until_complete(self.handler.handle_get(self.session, data))
 
-        assert_detection = {'name': 'template_injection', 'order': 3, 'payload': 'template_injection_test_payload'}
+        assert_detection = {'name': 'template_injection', 'order': 4, 'payload': 'template_injection_test_payload'}
         self.assertDictEqual(detection, assert_detection)
 
     def test_set_injectable_page(self):

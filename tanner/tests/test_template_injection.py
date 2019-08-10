@@ -3,6 +3,7 @@ import unittest
 import os
 
 from unittest import mock
+from tanner.utils import patterns
 from tanner.utils.asyncmock import AsyncMock
 from tanner.emulators.template_injection import TemplateInjection
 
@@ -23,7 +24,7 @@ class TestTemplateInjection(unittest.TestCase):
     def test_scan(self):
         payload = '{{7*7}}'
 
-        self.expected_result = dict(name='template_injection', order=3)
+        self.expected_result = dict(name='template_injection', order=4)
         self.returned_result = self.handler.scan(payload)
         self.assertEqual(self.returned_result, self.expected_result)
 
@@ -33,6 +34,15 @@ class TestTemplateInjection(unittest.TestCase):
         self.expected_result = None
         self.returned_result = self.handler.scan(payload)
         self.assertEqual(self.returned_result, self.expected_result)
+
+    def test_xss_mako_regex(self):
+        # xss payloads cannot be matched with mako's regex but vice versa is possible
+        test_xss = '<img/src="1"/onerror=alert(0)>'           # space bypass xss payload
+        verify_xss = patterns.XSS_ATTACK.match(test_xss)
+        self.returned_result = self.handler.scan(test_xss)
+        self.expected_result = None
+        self.assertEqual(self.returned_result, self.expected_result)
+        self.assertTrue(verify_xss)
 
     def test_handle_tornado(self):
         self.handler.docker_helper.execute_cmd = AsyncMock(return_value='posix.uname_result(sysname="Linux")')
