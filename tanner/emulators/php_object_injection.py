@@ -31,6 +31,7 @@ class PHPObjectInjection:
                    "$cmd = unserialize(\'%s\');" \
                    "?>" % code
 
+        self.logger.debug('Getting the object injection results of %s from php sandbox', code)
         object_injection_result = await self.helper.get_result(vul_code)
 
         return object_injection_result
@@ -57,5 +58,6 @@ class PHPObjectInjection:
 
         result = await self.get_injection_result(attack_params[0]['value'])
         if not result or 'stdout' not in result:
+            self.logger.exception('Error while getting the injection results from php sandbox..')
             return dict(status_code=504)
         return dict(value=result['stdout'], page=False)

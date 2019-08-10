@@ -1,3 +1,4 @@
+import logging
 import pylibinjection
 
 from tanner.config import TannerConfig
@@ -6,6 +7,7 @@ from tanner.emulators import mysqli, sqlite
 
 class SqliEmulator:
     def __init__(self, db_name, working_dir):
+        self.logger = logging.getLogger('tanner.sqli_emulator')
         if TannerConfig.get('SQLI', 'type') == 'MySQL':
             self.sqli_emulator = mysqli.MySQLIEmulator(db_name)
         else:
@@ -49,6 +51,7 @@ class SqliEmulator:
             else:
                 error_result = 'SQL ERROR: near {}: syntax error'.format(attack_value['id'])
 
+            self.logger.debug('Error while executing: %s', error_result)
             result = dict(value=error_result, page=True)
         else:
             execute_result = await self.sqli_emulator.execute_query(db_query, attacker_db)

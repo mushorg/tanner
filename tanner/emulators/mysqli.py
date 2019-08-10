@@ -1,8 +1,10 @@
+import logging
 from tanner.utils import mysql_db_helper
 
 
 class MySQLIEmulator:
     def __init__(self, db_name):
+        self.logger = logging.getLogger('tanner.mysqli_emulator')
         self.db_name = db_name
         self.helper = mysql_db_helper.MySQLDBHelper()
 
@@ -32,5 +34,6 @@ class MySQLIEmulator:
             for row in rows:
                 result.append(list(row))
         except Exception as mysql_error:
+            self.logger.debug('Error while executing query: %s', mysql_error)
             result = str(mysql_error)
         return result
