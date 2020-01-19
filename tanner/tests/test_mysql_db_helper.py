@@ -120,16 +120,14 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.expected_result = 1
         self.expected_outs = b''
 
-        dump1 = 'mysqldump --compact --skip-extended-insert -h {host} -u {user} -p{password} ' \
+        dump1 = 'mysqldump --compact --skip-extended-insert -h {host} -u {user} ' \
                 'test_db>/tmp/db/file1.sql'
         dump1 = dump1.format(host=TannerConfig.get('SQLI', 'host'),
-                             user=TannerConfig.get('SQLI', 'user'),
-                             password=TannerConfig.get('SQLI', 'password'))
-        dump2 = "mysqldump --compact --skip-extended-insert -h {host} -u {user} -p{password} " \
+                             user=TannerConfig.get('SQLI', 'user'))
+        dump2 = "mysqldump --compact --skip-extended-insert -h {host} -u {user} " \
                 "attacker_db>/tmp/db/file2.sql"
         dump2 = dump2.format(host=TannerConfig.get('SQLI', 'host'),
-                             user=TannerConfig.get('SQLI', 'user'),
-                             password=TannerConfig.get('SQLI', 'password'))
+                             user=TannerConfig.get('SQLI', 'user'))
 
         diff_db = "diff /tmp/db/file1.sql /tmp/db/file2.sql"
 
