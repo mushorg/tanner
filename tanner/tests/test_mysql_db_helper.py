@@ -9,7 +9,7 @@ from tanner.utils.mysql_db_helper import MySQLDBHelper
 
 
 def mock_config(section, value):
-    config = {'host': '127.0.0.1', 'user': 'root', 'password': 'user_pass'}
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
 
     return config[value]
 
