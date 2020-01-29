@@ -6,7 +6,7 @@ from tanner.emulators.mysqli import MySQLIEmulator
 
 
 def mock_config(section, value):
-    config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': 'user_pass'}
 
     return config[value]
 
