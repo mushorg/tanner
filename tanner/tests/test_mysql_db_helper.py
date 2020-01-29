@@ -9,7 +9,7 @@ from tanner.utils.mysql_db_helper import MySQLDBHelper
 
 
 def mock_config(section, value):
-    config = {'host': '127.0.0.1', 'user': 'root', 'password': ''}
+    config = {'host': '127.0.0.1', 'user': 'root', 'password': 'user_pass'}
 
     return config[value]
 
@@ -120,14 +120,16 @@ class TestMySQLDBHelper(unittest.TestCase):
         self.expected_result = 1
         self.expected_outs = b''
 
-        dump1 = 'echo | mysqldump --compact --skip-extended-insert -h {host} -u {user} ' \
+        dump1 = 'mysqldump --compact --skip-extended-insert -h {host} -u {user} -p {password}' \
                 'test_db>/tmp/db/file1.sql'
         dump1 = dump1.format(host=TannerConfig.get('SQLI', 'host'),
-                             user=TannerConfig.get('SQLI', 'user'))
-        dump2 = "echo | mysqldump --compact --skip-extended-insert -h {host} -u {user} " \
+                             user=TannerConfig.get('SQLI', 'user'),
+                             password=TannerConfig.get('SQLI', 'password'))
+        dump2 = "mysqldump --compact --skip-extended-insert -h {host} -u {user} -p {password}" \
                 "attacker_db>/tmp/db/file2.sql"
         dump2 = dump2.format(host=TannerConfig.get('SQLI', 'host'),
-                             user=TannerConfig.get('SQLI', 'user'))
+                             user=TannerConfig.get('SQLI', 'user'),
+                             password=TannerConfig.get('SQLI', 'password'))
 
         diff_db = "diff /tmp/db/file1.sql /tmp/db/file2.sql"
 
