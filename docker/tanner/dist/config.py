@@ -2,6 +2,8 @@ import configparser
 import logging
 import os
 import sys
+from colorama import Fore,init
+init(autoreset=True)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ class TannerConfig():
     def set_config(config_path):
         cfg = configparser.ConfigParser()
         if not os.path.exists(config_path):
-            print("Config file {} doesn't exist. Check the config path or use default".format(config_path))
+            print(Fore.RED + "Config file {} doesn't exist. Check the config path or use default".format(config_path))
             sys.exit(1)
 
         cfg.read(config_path)
