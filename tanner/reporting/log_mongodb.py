@@ -1,4 +1,5 @@
-from colorama import Back
+from colorama import Fore,init
+init(autoreset=True)
 
 try:
     import pymongo
@@ -31,7 +32,7 @@ class Reporting():
             # Indexes
             self.tan_sessions.create_index([('$**', 'text')])
         else:
-            print(Back.RED + 'pymongo not found. pip install pymongo')
+            print(Fore.RED + 'pymongo not found. pip install pymongo')
 
     def update_session(self, session_id, new_values):
         session_id = ObjectId(session_id)
