@@ -13,8 +13,7 @@ RUN apk -U --no-cache add \
                linux-headers \
                py3-yarl \
                python3 \
-               python3-dev && \ 
-
+               python3-dev && \
 # Setup Tanner
     git clone --depth=1 https://github.com/mushorg/tanner /opt/tanner && \
     cp /root/dist/config.py /opt/tanner/tanner/ && \
@@ -23,10 +22,8 @@ RUN apk -U --no-cache add \
     pip3 install --no-cache-dir -r requirements.txt && \
     python3 setup.py install && \
     cd / && \
-    
 # Setup configs, user, groups
     chown -R nobody:nobody /opt/tanner && \
-
 # Clean up
     apk del --purge \
             build-base \
@@ -39,4 +36,4 @@ RUN apk -U --no-cache add \
 # Start conpot
 USER nobody:nobody
 WORKDIR /opt/tanner
-CMD tanner 
+CMD tanner
