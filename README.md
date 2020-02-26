@@ -53,7 +53,7 @@ Getting Started
 
 1. Get TANNER: `git clone https://github.com/mushorg/tanner.git`
 2. Go to the TANNER source  directory: ``cd tanner``
-3. Install requirements: `pip3 install -r requirements.txt`
+3. Install requirements: `sudo pip3 install -r requirements.txt`
 4. Install TANNER: ``sudo python3 setup.py install``
 5. Run TANNER: ``sudo tanner``
 
