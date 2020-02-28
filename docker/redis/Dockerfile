@@ -5,9 +5,7 @@ ADD dist/ /root/dist/
 
 # Setup apt
 RUN apk -U --no-cache add redis && \ 
-
     cp /root/dist/redis.conf /etc && \
-
 # Clean up
     rm -rf /root/* && \
     rm -rf /tmp/* /var/tmp/* && \
