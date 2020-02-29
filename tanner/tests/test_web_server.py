@@ -16,7 +16,6 @@ class TestWebServer(AioHTTPTestCase):
         self.handler.redis_client = AsyncMock()
         self.handler.redis_client.close = AsyncMock()
 
-
         self.returned_content = None
         self.expected_content = None
 
@@ -32,7 +31,6 @@ class TestWebServer(AioHTTPTestCase):
         self.handler.api.return_latest_session = AsyncMock()
         response = await self.client.request('GET', '/')
         self.returned_content = await response.text()
-
 
         self.assertEqual(response.status, 200)
 
@@ -111,7 +109,8 @@ class TestWebServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_sessions_info(self):
-        session = dict(cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'}, possible_owners={"user": 1.0}, attack_count={"lfi":1})
+        session = dict(cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'},
+                       possible_owners={"user": 1.0}, attack_count={"lfi": 1})
 
         self.handler.api.return_session_info = AsyncMock(return_value=session)
 
