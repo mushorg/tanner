@@ -15,3 +15,4 @@ geoip2
 aiodocker
 tornado
 mako
+pyjwt

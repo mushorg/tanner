@@ -2,10 +2,15 @@ import asyncio
 import logging
 
 from aiohttp import web
+from aiohttp.web import middleware
 
 from tanner.api import api
 from tanner import redis_client
 from tanner.config import TannerConfig
+from tanner.utils.api_key_generator import generate
+
+import jwt
+from jwt.exceptions import DecodeError, InvalidSignatureError
 
 
 class ApiServer:
@@ -74,6 +79,16 @@ class ApiServer:
     async def on_shutdown(self, app):
         self.redis_client.close()
 
+    @middleware
+    async def auth(self, request, handler):
+        resp = await handler(request)
+        auth_key = request.query.get('key')
+        try:
+            decoded = jwt.decode(auth_key, TannerConfig.get('API', 'auth_signature'), algorithm='HS256')
+        except (DecodeError, InvalidSignatureError):
+            return web.Response(body='401: Unauthorized')
+        return resp
+
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
         app.router.add_get('/snares', self.handle_snares)
@@ -82,8 +97,11 @@ class ApiServer:
         app.router.add_resource('/{snare_uuid}/sessions').add_route('GET', self.handle_sessions)
         app.router.add_resource('/session/{sess_uuid}').add_route('GET', self.handle_session_info)
 
-    def create_app(self, loop):
-        app = web.Application(loop=loop)
+    def create_app(self, loop, auth=False):
+        if auth:
+            app = web.Application(loop=loop, middlewares=[self.auth])
+        else:
+            app = web.Application(loop=loop)
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
@@ -92,7 +110,13 @@ class ApiServer:
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
-        app = self.create_app(loop)
+        set_auth = TannerConfig.get('API', 'auth')
+        app = self.create_app(loop, set_auth)
         host = TannerConfig.get('API', 'host')
         port = int(TannerConfig.get('API', 'port'))
+
+        if set_auth:
+            key = generate()
+            print('API_KEY for full access:', key)
+
         web.run_app(app, host=host, port=port)
