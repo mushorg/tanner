@@ -22,19 +22,19 @@ class SessionManager:
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
         await redis_client.sadd('snare_ids', *[valid_data['uuid']])
-        session_uuid = self.get_session_uuid(valid_data)
-        if session_uuid not in self.sessions:
+        session_id = self.get_session_id(valid_data)
+        if session_id not in self.sessions:
             try:
                 new_session = Session(valid_data)
             except KeyError as key_error:
                 self.logger.exception('Error during session creation: %s', key_error)
                 return
-            self.sessions[session_uuid] = new_session
+            self.sessions[session_id] = new_session
             return new_session
         else:
-            self.sessions[session_uuid].update_session(valid_data)
+            self.sessions[session_id].update_session(valid_data)
         # prepare the list of sessions
-        return self.sessions[session_uuid]
+        return self.sessions[session_id], session_id
 
     @staticmethod
     def validate_data(data):
@@ -58,7 +58,7 @@ class SessionManager:
 
         return data
 
-    def get_session_uuid(self, data):
+    def get_session_id(self, data):
         ip = data['peer']['ip']
         user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else ""
         sess_uuid = data['cookies']['sess_uuid'] if data['cookies']['sess_uuid'] is not None else ""
@@ -66,24 +66,22 @@ class SessionManager:
         return hashlib.md5((ip + user_agent + sess_uuid).encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
-
-        while True:
-            for sess_uuid, session in self.sessions.items():
-                if not session.is_expired():
+        for sess_id, session in self.sessions.items():
+            if not session.is_expired():
+                continue
+            is_deleted = await self.delete_session(session, redis_client)
+            if is_deleted:
+                try:
+                    del self.sessions[sess_id]
+                except ValueError:
                     continue
-                is_deleted = await self.delete_session(session, redis_client)
-                if is_deleted:
-                    try:
-                        del self.sessions[sess_uuid]
-                    except ValueError:
-                        continue
-            await asyncio.sleep(self.delete_timeout)
+
 
     async def delete_sessions_on_shutdown(self, redis_client):
-        for sess_uuid, sess in self.sessions.items():
+        for sess_id, sess in self.sessions.items():
             is_deleted = await self.delete_session(sess, redis_client)
             if is_deleted:
-                del self.sessions[sess_uuid]
+                del self.sessions[sess_id]
 
     async def delete_session(self, sess, redis_client):
         await sess.remove_associated_db()

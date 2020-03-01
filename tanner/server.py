@@ -58,7 +58,7 @@ class TannerServer:
             self.logger.exception('error parsing request: %s', data)
             response_msg = self._make_response(msg=type(error).__name__)
         else:
-            session = await self.session_manager.add_or_update_session(
+            session, _ = await self.session_manager.add_or_update_session(
                 data, self.redis_client
             )
             self.logger.info('Requested path %s', path)
@@ -102,6 +102,11 @@ class TannerServer:
         await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
         self.redis_client.close()
 
+    async def delete_sessions(self):
+        while True:
+            await self.session_manager.delete_old_sessions(self.redis_client)
+            await asyncio.sleep(self.delete_timeout)
+
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
         app.router.add_post('/event', self.handle_event)
@@ -115,7 +120,7 @@ class TannerServer:
         return app
 
     async def start_background_delete(self, app):
-        app['session_delete'] = asyncio.create_task(self.session_manager.delete_old_sessions(self.redis_client))
+        app['session_delete'] = asyncio.create_task(self.delete_sessions())
 
     async def cleanup_background_tasks(self, app):
         app['session_delete'].cancel()
