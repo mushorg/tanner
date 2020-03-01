@@ -23,7 +23,7 @@ class TestServer(AioHTTPTestCase):
 
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('tanner.emulators.base.BaseHandler', mock.Mock(), create=True):
-                with mock.patch('tanner.session_manager.SessionManager', mock.Mock(), create=True):
+                with mock.patch('tanner.sessions.session_manager.SessionManager', mock.Mock(), create=True):
                     self.serv = server.TannerServer()
 
         self.test_uuid = uuid.uuid4()

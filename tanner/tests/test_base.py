@@ -182,7 +182,7 @@ class TestBase(unittest.TestCase):
         paths = [{'path': '/python.html', 'timestamp': 1465851064.2740946},
                  {'path': '/python.php/?foo=bar', 'timestamp': 1465851065.2740946},
                  {'path': '/python.html/?foo=bar', 'timestamp': 1465851065.2740946}]
-        with mock.patch('tanner.session.Session') as mock_session:
+        with mock.patch('tanner.sessions.session.Session') as mock_session:
             mock_session.return_value.paths = paths
             sess = session.Session(None)
         injectable_page = self.handler.set_injectable_page(sess)
