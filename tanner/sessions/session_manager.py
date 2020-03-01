@@ -30,7 +30,7 @@ class SessionManager:
                 self.logger.exception('Error during session creation: %s', key_error)
                 return
             self.sessions[session_id] = new_session
-            return new_session
+            return new_session, session_id
         else:
             self.sessions[session_id].update_session(valid_data)
         # prepare the list of sessions
