@@ -10,7 +10,7 @@ from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
 class SessionManager:
-    def __init__(self, loop=None, delete_timeout=60*5):
+    def __init__(self, loop=None, delete_timeout=60 * 5):
         self.sessions = {}
         self.analyzer = SessionAnalyzer(loop=loop)
         self.logger = logging.getLogger(__name__)
@@ -60,10 +60,10 @@ class SessionManager:
 
     def get_session_uuid(self, data):
         ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else "" 
+        user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else ""
         sess_uuid = data['cookies']['sess_uuid'] if data['cookies']['sess_uuid'] is not None else ""
 
-        return hashlib.md5((ip+user_agent+sess_uuid).encode()).hexdigest()
+        return hashlib.md5((ip + user_agent + sess_uuid).encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
 

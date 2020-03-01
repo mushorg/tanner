@@ -118,8 +118,8 @@ class TannerServer:
         app['session_delete'] = asyncio.create_task(self.session_manager.delete_old_sessions(self.redis_client))
 
     async def cleanup_background_tasks(self, app):
-            app['session_delete'].cancel()
-            await app['session_delete']
+        app['session_delete'].cancel()
+        await app['session_delete']
 
     def start(self):
         loop = asyncio.get_event_loop()
