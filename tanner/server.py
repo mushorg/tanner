@@ -25,6 +25,8 @@ class TannerServer:
         db_name = TannerConfig.get('SQLI', 'db_name')
 
         self.session_manager = session_manager.SessionManager()
+        self.delete_timeout = TannerConfig.get('SESSIONS', 'delete_timeout')
+
         self.dorks = dorks_manager.DorksManager()
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)

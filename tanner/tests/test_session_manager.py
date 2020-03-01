@@ -18,7 +18,8 @@ class TestSessions(unittest.TestCase):
         data = {
             'headers': {
                 'USER-AGENT':
-                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
@@ -29,7 +30,8 @@ class TestSessions(unittest.TestCase):
             'peer': {'ip': None, 'port': None},
             'headers': {
                 'user-agent':
-                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
@@ -109,7 +111,7 @@ class TestSessions(unittest.TestCase):
         redis_mock.sadd = sess_sadd
         sess, sess_id = self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
 
-        self.assertDictEqual({sess_id : sess}, self.handler.sessions)
+        self.assertDictEqual({sess_id: sess}, self.handler.sessions)
 
     def test_updating_session(self):
         async def sess_sadd(key, value):
@@ -134,7 +136,7 @@ class TestSessions(unittest.TestCase):
 
         sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
 
-        sess_id =  hashlib.md5(sess_id_string.encode()).hexdigest()
+        sess_id = hashlib.md5(sess_id_string.encode()).hexdigest()
 
         redis_mock = mock.Mock()
         redis_mock.sadd = sess_sadd

@@ -10,11 +10,10 @@ from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
 class SessionManager:
-    def __init__(self, loop=None, delete_timeout=60 * 5):
+    def __init__(self, loop=None):
         self.sessions = {}
         self.analyzer = SessionAnalyzer(loop=loop)
         self.logger = logging.getLogger(__name__)
-        self.delete_timeout = delete_timeout
 
     async def add_or_update_session(self, raw_data, redis_client):
 
@@ -81,7 +80,6 @@ class SessionManager:
                 del self.sessions[sess_id]
             except ValueError:
                 continue
-
 
     async def delete_sessions_on_shutdown(self, redis_client):
         for sess_id, sess in self.sessions.items():
