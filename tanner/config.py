@@ -3,22 +3,23 @@ import logging
 import os
 import sys
 
+TANNER_DIR = os.path.expanduser("~/.tanner")
 LOGGER = logging.getLogger(__name__)
 
-config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
-                            'dorks': '/opt/tanner/data/dorks.pickle',
-                            'user_dorks': '/opt/tanner/data/user_dorks.pickle',
-                            'crawler_stats': '/opt/tanner/data/crawler_user_agents.txt',
-                            'geo_db': '/opt/tanner/db/GeoLite2-City.mmdb',
-                            'tornado': '/opt/tanner/data/tornado.py',
-                            'mako': '/opt/tanner/data/mako.py'
+config_template = {'DATA': {'db_config': os.path.join(TANNER_DIR, 'db/db_config.json'),
+                            'dorks': os.path.join(TANNER_DIR, 'data/dorks.pickle'),
+                            'user_dorks': os.path.join(TANNER_DIR, 'data/user_dorks.pickle'),
+                            'crawler_stats': os.path.join(TANNER_DIR, 'data/crawler_user_agents.txt'),
+                            'geo_db': os.path.join(TANNER_DIR, 'db/GeoLite2-City.mmdb'),
+                            'tornado': os.path.join(TANNER_DIR, 'data/tornado.py'),
+                            'mako': os.path.join(TANNER_DIR, 'data/mako.py')
                             },
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'WEB': {'host': '0.0.0.0', 'port': 8091},
                    'API': {'host': '0.0.0.0', 'port': 8092},
                    'PHPOX': {'host': '0.0.0.0', 'port': 8088},
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
-                   'EMULATORS': {'root_dir': '/opt/tanner'},
+                   'EMULATORS': {'root_dir': TANNER_DIR},
                    'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True,
                                         'php_code_injection': True, 'php_object_injection': True, "crlf": True,
                                         "xxe_injection": True, "template_injection": True},
@@ -26,7 +27,7 @@ config_template = {'DATA': {'db_config': '/opt/tanner/db/db_config.json',
                             'password': 'user_pass'},
                    'XXE_INJECTION': {'OUT_OF_BAND': False},
                    'DOCKER': {'host_image': 'busybox:latest'},
-                   'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
+                   'LOGGER': {'log_debug': os.path.join(TANNER_DIR, 'tanner.log'), 'log_err': os.path.join(TANNER_DIR, 'tanner.err')},
                    'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
                    'HPFEEDS': {'enabled': False, 'HOST': 'localhost', 'PORT': 10000, 'IDENT': '', 'SECRET': '',
                                'CHANNEL': 'tanner.events'},

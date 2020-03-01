@@ -5,6 +5,8 @@ import unittest
 from unittest import mock
 from tanner import config
 
+TANNER_DIR = os.path.expanduser("~/.tanner")
+
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
@@ -17,12 +19,12 @@ class TestConfig(unittest.TestCase):
             'API': {'host': '0.0.0.0', 'port': '9002'},
             'PHPOX': {'host': '0.0.0.0', 'port': '8088'},
             'REDIS': {'host': 'localhost', 'port': '6379', 'poolsize': '80', 'timeout': '5'},
-            'EMULATORS': {'root_dir': '/opt/tanner'},
+            'EMULATORS': {'root_dir': TANNER_DIR},
             'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
             'SQLI': {'type': 'SQLITE', 'db_name': 'user_tanner_db', 'host': 'localhost', 'user': 'user_name',
                      'password': 'user_pass'},
             'DOCKER': {'host_image': 'test_image'},
-            'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
+            'LOGGER': {'log_debug': os.path.join(TANNER_DIR, '/tanner.log'), 'log_err': os.path.join(TANNER_DIR, '/tanner.err')},
             'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/user_tanner_report.json'},
             'CLEANLOG': {'enabled': 'False'}
@@ -66,19 +68,19 @@ class TestConfig(unittest.TestCase):
 
     def test_get_when_file_dont_exists(self):
         config_template = {
-            'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
-                     'user_dorks': '/opt/tanner/data/user_dorks.pickle'},
+            'DATA': {'db_config': os.path.join(TANNER_DIR, '/db/db_config.json'), 'dorks': os.path.join(TANNER_DIR, '/data/dorks.pickle'),
+                     'user_dorks': os.path.join(TANNER_DIR, '/data/user_dorks.pickle')},
             'TANNER': {'host': '0.0.0.0', 'port': 8090},
             'WEB': {'host': '0.0.0.0', 'port': 8091},
             'API': {'host': '0.0.0.0', 'port': 8092},
             'PHPOX': {'host': '0.0.0.0', 'port': 8088},
             'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
-            'EMULATORS': {'root_dir': '/opt/tanner'},
+            'EMULATORS': {'root_dir': TANNER_DIR},
             'EMULATOR_ENABLED': {'sqli': True, 'rfi': True, 'lfi': True, 'xss': True, 'cmd_exec': True},
             'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
                      'password': 'user_pass'},
             'DOCKER': {'host_image': 'busybox:latest'},
-            'LOGGER': {'log_debug': '/opt/tanner/tanner.log', 'log_err': '/opt/tanner/tanner.err'},
+            'LOGGER': {'log_debug': os.path.join(TANNER_DIR, '/tanner.log'), 'log_err': os.path.join(TANNER_DIR, '/tanner.err')},
             'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
             'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
             'CLEANLOG': {'enabled': False}
