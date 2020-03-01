@@ -1,5 +1,6 @@
 import uuid
 from unittest import mock
+import hashlib
 
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
@@ -31,9 +32,10 @@ class TestServer(AioHTTPTestCase):
         async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
+            sess_id = hashlib.md5(b"foo")
             test_uuid = uuid
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
-            return sess
+            return sess, sess_id
 
         async def _delete_sessions_mock(client):
             pass
