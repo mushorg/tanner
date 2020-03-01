@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest import mock
 
-from tanner import session, session_manager
+from tanner.sessions import session_manager, session
 
 
 class TestSessions(unittest.TestCase):

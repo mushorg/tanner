@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 import geoip2
 import aioredis
-from tanner.session_analyzer import SessionAnalyzer
+from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
 session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \

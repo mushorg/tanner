@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 from tanner.utils.asyncmock import AsyncMock
-from tanner import session
+from tanner.sessions import session
 from tanner.emulators import base
 from tanner import __version__ as tanner_version
 

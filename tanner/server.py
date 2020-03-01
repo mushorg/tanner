@@ -1,12 +1,14 @@
 import asyncio
 import json
 import logging
+import concurrent
 
 import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import dorks_manager, session_manager, redis_client
+from tanner import dorks_manager, redis_client
+from tanner.sessions import session_manager
 from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
@@ -115,6 +117,8 @@ class TannerServer:
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(pool, self.session_manager.delete_old_sessions, self.redis_client)
         app = self.create_app(loop)
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
