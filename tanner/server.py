@@ -114,12 +114,21 @@ class TannerServer:
         self.setup_routes(app)
         return app
 
+    async def start_background_delete(self, app):
+        app['session_delete'] = asyncio.create_task(self.session_manager.delete_old_sessions(self.redis_client))
+
+    async def cleanup_background_tasks(self, app):
+            app['session_delete'].cancel()
+            await app['session_delete']
+
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            await loop.run_in_executor(pool, self.session_manager.delete_old_sessions, self.redis_client)
+
         app = self.create_app(loop)
+        app.on_startup.append(self.start_background_delete)
+        app.on_cleanup.append(self.cleanup_background_tasks)
+
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
         web.run_app(app, host=host, port=int(port))

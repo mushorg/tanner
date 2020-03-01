@@ -1,6 +1,7 @@
 import logging
 import hashlib
 import asyncio
+import time
 
 import aioredis
 
@@ -62,10 +63,12 @@ class SessionManager:
         user_agent = data['headers']['user-agent']
         sess_uuid = data['cookies']['sess_uuid']
 
-        return hashlib.md5(ip+user_agent+sess_uuid).hexdigest()
+        return hashlib.md5((ip+user_agent+sess_uuid).encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
+        delete_timeout = 60*5 
         while True:
+            print("delete session")
             for sess_uuid,session in self.sessions.items():
                 if not session.is_expired():
                     continue
@@ -75,13 +78,13 @@ class SessionManager:
                         del self.sessions[session]
                     except ValueError:
                         continue
-            await asyncio.sleep(5*60)
+            await asyncio.sleep(delete_timeout)
 
     async def delete_sessions_on_shutdown(self, redis_client):
-        for _, sess in self.sessions.items():
+        for sess_uuid, sess in self.sessions.items():
             is_deleted = await self.delete_session(sess, redis_client)
             if is_deleted:
-                del self.sessions[sess]
+                del self.sessions[sess_uuid]
 
     async def delete_session(self, sess, redis_client):
         await sess.remove_associated_db()
