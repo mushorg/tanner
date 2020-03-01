@@ -33,7 +33,6 @@ class SessionManager:
         else:
             self.sessions[session_uuid].update_session(valid_data)
         # prepare the list of sessions
-        await self.delete_old_sessions(redis_client)
         return self.sessions[session_uuid]
 
     @staticmethod
@@ -60,22 +59,21 @@ class SessionManager:
 
     def get_session_uuid(self, data):
         ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent']
-        sess_uuid = data['cookies']['sess_uuid']
+        user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else "" 
+        sess_uuid = data['cookies']['sess_uuid'] if data['cookies']['sess_uuid'] is not None else ""
 
         return hashlib.md5((ip+user_agent+sess_uuid).encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
         delete_timeout = 60*5 
         while True:
-            print("delete session")
-            for sess_uuid,session in self.sessions.items():
+            for sess_uuid, session in self.sessions.items():
                 if not session.is_expired():
                     continue
                 is_deleted = await self.delete_session(session, redis_client)
                 if is_deleted:
                     try:
-                        del self.sessions[session]
+                        del self.sessions[sess_uuid]
                     except ValueError:
                         continue
             await asyncio.sleep(delete_timeout)
