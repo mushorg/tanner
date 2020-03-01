@@ -60,10 +60,12 @@ class SessionManager:
 
     def get_session_id(self, data):
         ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else ""
-        sess_uuid = data['cookies']['sess_uuid'] if data['cookies']['sess_uuid'] is not None else ""
+        user_agent = data['headers']['user-agent']
+        sess_uuid = data['cookies']['sess_uuid']
 
-        return hashlib.md5((ip + user_agent + sess_uuid).encode()).hexdigest()
+        sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
+
+        return hashlib.md5(sess_id_string.encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
         for sess_id, session in self.sessions.items():

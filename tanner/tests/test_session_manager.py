@@ -128,12 +128,13 @@ class TestSessions(unittest.TestCase):
         }
         sess = session.Session(data)
 
-        data['cookies']['sess_uuid'] = sess.get_uuid()
         ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent'] if data['headers']['user-agent'] is not None else ""
-        sess_uuid = data['cookies']['sess_uuid'] if data['cookies']['sess_uuid'] is not None else ""
+        user_agent = data['headers']['user-agent']
+        sess_uuid = data['cookies']['sess_uuid']
 
-        sess_id = hashlib.md5((ip + user_agent + sess_uuid).encode()).hexdigest()
+        sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
+
+        sess_id =  hashlib.md5(sess_id_string.encode()).hexdigest()
 
         redis_mock = mock.Mock()
         redis_mock.sadd = sess_sadd
