@@ -103,11 +103,15 @@ class TannerServer:
     async def on_shutdown(self, app):
         await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
         self.redis_client.close()
+        await self.redis_client.wait_closed()
 
     async def delete_sessions(self):
-        while True:
-            await self.session_manager.delete_old_sessions(self.redis_client)
-            await asyncio.sleep(self.delete_timeout)
+        try:
+            while True:
+                await self.session_manager.delete_old_sessions(self.redis_client)
+                await asyncio.sleep(self.delete_timeout)
+        except asyncio.CancelledError:
+            pass
 
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
