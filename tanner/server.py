@@ -1,12 +1,14 @@
 import asyncio
 import json
 import logging
+import concurrent
 
 import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import dorks_manager, session_manager, redis_client
+from tanner import dorks_manager, redis_client
+from tanner.sessions import session_manager
 from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
@@ -23,6 +25,8 @@ class TannerServer:
         db_name = TannerConfig.get('SQLI', 'db_name')
 
         self.session_manager = session_manager.SessionManager()
+        self.delete_timeout = TannerConfig.get('SESSIONS', 'delete_timeout')
+
         self.dorks = dorks_manager.DorksManager()
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
@@ -56,7 +60,7 @@ class TannerServer:
             self.logger.exception('error parsing request: %s', data)
             response_msg = self._make_response(msg=type(error).__name__)
         else:
-            session = await self.session_manager.add_or_update_session(
+            session, _ = await self.session_manager.add_or_update_session(
                 data, self.redis_client
             )
             self.logger.info('Requested path %s', path)
@@ -99,6 +103,15 @@ class TannerServer:
     async def on_shutdown(self, app):
         await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
         self.redis_client.close()
+        await self.redis_client.wait_closed()
+
+    async def delete_sessions(self):
+        try:
+            while True:
+                await self.session_manager.delete_old_sessions(self.redis_client)
+                await asyncio.sleep(self.delete_timeout)
+        except asyncio.CancelledError:
+            pass
 
     def setup_routes(self, app):
         app.router.add_route('*', '/', self.default_handler)
@@ -112,10 +125,21 @@ class TannerServer:
         self.setup_routes(app)
         return app
 
+    async def start_background_delete(self, app):
+        app['session_delete'] = asyncio.create_task(self.delete_sessions())
+
+    async def cleanup_background_tasks(self, app):
+        app['session_delete'].cancel()
+        await app['session_delete']
+
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+
         app = self.create_app(loop)
+        app.on_startup.append(self.start_background_delete)
+        app.on_cleanup.append(self.cleanup_background_tasks)
+
         host = TannerConfig.get('TANNER', 'host')
         port = TannerConfig.get('TANNER', 'port')
         web.run_app(app, host=host, port=int(port))

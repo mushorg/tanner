@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 from tanner.utils.asyncmock import AsyncMock
-from tanner import session
+from tanner.sessions import session
 from tanner.emulators import base
 from tanner import __version__ as tanner_version
 
@@ -182,7 +182,7 @@ class TestBase(unittest.TestCase):
         paths = [{'path': '/python.html', 'timestamp': 1465851064.2740946},
                  {'path': '/python.php/?foo=bar', 'timestamp': 1465851065.2740946},
                  {'path': '/python.html/?foo=bar', 'timestamp': 1465851065.2740946}]
-        with mock.patch('tanner.session.Session') as mock_session:
+        with mock.patch('tanner.sessions.session.Session') as mock_session:
             mock_session.return_value.paths = paths
             sess = session.Session(None)
         injectable_page = self.handler.set_injectable_page(sess)
