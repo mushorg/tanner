@@ -6,6 +6,7 @@ from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from tanner import server
 from tanner.config import TannerConfig
+from tanner.utils.asyncmock import AsyncMock
 from tanner import __version__ as tanner_version
 
 
@@ -50,8 +51,9 @@ class TestServer(AioHTTPTestCase):
         dorks.choose_dorks = choosed
         dorks.extract_path = self._make_coroutine()
 
-        redis = mock.Mock()
+        redis = AsyncMock()
         redis.close = mock.Mock()
+        redis.wait_closed = AsyncMock()
         self.serv.dorks = dorks
         self.serv.redis_client = redis
 
