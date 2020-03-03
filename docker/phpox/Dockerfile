@@ -1,10 +1,11 @@
 FROM alpine
-
+#
 # Include dist
 ADD dist/ /root/dist/
-
+#
 # Install packages
-RUN apk -U --no-cache add \
+RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
+    apk -U --no-cache add \
                build-base \
                file \
                git \
@@ -15,7 +16,7 @@ RUN apk -U --no-cache add \
                python3 \
                python3-dev \
                re2c && \
-    pip3 install --no-cache-dir --upgrade pip && \
+#
 # Install bfr sandbox from git
     git clone --depth=1 https://github.com/mushorg/BFR /opt/BFR && \
     cd /opt/BFR && \
@@ -28,12 +29,14 @@ RUN apk -U --no-cache add \
     cd / && \
     rm -rf /opt/BFR /tmp/* /var/tmp/* && \
     echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php7/php.ini && \
+#
 # Install PHP Sandbox
     git clone --depth=1 https://github.com/mushorg/phpox /opt/phpox && \
     cd /opt/phpox && \
     cp /root/dist/sandbox.py . && \
     pip3 install -r requirements.txt && \
     make && \
+#
 # Clean up
     apk del --purge build-base \
                     git \
@@ -41,7 +44,7 @@ RUN apk -U --no-cache add \
                     python3-dev && \
     rm -rf /root/* && \
     rm -rf /var/cache/apk/*
-
+#
 # Set workdir and start phpsandbox
 USER nobody:nobody
 WORKDIR /opt/phpox
