@@ -14,7 +14,8 @@ class BaseHandler:
         self.emulator_enabled = TannerConfig.get_section('EMULATOR_ENABLED')
 
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
+            'rfi': rfi.RfiEmulator(base_dir, loop=loop, allow_insecure=TannerConfig.get("RFI", 'allow_insecure'))
+                if self.emulator_enabled['rfi'] else None,
             'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
             'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
             'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
