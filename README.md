@@ -60,7 +60,7 @@ For more info please see the detailed installation guide [here.](https://docs.do
 6. (Optional) For runnning TANNER Api ``sudo tannerapi``
 7. (Optional) For runnning TANNER Web ``sudo tannerweb``
 
-Note:- Make sure you have ```python3-dev`` incase you are facing problem with installing some requirments.
+Note:- Make sure you have `python3-dev` incase you are facing problem with installing some requirments.
 ```
   sudo apt-get install python3-dev
 ```
