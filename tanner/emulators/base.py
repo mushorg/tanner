@@ -5,7 +5,8 @@ import yarl
 
 from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, xxe_injection, template_injection   # noqa
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, \
+    xxe_injection, template_injection  # noqa
 from tanner.utils import patterns
 
 
@@ -15,7 +16,7 @@ class BaseHandler:
 
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop=loop, allow_insecure=TannerConfig.get("RFI", 'allow_insecure'))
-                if self.emulator_enabled['rfi'] else None,
+            if self.emulator_enabled['rfi'] else None,
             'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
             'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
             'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,
