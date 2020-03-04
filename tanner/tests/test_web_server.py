@@ -10,12 +10,11 @@ from tanner.web.server import TannerWebServer
 class TestWebServer(AioHTTPTestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
-        redis = mock.Mock()
-        redis.close = mock.Mock()
 
         self.handler = TannerWebServer()
-        self.handler.redis_client = redis
-        self.handler.api = Api(self.handler.redis_client)
+        self.handler.api = AsyncMock()
+        self.handler.redis_client = AsyncMock()
+        self.handler.redis_client.close = AsyncMock()
 
         self.returned_content = None
         self.expected_content = None
@@ -28,12 +27,12 @@ class TestWebServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_handle_index(self):
+        self.handler.api.return_snares = AsyncMock(return_value=["foo"])
+        self.handler.api.return_latest_session = AsyncMock()
         response = await self.client.request('GET', '/')
         self.returned_content = await response.text()
 
-        self.expected_content = '<html>\n<head>\n\t<title>Home - Tanner Web</title>\n\t'
-
-        self.assertIn(self.expected_content, self.returned_content)
+        self.assertEqual(response.status, 200)
 
     @unittest_run_loop
     async def test_handle_snares(self):
@@ -110,7 +109,8 @@ class TestWebServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_sessions_info(self):
-        session = dict(cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'}, possible_owners={"user": 1.0})
+        session = dict(cookies={'sess_uuid': '9f82e5d0e6b64047bba996222d45e72c'},
+                       possible_owners={"user": 1.0}, attack_count={"lfi": 1})
 
         self.handler.api.return_session_info = AsyncMock(return_value=session)
 

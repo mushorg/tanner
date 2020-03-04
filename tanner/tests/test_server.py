@@ -1,10 +1,12 @@
 import uuid
 from unittest import mock
+import hashlib
 
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from tanner import server
 from tanner.config import TannerConfig
+from tanner.utils.asyncmock import AsyncMock
 from tanner import __version__ as tanner_version
 
 
@@ -23,7 +25,7 @@ class TestServer(AioHTTPTestCase):
 
         with mock.patch('tanner.dorks_manager.DorksManager', mock.Mock()):
             with mock.patch('tanner.emulators.base.BaseHandler', mock.Mock(), create=True):
-                with mock.patch('tanner.session_manager.SessionManager', mock.Mock(), create=True):
+                with mock.patch('tanner.sessions.session_manager.SessionManager', mock.Mock(), create=True):
                     self.serv = server.TannerServer()
 
         self.test_uuid = uuid.uuid4()
@@ -31,9 +33,10 @@ class TestServer(AioHTTPTestCase):
         async def _add_or_update_mock(data, client):
             sess = mock.Mock()
             sess.set_attack_type = mock.Mock()
+            sess_id = hashlib.md5(b"foo")
             test_uuid = uuid
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
-            return sess
+            return sess, sess_id
 
         async def _delete_sessions_mock(client):
             pass
@@ -48,8 +51,9 @@ class TestServer(AioHTTPTestCase):
         dorks.choose_dorks = choosed
         dorks.extract_path = self._make_coroutine()
 
-        redis = mock.Mock()
+        redis = AsyncMock()
         redis.close = mock.Mock()
+        redis.wait_closed = AsyncMock()
         self.serv.dorks = dorks
         self.serv.redis_client = redis
 

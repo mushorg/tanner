@@ -7,13 +7,16 @@ TANNER
 
 <b><i>He who flays the hide</b></i>
 
+
 About
---------
+-----
 TANNER is a remote data analysis, and classification service, to evaluate HTTP requests and composing the response then served by [SNARE](https://github.com/mushorg/snare) events.
 
+
 Documentation
----------------
+-------------
 The documentation can be found [here](http://tanner.readthedocs.io).
+
 
 Basic Concept
 -------------
@@ -26,64 +29,67 @@ Basic Concept
 Getting Started
 ---------------
 
-- You need Python3. We tested primarily with **python 3.5**
-- This was tested with a recent Ubuntu based Linux.
+- You need Python3.6 and above for installing tanner.
+- This was tested with a recent Ubuntu-based Linux.
 
+### Steps to install TANNER
 
-### Setup Redis
-
+#### Step 1: Setup Redis
 
 1. Install the Redis: ``sudo apt-get install redis-server``
-2. Start it on ``localhost`` with default ``port``: ``redis-server``
+2. Run ``redis-server`` (to start it on `localhost` with default `port`)
 
-### Setup PHP Sandbox
-
+#### Step 2: Setup PHP Sandbox
 
 1. For PHP Sandbox setup, see sandbox [manual](https://github.com/mushorg/phpox)
 2. In PHP Sandbox directory, run sandbox: ``sudo python3 sandbox.py``
 
-### Setup Docker
+#### Step 3: Setup Docker
 
+1. Run ``sudo apt-get install docker-ce docker-ce-cli containerd.io``
 
-1. Install [docker](https://docs.docker.com/engine/installation/linux/ubuntu/)
-2. Pull the required image to use [default : ``busybox:latest``]
+For more info please see the detailed installation guide [here.](https://docs.docker.com/engine/installation/linux/ubuntu/)
 
-### Setup and run TANNER
-
+#### Step 4: Setup and run TANNER
 
 1. Get TANNER: `git clone https://github.com/mushorg/tanner.git`
 2. Go to the TANNER source  directory: ``cd tanner``
 3. Install requirements: `sudo pip3 install -r requirements.txt`
 4. Install TANNER: ``sudo python3 setup.py install``
 5. Run TANNER: ``sudo tanner``
+6. (Optional) For runnning TANNER Api ``sudo tannerapi``
+7. (Optional) For runnning TANNER Web ``sudo tannerweb``
 
-### Run Tanner Api
+Note:- Make sure you have ```python3-dev`` incase you are facing problem with installing some requirments.
+```
+  sudo apt-get install python3-dev
+```
 
-Run ``sudo tannerapi``
+(Recommended) You should to bind to 0.0.0.0 when running in
+<i>production</i> and on a different host than SNARE.
 
-### Run Tanner WebUI
+### Install and run TANNER using docker container
 
-Run ``sudo tannerweb``
+  In case you want to run the TANNER service using docker or facing any problem
+  in setting up TANNER on your machine, you can follow these steps.
 
-You obviously want to bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE (recommended).
-
-## Docker build instructions
-1. Change current directory to `tanner/docker`
-2. `docker-compose build`
-3. `docker-compose up`
+#### Docker build instructions
+1. Change the current directory to `tanner/docker`
+2. `sudo docker-compose build`
+3. `sudo docker-compose up`
 
 More information about running `docker-compose` can be found [here.](https://docs.docker.com/compose/gettingstarted/)
 
-## Testing
+Testing
+-------
 
 In order to run the tests and receive a test coverage report, we recommend running `pytest`:
-
 
     pip install pytest pytest-cov
     sudo pytest --cov-report term-missing --cov=tanner tanner/tests/
 
-## Sample Output
-
+Sample Output
+-------------
 
 ```shell
     # sudo tanner
