@@ -33,7 +33,6 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
 # Install PHP Sandbox
     git clone --depth=1 https://github.com/mushorg/phpox /opt/phpox && \
     cd /opt/phpox && \
-    cp /root/dist/sandbox.py . && \
     pip3 install -r requirements.txt && \
     make && \
 #
