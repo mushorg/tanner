@@ -4,6 +4,7 @@ import hashlib
 import logging
 import os
 import re
+import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -15,11 +16,12 @@ from tanner.utils import patterns
 
 
 class RfiEmulator:
-    def __init__(self, root_dir, loop=None):
+    def __init__(self, root_dir, loop=None, allow_insecure=False):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.script_dir = os.path.join(root_dir, 'files')
         self.logger = logging.getLogger('tanner.rfi_emulator.RfiEmulator')
         self.helper = PHPSandboxHelper(self._loop)
+        self.allow_insecure = allow_insecure
 
     async def download_file(self, path):
         file_name = None
@@ -39,9 +41,10 @@ class RfiEmulator:
             file_name = await ftp_future
 
         else:
+            ssl_context = False if self.allow_insecure else ssl.create_default_context()
             try:
                 async with aiohttp.ClientSession(loop=self._loop) as client:
-                    async with await client.get(url) as resp:
+                    async with await client.get(url, ssl=ssl_context) as resp:
                         data = await resp.text()
             except aiohttp.ClientError as client_error:
                 self.logger.exception('Error during downloading the rfi script %s', client_error)
