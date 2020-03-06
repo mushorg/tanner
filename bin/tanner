@@ -17,7 +17,9 @@ def main():
     """)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config")
+    parser.add_argument("--database", help="choose a database postgres/redis")
     args = parser.parse_args()
+    database=args.database
     if args.config:
         TannerConfig.set_config(args.config)
     debug_log_file_name = TannerConfig.get("LOGGER", "log_debug")
@@ -27,7 +29,7 @@ def main():
     print("Error logs will be stored in", error_log_file_name)
     if TannerConfig.get('LOCALLOG', 'enabled') is True:
         print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
-    tanner = server.TannerServer()
+    tanner = server.TannerServer(database=database)
     tanner.start()
 
 
