@@ -7,7 +7,7 @@ import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import dorks_manager, redis_client
+from tanner import dorks_manager, redis_client, postgres_client
 from tanner.sessions import session_manager
 from tanner.config import TannerConfig
 from tanner.emulators import base
@@ -20,7 +20,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 class TannerServer:
-    def __init__(self):
+    def __init__(self,database):
         base_dir = TannerConfig.get('EMULATORS', 'root_dir')
         db_name = TannerConfig.get('SQLI', 'db_name')
 
@@ -30,7 +30,8 @@ class TannerServer:
         self.dorks = dorks_manager.DorksManager()
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
-        self.redis_client = None
+        self.db_client = None
+        self.database=database
 
         if TannerConfig.get('HPFEEDS', 'enabled') is True:
             self.hpf = hpfeeds_report()
@@ -61,10 +62,10 @@ class TannerServer:
             response_msg = self._make_response(msg=type(error).__name__)
         else:
             session, _ = await self.session_manager.add_or_update_session(
-                data, self.redis_client
+                data, self.db_client
             )
             self.logger.info('Requested path %s', path)
-            await self.dorks.extract_path(path, self.redis_client)
+            await self.dorks.extract_path(path, self.db_client)
             detection = await self.base_handler.handle(data, session)
             session.set_attack_type(path, detection["name"])
 
@@ -92,7 +93,7 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def handle_dorks(self, request):
-        dorks = await self.dorks.choose_dorks(self.redis_client)
+        dorks = await self.dorks.choose_dorks(self.db_client)
         response_msg = dict(version=tanner_version, response=dict(dorks=dorks))
         return web.json_response(response_msg)
 
@@ -101,14 +102,14 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
-        await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
-        self.redis_client.close()
-        await self.redis_client.wait_closed()
+        await self.session_manager.delete_sessions_on_shutdown(self.db_client)
+        self.db_client.close()
+        await self.db_client.wait_closed()
 
     async def delete_sessions(self):
         try:
             while True:
-                await self.session_manager.delete_old_sessions(self.redis_client)
+                await self.session_manager.delete_old_sessions(self.db_client)
                 await asyncio.sleep(self.delete_timeout)
         except asyncio.CancelledError:
             pass
@@ -134,8 +135,10 @@ class TannerServer:
 
     def start(self):
         loop = asyncio.get_event_loop()
-        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
-
+        if self.database == 'redis':
+            self.db_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
+        elif self.database == 'postgres':
+            self.db_client = loop.run_until_complete(postgres_client.PostgresClient.get_postgres_client())
         app = self.create_app(loop)
         app.on_startup.append(self.start_background_delete)
         app.on_cleanup.append(self.cleanup_background_tasks)
