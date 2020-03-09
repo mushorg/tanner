@@ -19,7 +19,7 @@ def main():
     parser.add_argument("--config", help="tanner config")
     args = parser.parse_args()
     if args.config:
-        TannerConfig.set_config(args.config)
+        TannerConfig.set_config(args.config, False)
     debug_log_file_name = TannerConfig.get("LOGGER", "log_debug")
     error_log_file_name = TannerConfig.get("LOGGER", "log_err")
     logger.Logger.create_logger(debug_log_file_name, error_log_file_name, __package__)
