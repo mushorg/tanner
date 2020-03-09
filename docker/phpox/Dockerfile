@@ -1,8 +1,5 @@
 FROM alpine:3.10
 #
-# Include dist
-ADD dist/ /root/dist/
-#
 # Install packages
 RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
     apk -U --no-cache add \
