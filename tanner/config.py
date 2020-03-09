@@ -18,7 +18,7 @@ class Meta(type):
         def parse_default_configs(path):
             return read_config(path)
 
-        default_config = parse_default_configs("/opt/tanner/config.yaml")
+        default_config = parse_default_configs("/opt/tanner/data/config.yaml")
         attribs.update({
             'default_config': default_config,
             'parse_default_configs': parse_default_configs
@@ -32,7 +32,7 @@ class TannerConfig(metaclass=Meta):
 
     @staticmethod
     def set_default_config(default_config_path):
-        TannerConfig.default_config = read_config("/opt/tanner/config.yaml")
+        TannerConfig.default_config = read_config(default_config_path)
 
     @staticmethod
     def set_config(config_path):

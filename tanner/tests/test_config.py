@@ -66,7 +66,7 @@ class TestConfig(unittest.TestCase):
                 self.assertEqual(data, convert_type(assertion_data))
 
     def test_get_when_file_dont_exists(self):
-        with open("/opt/tanner/config.yaml", 'r') as f:
+        with open("/opt/tanner/data/config.yaml", 'r') as f:
             config_template = yaml.load(f, Loader=yaml.FullLoader)
 
         for section in config_template:
