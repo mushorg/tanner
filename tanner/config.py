@@ -8,31 +8,17 @@ LOGGER = logging.getLogger(__name__)
 
 
 def read_config(path):
+    config_values = {}
     with open(path, 'r') as f:
         config_values = yaml.load(f, Loader=yaml.FullLoader)
     return config_values
 
 
-class Meta(type):
-    def __new__(cls, clsname, superclasses, attribs):
-        def parse_default_configs(path):
-            return read_config(path)
-
-        default_config = parse_default_configs("/opt/tanner/data/config.yaml")
-        attribs.update({
-            'default_config': default_config,
-            'parse_default_configs': parse_default_configs
-        })
-
-        return super(Meta, cls).__new__(cls, clsname, superclasses, attribs)
+DEFAULT_CONFIG = read_config("/opt/tanner/data/config.yaml")
 
 
-class TannerConfig(metaclass=Meta):
+class TannerConfig():
     config = None
-
-    @staticmethod
-    def set_default_config(default_config_path):
-        TannerConfig.default_config = read_config(default_config_path)
 
     @staticmethod
     def set_config(config_path):
@@ -49,9 +35,9 @@ class TannerConfig(metaclass=Meta):
             try:
                 res = TannerConfig.config[section][value]
             except KeyError:
-                res = TannerConfig.default_config[section][value]
+                res = DEFAULT_CONFIG[section][value]
         else:
-            res = TannerConfig.default_config[section][value]
+            res = DEFAULT_CONFIG[section][value]
 
         return res
 
@@ -61,6 +47,6 @@ class TannerConfig(metaclass=Meta):
         if TannerConfig.config is not None:
             res = TannerConfig.config[section]
         else:
-            res = TannerConfig.default_config[section]
+            res = DEFAULT_CONFIG[section]
 
         return res
