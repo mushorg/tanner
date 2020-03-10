@@ -1,6 +1,5 @@
 import asyncio
 import json
-import sys
 import logging
 import concurrent
 
@@ -127,10 +126,7 @@ class TannerServer:
         return app
 
     async def start_background_delete(self, app):
-        if sys.version_info[1]>=7:
-            app['session_delete'] = asyncio.create_task(self.delete_sessions())
-        else:
-            app['session_delete'] = asyncio.ensure_future(self.delete_sessions())
+        app['session_delete'] = asyncio.ensure_future(self.delete_sessions())
 
     async def cleanup_background_tasks(self, app):
         app['session_delete'].cancel()
