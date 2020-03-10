@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import sqlalchemy import create_engine
+from sqlalchemy import create_engine
 import aiopg
 from tanner.config import TannerConfig
 
