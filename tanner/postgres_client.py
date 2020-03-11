@@ -16,6 +16,7 @@ class PostgresClient:
             user=TannerConfig.get('POSTGRES', 'user')
             timeout=TannerConfig.get('POSTGRES','timeout')
             password=TannerConfig.get('POSTGRES', 'password')
+            poolsize=TannerConfig.get('POSTGRES', 'poolsize')
             if poolsize is None:
                 poolsize=TannerConfig.get('REDIS', 'poolsize')
             db_string = 'dbname={} user={} password={} host={} port={}'.format(dbname, user, password, host, port)

@@ -17,7 +17,7 @@ def main():
     """)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config")
-    parser.add_argument("--database", help="choose a database postgres/redis")
+    parser.add_argument("--database", help="choose a database postgres/redis", default='redis')
     args = parser.parse_args()
     database=args.database
     if args.config:
