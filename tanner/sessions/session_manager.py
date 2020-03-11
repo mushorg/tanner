@@ -76,7 +76,6 @@ class SessionManager:
                 except ValueError:
                     continue
 
-
     async def delete_sessions_on_shutdown(self, redis_client):
         id_for_deletion = list(self.sessions.keys())
 
@@ -86,8 +85,8 @@ class SessionManager:
                 del self.sessions[sess_id]
 
         try:
-            assert len(self.sessions)==0
-        except AssertionError as e:
+            assert len(self.sessions) == 0
+        except AssertionError:
             self.logger.exception("Not all sessions were moved to the storage!")
 
     async def delete_session(self, sess, redis_client):
