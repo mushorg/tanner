@@ -7,14 +7,17 @@ import yaml
 LOGGER = logging.getLogger(__name__)
 
 
-def read_config(path):
-    config_values = {}
-    with open(path, 'r') as f:
-        config_values = yaml.load(f, Loader=yaml.FullLoader)
-    return config_values
+class ReadConfig():
+
+    @staticmethod
+    def read_config(path):
+        config_values = {}
+        with open(path, 'r') as f:
+            config_values = yaml.load(f, Loader=yaml.FullLoader)
+        return config_values
 
 
-DEFAULT_CONFIG = read_config("/opt/tanner/data/config.yaml")
+DEFAULT_CONFIG = ReadConfig.read_config("/opt/tanner/data/config.yaml")
 
 
 class TannerConfig():
@@ -27,16 +30,13 @@ class TannerConfig():
                 config_path))
             sys.exit(1)
 
-        TannerConfig.config = read_config(config_path)
+        TannerConfig.config = ReadConfig.read_config(config_path)
 
     @staticmethod
     def get(section, value):
-        if TannerConfig.config is not None:
-            try:
-                res = TannerConfig.config[section][value]
-            except KeyError:
-                res = DEFAULT_CONFIG[section][value]
-        else:
+        try:
+            res = TannerConfig.config[section][value]
+        except (KeyError, TypeError):
             res = DEFAULT_CONFIG[section][value]
 
         return res
