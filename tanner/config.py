@@ -16,7 +16,7 @@ config_template = {'DATA': {'db_config': os.path.join(TANNER_DIR, 'db/db_config.
                             },
                    'TANNER': {'host': '0.0.0.0', 'port': 8090},
                    'WEB': {'host': '0.0.0.0', 'port': 8091},
-                   'API': {'host': '0.0.0.0', 'port': 8092},
+                   'API': {'host': '0.0.0.0', 'port': 8092, 'auth': False, 'auth_signature': 'tanner_api_auth'},
                    'PHPOX': {'host': '0.0.0.0', 'port': 8088},
                    'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
                    'EMULATORS': {'root_dir': TANNER_DIR},
@@ -26,6 +26,7 @@ config_template = {'DATA': {'db_config': os.path.join(TANNER_DIR, 'db/db_config.
                    'SQLI': {'type': 'SQLITE', 'db_name': 'tanner_db', 'host': 'localhost', 'user': 'root',
                             'password': 'user_pass'},
                    'XXE_INJECTION': {'OUT_OF_BAND': False},
+                   'RFI': {"allow_insecure": False},
                    'DOCKER': {'host_image': 'busybox:latest'},
                    'LOGGER': {'log_debug': os.path.join(TANNER_DIR, 'tanner.log'), 'log_err': os.path.join(TANNER_DIR, 'tanner.err')},
                    'MONGO': {'enabled': False, 'URI': 'mongodb://localhost'},
@@ -34,7 +35,8 @@ config_template = {'DATA': {'db_config': os.path.join(TANNER_DIR, 'db/db_config.
                    'LOCALLOG': {'enabled': False, 'PATH': '/tmp/tanner_report.json'},
                    'CLEANLOG': {'enabled': False},
                    'REMOTE_DOCKERFILE': {'GITHUB': "https://raw.githubusercontent.com/mushorg/tanner/master/docker/"
-                                                   "tanner/template_injection/Dockerfile"}
+                                                   "tanner/template_injection/Dockerfile"},
+                   'SESSIONS': {"delete_timeout": 300}
                    }
 
 

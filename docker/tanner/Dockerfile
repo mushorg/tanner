@@ -1,10 +1,11 @@
-FROM alpine
+FROM alpine:3.10
 
 # Include dist
 ADD dist/ /root/dist/
 
 # Setup apt
-RUN apk -U --no-cache add \
+RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
+    apk -U --no-cache add \
                build-base \
                git \
                libcap \
@@ -13,20 +14,17 @@ RUN apk -U --no-cache add \
                linux-headers \
                py3-yarl \
                python3 \
-               python3-dev && \ 
-
+               python3-dev && \
 # Setup Tanner
     git clone --depth=1 https://github.com/mushorg/tanner /opt/tanner && \
     cp /root/dist/config.py /opt/tanner/tanner/ && \
     cd /opt/tanner/ && \
-    pip3 install --no-cache-dir --upgrade pip setuptools && \
+    pip3 install --no-cache-dir setuptools && \
     pip3 install --no-cache-dir -r requirements.txt && \
     python3 setup.py install && \
     cd / && \
-    
 # Setup configs, user, groups
     chown -R nobody:nobody /opt/tanner && \
-
 # Clean up
     apk del --purge \
             build-base \
@@ -36,7 +34,7 @@ RUN apk -U --no-cache add \
     rm -rf /tmp/* /var/tmp/* && \
     rm -rf /var/cache/apk/*
 
-# Start conpot
+# Start tanner
 USER nobody:nobody
 WORKDIR /opt/tanner
-CMD tanner 
+CMD tanner

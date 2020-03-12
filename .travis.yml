@@ -11,9 +11,10 @@ before_install:
 language: python
 python:
   - "3.6"
+  - "3.7"
 # command to install dependencies
 install:
-  - "pip install -r requirements.txt"
+  - pip install -r requirements.txt
   - pip install coveralls
   - docker-compose -f ./docker/docker-compose.yml up -d
 # command to run tests

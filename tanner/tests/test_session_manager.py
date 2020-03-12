@@ -1,8 +1,9 @@
 import asyncio
 import unittest
 from unittest import mock
+import hashlib
 
-from tanner import session, session_manager
+from tanner.sessions import session_manager, session
 
 
 class TestSessions(unittest.TestCase):
@@ -17,7 +18,8 @@ class TestSessions(unittest.TestCase):
         data = {
             'headers': {
                 'USER-AGENT':
-                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
@@ -28,7 +30,8 @@ class TestSessions(unittest.TestCase):
             'peer': {'ip': None, 'port': None},
             'headers': {
                 'user-agent':
-                'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/41.0.2228.0 Safari/537.36'
             },
             'path': '/foo',
             'uuid': None,
@@ -106,9 +109,9 @@ class TestSessions(unittest.TestCase):
 
         redis_mock = mock.Mock()
         redis_mock.sadd = sess_sadd
-        sess = self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
+        sess, sess_id = self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
 
-        self.assertEquals([sess], self.handler.sessions)
+        self.assertDictEqual({sess_id: sess}, self.handler.sessions)
 
     def test_updating_session(self):
         async def sess_sadd(key, value):
@@ -126,12 +129,20 @@ class TestSessions(unittest.TestCase):
             'cookies': {'sess_uuid': None}
         }
         sess = session.Session(data)
-        data['cookies']['sess_uuid'] = sess.get_uuid()
+
+        ip = data['peer']['ip']
+        user_agent = data['headers']['user-agent']
+        sess_uuid = data['cookies']['sess_uuid']
+
+        sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
+
+        sess_id = hashlib.md5(sess_id_string.encode()).hexdigest()
+
         redis_mock = mock.Mock()
         redis_mock.sadd = sess_sadd
-        self.handler.sessions.append(sess)
+        self.handler.sessions[sess_id] = sess
         self.loop.run_until_complete(self.handler.add_or_update_session(data, redis_mock))
-        self.assertEqual(self.handler.sessions[0].count, 2)
+        self.assertEqual(self.handler.sessions[sess_id].count, 2)
 
     def test_deleting_sessions(self):
         async def analyze(session_key, redis_client):
@@ -155,11 +166,11 @@ class TestSessions(unittest.TestCase):
         sess = session.Session(data)
         sess.is_expired = mock.MagicMock(name='expired')
         sess.is_expired.__bool__.reurned_value = True
-        self.handler.sessions.append(sess)
+        self.handler.sessions[sess] = sess
         redis_mock = mock.Mock()
         redis_mock.set = sess_set
         self.loop.run_until_complete(self.handler.delete_old_sessions(redis_mock))
-        self.assertListEqual(self.handler.sessions, [])
+        self.assertDictEqual(self.handler.sessions, {})
 
     def test_get_uuid(self):
         data = {

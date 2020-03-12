@@ -5,7 +5,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 import geoip2
 import aioredis
-from tanner.session_analyzer import SessionAnalyzer
+from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
 session = b'{"sess_uuid": "c546114f97f548f982756495f963e280", "start_time": 1466091813.4780173, ' \
@@ -112,7 +112,8 @@ class TestSessionAnalyzer(unittest.TestCase):
             }],
             attack_types={'index'},
             requests_in_second=11.1,
-            referer=None
+            referer=None,
+            peer_ip='ip'
         )
 
         async def test():
@@ -130,7 +131,8 @@ class TestSessionAnalyzer(unittest.TestCase):
             }],
             attack_types={'rfi', 'lfi'},
             requests_in_second=2,
-            user_agent='user'
+            user_agent='user',
+            peer_ip='ip'
         )
 
         async def test():
