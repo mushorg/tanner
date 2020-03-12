@@ -20,7 +20,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 class TannerServer:
-    def __init__(self,database):
+    def __init__(self, database):
         base_dir = TannerConfig.get('EMULATORS', 'root_dir')
         db_name = TannerConfig.get('SQLI', 'db_name')
 
@@ -31,7 +31,7 @@ class TannerServer:
         self.base_handler = base.BaseHandler(base_dir, db_name)
         self.logger = logging.getLogger(__name__)
         self.db_client = None
-        self.database=database
+        self.database = database
 
         if TannerConfig.get('HPFEEDS', 'enabled') is True:
             self.hpf = hpfeeds_report()
