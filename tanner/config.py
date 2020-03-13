@@ -19,9 +19,14 @@ class TannerConfig():
 
     @staticmethod
     def set_config(config_path):
-        if not os.path.exists(config_path):
-            print("Config file {} doesn't exist. Check the config path or use default".format(
-                config_path))
+        _, ext = os.path.splitext(config_path)
+        if ext != ".ini" or ext != ".INI":
+            if not os.path.exists(config_path):
+                print("Config file {} doesn't exist. Check the config path or use default".format(
+                    config_path))
+                sys.exit(1)
+        else:
+            print("Use of INI config file is deprecated. Please use YAML format.")
             sys.exit(1)
 
         TannerConfig.config = TannerConfig.read_config(config_path)
@@ -32,16 +37,6 @@ class TannerConfig():
             res = TannerConfig.config[section][value]
         except (KeyError, TypeError):
             res = DEFAULT_CONFIG[section][value]
-
-        return res
-
-    @staticmethod
-    def get_section(section):
-        res = {}
-        if TannerConfig.config is not None:
-            res = TannerConfig.config[section]
-        else:
-            res = DEFAULT_CONFIG[section]
 
         return res
 
