@@ -62,7 +62,7 @@ class TannerServer:
             response_msg = self._make_response(msg=type(error).__name__)
         else:
             session, _ = await self.session_manager.add_or_update_session(
-                data, self.db_client
+                data, self.db_client, self.database
             )
             self.logger.info('Requested path %s', path)
             await self.dorks.extract_path(path, self.db_client)
