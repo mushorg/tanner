@@ -1,8 +1,8 @@
 import asyncio
-
 from unittest import mock
-from tanner.api.api import Api
+
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from tanner.api.api import Api
 from tanner.utils.asyncmock import AsyncMock
 from tanner.web.server import TannerWebServer
 
@@ -68,12 +68,11 @@ class TestWebServer(AioHTTPTestCase):
 
         response = await self.client.request('GET', '/snare-stats/9a631aee-2b52-4108-9831-b495ac8afa80')
         self.returned_content = await response.text()
-
-        self.expected_content = '<tr>\n    <td><b>Attack Frequency</b></td>\n    <td>\n    \n      cmd_exec : 1 <br>' \
-                                '\n    \n      lfi : 2 <br>\n    \n      rfi : 1 <br>\n    \n      sqli : 0 <br>\n ' \
-                                '   \n      xss : 1 <br>\n    \n    </td>\n  </tr>  \n'
-
-        self.assertIn(self.expected_content, self.returned_content)
+        self.clear_returned_content = "".join(self.returned_content.split()[65:-8])
+        self.expected_content = ("<tr><td><b>AttackFrequency</b></td><td>cmd_exec:1<br>lfi:2"
+                                 "<br>rfi:1<br>sqli:0<br>xss:1<br></td>"
+                                 )
+        self.assertEqual(self.expected_content, self.clear_returned_content.strip())
 
     @unittest_run_loop
     async def test_handle_sessions(self):
