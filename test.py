@@ -1,9 +1,15 @@
 import aiopg
 import asyncio
 from psycopg2.extras import Json
-
-
-
+class Test:
+    async def test_from_diff_method(pool, valid_data, koi):
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                required_dict=dict(snare_ids_new_4=[valid_data['uuid']])
+                await cur.execute('INSERT INTO test_tanner(key,dict) VALUES(%s,%s)', [koi,Json(required_dict)])
+                cur.close()
+            conn.close()
+        return True
 async def go(dsn):
     pool = await aiopg.create_pool(dsn, maxsize=80)
     async with pool.acquire() as conn:
@@ -15,7 +21,7 @@ async def go(dsn):
             keys=[]
             for temp in keys_get:
                 keys.append(temp[0])
-            koi='snare_ids'
+            koi='snare_ids_new_4'
             print(keys)
             if keys:
                 if koi in keys:
@@ -25,17 +31,16 @@ async def go(dsn):
                     row=await cur.fetchone()
                     print(row)
                     previous_data=row[0]['{}'.format(koi)]
-                    required_dict=dict(snare_ids=previous_data)
+                    required_dict=dict(snare_ids_new_4=previous_data)
                     required_dict[koi].append(valid_data['uuid'])
-                    await cur.execute("UPDATE test_tanner SET dict=%s WHERE key=%s", [Json(required_dict),koi])  
+                    await cur.execute("UPDATE test_tanner SET dict=%s WHERE key=%s", [Json(required_dict),koi])
                 else:
                     print('creating new data')
-                    required_dict=dict(snare_ids=[valid_data['uuid']])
-                    await cur.execute('INSERT INTO test_tanner(key,dict) VALUES(%s,%s)', [koi,Json(required_dict)])  
+                    created=await Test.test_from_diff_method(pool, valid_data, koi)
             else:
                 print('creating first commit')
-                required_dict=dict(snare_ids=[valid_data['uuid']])
-                await cur.execute('INSERT INTO test_tanner(key,dict) VALUES(%s,%s)', [koi,Json(required_dict)])  
+                required_dict=dict(snare_ids_new=[valid_data['uuid']])
+                await cur.execute('INSERT INTO test_tanner(key,dict) VALUES(%s,%s)', [koi,Json(required_dict)])
 
 #            print(row, type(row), row[0])
             print('Done')

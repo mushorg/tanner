@@ -5,7 +5,7 @@ import aiopg
 import time
 from psycopg2.extras import Json
 import aioredis
-
+from tanner.postgres_client import PostgresClient
 from tanner.sessions.session import Session
 from tanner.sessions.session_analyzer import SessionAnalyzer
 
@@ -15,37 +15,7 @@ class SessionManager:
         self.sessions = {}
         self.analyzer = SessionAnalyzer(loop=loop)
         self.logger = logging.getLogger(__name__)
-
-    async def add_or_update_postgres_session(self, raw_data, postgres_client):
-        with postgres_client.acquire() as conn:
-            with conn.cursor() as cur:
-                await cur.execute('SELECT key FROM tanner')
-                keys_get=await cur.fetchall()
-                keys=[]
-                for temp in keys_get:
-                    keys.append(temp[0])
-                print(keys)
-                if keys:
-                    if 'snare_ids' in keys:
-                        # accessing previous daata
-                        await cur.execute("SELECT dict FROM tanner WHERE key=%s",['snare_ids'])
-                        row=await cur.fetchone()
-                        previous_data=row[0]['snare_ids']
-                        required_dict=dict(snare_ids=previous_data)
-                        required_dict['snare_ids'].append(valid_data['uuid'])
-                        await cur.execute("UPDATE tanner SET dict=%s WHERE key=%s", [Json(required_dict),'snare_ids'])
-                    else:
-                        # creating new data
-                        required_dict=dict(snare_ids=[valid_data['uuid']])
-                        await cur.execute('INSERT INTO tanner(key,dict) VALUES(%s,%s)', ['snare_ids',Json(required_dict)])
-                else:
-                    # creating first commit
-                    required_dict=dict(snare_ids=[valid_data['uuid']])
-                    await cur.execute('INSERT INTO tanner(key,dict) VALUES(%s,%s)', ['snare_ids',Json(required_dict)])
-                await cur.close()
-            await conn.close()
-            print('Done')
-            return True
+        self.pg_client=PostgresClient()
 
     async def add_or_update_session(self, raw_data, db_client, database):
         # handle raw data
@@ -53,34 +23,8 @@ class SessionManager:
         # push snare uuid into postgres database.
         if database=='postgres':
             print('in postgress')
-            with postgres_client.acquire() as conn:
-                with conn.cursor() as cur:
-                    await cur.execute('SELECT key FROM tanner')
-                    keys_get=await cur.fetchall()
-                    keys=[]
-                    for temp in keys_get:
-                        keys.append(temp[0])
-                    print(keys)
-                    if keys:
-                        if 'snare_ids' in keys:
-                            # accessing previous daata
-                            await cur.execute("SELECT dict FROM tanner WHERE key=%s",['snare_ids'])
-                            row=await cur.fetchone()
-                            previous_data=row[0]['snare_ids']
-                            required_dict=dict(snare_ids=previous_data)
-                            required_dict['snare_ids'].append(valid_data['uuid'])
-                            await cur.execute("UPDATE tanner SET dict=%s WHERE key=%s", [Json(required_dict),'snare_ids'])
-                        else:
-                            # creating new data
-                            required_dict=dict(snare_ids=[valid_data['uuid']])
-                            await cur.execute('INSERT INTO tanner(key,dict) VALUES(%s,%s)', ['snare_ids',Json(required_dict)])
-                    else:
-                        # creating first commit
-                        required_dict=dict(snare_ids=[valid_data['uuid']])
-                        await cur.execute('INSERT INTO tanner(key,dict) VALUES(%s,%s)', ['snare_ids',Json(required_dict)])
-                    await cur.close()
-                await conn.close()
-                print('Done')
+            added=await self.pg_client.add_postgres_session(valid_data, db_client)
+            print('Done')
 
         #pushing data into reddis
         else:
@@ -158,15 +102,15 @@ class SessionManager:
             if is_deleted:
                 del self.sessions[sess_id]
 
-    async def delete_session(self, sess, redis_client):
+    async def delete_session(self, sess, db_client):
         print('in delete_session')
         await sess.remove_associated_db()
         if sess.associated_env is not None:
             await sess.remove_associated_env()
         try:
             print(sess.get_uuid(), sess.to_json())
-            await redis_client.set(sess.get_uuid(), sess.to_json())
-            await self.analyzer.analyze(sess.get_uuid(), redis_client)
+            await self.pg_client.set(sess.get_uuid(), sess.to_json(), db_client)
+            await self.analyzer.analyze(sess.get_uuid(), db_client)
         except aioredis.ProtocolError as redis_error:
             self.logger.exception('Error connect to redis, session stay in memory. %s', redis_error)
             print('Error connect to redis, session stay in memory. %s', redis_error)
