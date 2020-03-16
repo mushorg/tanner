@@ -94,10 +94,10 @@ class SessionManager:
 
     async def delete_sessions_on_shutdown(self, redis_client):
         print('in delete_sessions_on_shutdown')
-        print(self.sessions)
+        # print(self.sessions)
         for sess_id, sess in self.sessions.items():
             print('deleating...')
-            print(sess.get_uuid(), sess.to_json())
+            # print(sess.get_uuid(), sess.to_json())
             is_deleted = await self.delete_session(sess, redis_client)
             if is_deleted:
                 del self.sessions[sess_id]
@@ -108,7 +108,7 @@ class SessionManager:
         if sess.associated_env is not None:
             await sess.remove_associated_env()
         try:
-            print(sess.get_uuid(), sess.to_json())
+            # print(sess.get_uuid(), sess.to_json())
             await self.pg_client.set(sess.get_uuid(), sess.to_json(), db_client)
             await self.analyzer.analyze(sess.get_uuid(), db_client)
         except aioredis.ProtocolError as redis_error:

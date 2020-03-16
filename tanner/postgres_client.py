@@ -87,7 +87,7 @@ class PostgresClient:
             conn.close()
         return True
 
-    async def get(session_id, postgres_client):
+    async def get(self, session_id, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("SELECT dict FROM tanner WHERE key=%s",[session_id])
