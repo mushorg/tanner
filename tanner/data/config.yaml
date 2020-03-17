@@ -13,7 +13,7 @@ TANNER:
 
 WEB: 
   host: 0.0.0.0
-  port: 8091,
+  port: 8091
 
 API: 
   host: 0.0.0.0

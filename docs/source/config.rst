@@ -6,7 +6,7 @@ The use of ``INI`` configuration file is obsolete now.
 
 There are 8 different sections :
   * **DATA**
-
+    # Data configuration
     :db_config: Location of SQLI database configuration
     :dorks: Location of dorks
     :user_dorks: Location of user dorks
@@ -15,11 +15,11 @@ There are 8 different sections :
     :host: The host at which Tanner is running
     :port: The port at which Tanner is running
   * **WEB**
-
+    # Tanner web configuration
     :host: The host at which Tanner Web UI is running
     :port: The port at which Tanner Web UI is running
   * **API**
-
+    # Tanner API configuration
     :Host: The host at which Tanner API is running
     :Port: The port at which Tanner API is running
   * **PHPOX**
@@ -27,17 +27,18 @@ There are 8 different sections :
     :Host: The host at which PHPOX is running
     :Port: The port at which PHPOX is running
   * **REDIS**
-
+    # Configure redis if it's running on some different port or network.
+    
     :host: The host address at which redis is running
     :port: The port at which which redis is running
     :poolsize: The poolsize of redis server
     :timeout: The duration of timeout for redis server
   * **EMULATORS**
-
+    
     :root_dir: The root directory for emulators that need data storing such as SQLI and LFI. Data will be stored in this directory
 
     * **EMULATOR_ENABLED**
-
+      # Enable or disable emulators by setting value true or false respectively.
       :sqli: True if this emulator is enabled else False
       :rfi: True if this emulator is enabled else False
       :lfi: True if this emulator is enabled else False
