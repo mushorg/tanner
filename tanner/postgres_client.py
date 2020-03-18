@@ -27,6 +27,7 @@ class PostgresClient:
             async with postgres_client.acquire() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute("CREATE TABLE IF NOT EXISTS tanner(key text PRIMARY KEY, dict JSONB)")
+                    await cur.execute("CREATE TABLE IF NOT EXISTS tanner_snare(sess_id SERIAL PRIMARY KEY, key text, score float, dict JSONB)")
                     cur.close()
                 conn.close()
         except asyncio.TimeoutError as timeout_error:
@@ -70,32 +71,51 @@ class PostgresClient:
             conn.close()
         print('Done')
         return True
-    async def delete(session_id, postgres_client):
+    async def delete_tanner(key, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.curssor() as cur:
-                await cur.execute("DELETE FROM tanner WHERE key=%s",[session_id])
+                await cur.execute("DELETE FROM tanner WHERE key=%s",[key])
                 cur.close()
             conn.close()
         return True
 
-    async def update_postgres_session(session_id, new_data, postgres_client):
+    async def delete_snare_id(key, postgres_client):
         async with postgres_client.acquire() as conn:
-            async with conn.cursor() as cur:
-                updated_data={'{}'.format(session_id):[new_data]}
-                await cur.execute("UPDATE tanner SET dict=%s WHERE key=%s", [Json(updated_data), session_id])
+            async with conn.curssor() as cur:
+                await cur.execute("DELETE FROM tanner_snare WHERE key=%s",[key])
                 cur.close()
             conn.close()
         return True
 
-    async def get(self, session_id, postgres_client):
+    async def update_postgres_session(key, new_data, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute("SELECT dict FROM tanner WHERE key=%s",[session_id])
-                data = await cur.fetchone()
+                updated_data={'{}'.format(key):[new_data]}
+                await cur.execute("UPDATE tanner SET dict=%s WHERE key=%s", [Json(updated_data), key])
+                cur.close()
+            conn.close()
+        return True
+
+    async def get(self, key, postgres_client):
+        async with postgres_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT dict FROM tanner WHERE key=%s",[key])
+                data = await cur.fetchall()
                 data=data[0][key]
                 cur.close()
             conn.close()
         return data
+
+    async def get_tanner_snare(self, key, postgres_client):
+        async with postgres_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT dict FROM tanner_snare WHERE key=%s",[key])
+                data = await cur.fetchall()
+                data=data[0][key]
+                cur.close()
+            conn.close()
+        return data
+
 
     async def set(self, key, value, postgres_client):
         async with postgres_client.acquire() as conn:
@@ -105,10 +125,19 @@ class PostgresClient:
             conn.close()
         return True
 
+    async def set_tanner_snare(self, key, value, postgres_client):
+        async with postgres_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("INSERT INTO tanner_snare(key, dict) VALUES(%s, %s)",[key, Json(value)])
+                cur.close()
+            conn.close()
+        return True
+
     async def drop_tanner(self, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("DROP TABLE tanner")
+                await cur.execute("DROP TABLE tanner_session")
                 cur.close()
             conn.close()
         return True
@@ -117,7 +146,7 @@ class PostgresClient:
         async with postgres_client.acquire() as conn:
             async with conn.curssor() as cur:
                 data=await cur.execute("SELECT dict FROM tanner WHERE KEY=%s", [key])
-                data=await cur.fetchone()
+                data=await cur.fetchall()
                 if data:
                     data=data[0][key]
                 else:
@@ -126,9 +155,10 @@ class PostgresClient:
             conn.close()
         return data
 
-        async def zadd(self, key, score, value, postgres_client):
-            async with postgres_client.acquire() as conn:
-                async with conn.cursor() as cur:
-                    data=await cur.execute("SELECT dict FROM tanner WHERE key=%s",[key])
-                    data=data[0][key]
-                    
+    async def zadd(self, key, score, value, postgres_client):
+        async with postgres_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("INSERT INTO tanner_snare(key, score, dict) VALUES(%s, %f, %s)",[key, dict, score])
+                cur.close()
+            conn.close()
+        return True

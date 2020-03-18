@@ -5,7 +5,7 @@ import pickle
 import random
 import re
 import uuid
-
+from tanner.postgres_client import PostgresClient
 import aioredis
 
 from tanner import config
@@ -19,9 +19,9 @@ class DorksManager:
     def __init__(self):
         self.logger = logging.getLogger('tanner.dorks_manager.DorksManager')
         self.init_done = False
-
+        self.pg_client=PostgresClient()
     @staticmethod
-    async def push_init_dorks(file_name, redis_key, redis_client):
+    async def push_init_dorks(file_name, key, db_client):
         dorks = None
         if os.path.exists(file_name):
             with open(file_name, 'rb') as dorks_file:
@@ -31,7 +31,7 @@ class DorksManager:
                 dorks = dorks.split()
             if isinstance(dorks, set):
                 dorks = [x for x in dorks if x is not None]
-            await redis_client.sadd(redis_key, *dorks)
+            await pg_client.add_postgres_session(key, dorks, db_client)
 
     async def extract_path(self, path, redis_client):
         extracted = re.match(patterns.QUERY, path)

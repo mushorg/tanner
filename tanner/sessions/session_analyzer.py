@@ -40,9 +40,9 @@ class SessionAnalyzer:
             try:
                 #NEED TO UPDATE
                 await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session))
-                await self.pg_client.delete([del_key], db_client)
-            except aioredis.ProtocolError as redis_error:
-                self.logger.exception('Error with redis. Session will be returned to the queue: %s', redis_error)
+                await self.pg_client.delete(del_key, db_client)
+            except Exception as db_error:
+                self.logger.exception('Error with database. Session will be returned to the queue: %s', db_error)
                 self.queue.put(session)
 
     async def create_stats(self, session, db_client):
