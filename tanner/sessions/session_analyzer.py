@@ -5,6 +5,7 @@ import socket
 from geoip2.database import Reader
 import geoip2
 import aioredis
+from tanner.postgres_client import PostgresClient
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
 
@@ -15,35 +16,36 @@ class SessionAnalyzer:
         self.queue = asyncio.Queue(loop=self._loop)
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
-
-    async def analyze(self, session_key, redis_client):
+        self.pg_client=PostgresClient()
+    async def analyze(self, session_key, db_client):
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await redis_client.get(session_key, encoding='utf-8')
+            session = await self.pg_client.get(session_key, db_client)
             # print(session, type(session))
             session = json.loads(session)
             # print(session, type(session))
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.exception('Can\'t get session for analyze: %s', error)
         else:
-            result = await self.create_stats(session, redis_client)
+            result = await self.create_stats(session, db_client)
             await self.queue.put(result)
-            await self.save_session(redis_client)
+            await self.save_session(db_client)
 
-    async def save_session(self, redis_client):
+    async def save_session(self, db_client):
         while not self.queue.empty():
             session = await self.queue.get()
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
-                await redis_client.delete(*[del_key])
+                #NEED TO UPDATE
+                await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session))
+                await self.pg_client.delete([del_key], db_client)
             except aioredis.ProtocolError as redis_error:
                 self.logger.exception('Error with redis. Session will be returned to the queue: %s', redis_error)
                 self.queue.put(session)
 
-    async def create_stats(self, session, redis_client):
+    async def create_stats(self, session, db_client):
         sess_duration = session['end_time'] - session['start_time']
         referer = None
         if sess_duration != 0:
@@ -54,7 +56,7 @@ class SessionAnalyzer:
             None, self.find_location, session['peer']['ip']
         )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
-                                                                           redis_client)
+                                                                           db_client)
         attack_count = self.set_attack_count(attack_types)
 
         stats = dict(
@@ -83,11 +85,11 @@ class SessionAnalyzer:
         return stats
 
     @staticmethod
-    async def analyze_paths(paths, redis_client):
+    async def analyze_paths(self, paths, db_client):
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = await redis_client.smembers(DorksManager.dorks_key)
+        dorks = await self.pg_client.smembers(DorksManager.dorks_key)
         print(dorks, type(dorks))
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])

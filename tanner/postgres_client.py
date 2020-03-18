@@ -70,7 +70,7 @@ class PostgresClient:
             conn.close()
         print('Done')
         return True
-    async def delete_postgres_session(session_id, postgres_client):
+    async def delete(session_id, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.curssor() as cur:
                 await cur.execute("DELETE FROM tanner WHERE key=%s",[session_id])
@@ -92,6 +92,7 @@ class PostgresClient:
             async with conn.cursor() as cur:
                 await cur.execute("SELECT dict FROM tanner WHERE key=%s",[session_id])
                 data = await cur.fetchone()
+                data=data[0][key]
                 cur.close()
             conn.close()
         return data
@@ -124,3 +125,10 @@ class PostgresClient:
                 cur.close()
             conn.close()
         return data
+
+        async def zadd(self, key, score, value, postgres_client):
+            async with postgres_client.acquire() as conn:
+                async with conn.cursor() as cur:
+                    data=await cur.execute("SELECT dict FROM tanner WHERE key=%s",[key])
+                    data=data[0][key]
+                    
