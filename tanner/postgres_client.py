@@ -104,10 +104,23 @@ class PostgresClient:
             conn.close()
         return True
 
-    async def drop_tanner(self, postgre_client):
+    async def drop_tanner(self, postgres_client):
         async with postgres_client.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("DROP TABLE tanner")
                 cur.close()
             conn.close()
         return True
+
+    async def smembers(self, key, postgres_client):
+        async with postgres_client.acquire() as conn:
+            async with conn.curssor() as cur:
+                data=await cur.execute("SELECT dict FROM tanner WHERE KEY=%s", [key])
+                data=await cur.fetchone()
+                if data:
+                    data=data[0][key]
+                else:
+                    data=[]
+                cur.close()
+            conn.close()
+        return data

@@ -7,7 +7,6 @@ import geoip2
 import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
-from tanner.postgres_client import PostgresClient
 
 
 class SessionAnalyzer:
@@ -16,21 +15,21 @@ class SessionAnalyzer:
         self.queue = asyncio.Queue(loop=self._loop)
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
-        self.pg_sql = PostgresClient()
 
-    async def analyze(self, session_key, db_client):
+    async def analyze(self, session_key, redis_client):
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await self.pg_sql.get(session_key, db_client)
-            print(session, type(session))
-            session = json.loads(session[0])
+            session = await redis_client.get(session_key, encoding='utf-8')
+            # print(session, type(session))
+            session = json.loads(session)
+            # print(session, type(session))
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.exception('Can\'t get session for analyze: %s', error)
         else:
-            result = await self.create_stats(session, db_client)
+            result = await self.create_stats(session, redis_client)
             await self.queue.put(result)
-            await self.save_session(db_client)
+            await self.save_session(redis_client)
 
     async def save_session(self, redis_client):
         while not self.queue.empty():
@@ -89,7 +88,7 @@ class SessionAnalyzer:
         attack_types = []
         current_path = paths[0]
         dorks = await redis_client.smembers(DorksManager.dorks_key)
-
+        print(dorks, type(dorks))
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
             current_path = path
