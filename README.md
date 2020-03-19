@@ -10,7 +10,7 @@ TANNER
 
 About
 -----
-TANNER is a remote data analysis, and classification service, to evaluate HTTP requests and composing the response then served by [SNARE](https://github.com/mushorg/snare) events.
+TANNER is a remote data analysis and classification service to evaluate HTTP requests and composing the response then served by [SNARE](https://github.com/mushorg/snare). TANNER uses multiple application vulnerability type emulation techniques when providing responses for SNARE. In addition, TANNER provides Dorks for SNARE powering its luring capabilities.
 
 
 Documentation
@@ -23,13 +23,13 @@ Basic Concept
 
 - Evaluating [SNARE](https://github.com/mushorg/snare) events.
 - Serve dorks.
-- Adopt and change the responses.
+- Emulate vulnerabilities and provide responses.
 
 
 Getting Started
 ---------------
 
-- You need Python3.6 and above for installing tanner.
+- You need Python3.7 and above for installing tanner.
 - This was tested with a recent Ubuntu-based Linux.
 
 ### Steps to install TANNER
@@ -65,13 +65,12 @@ Note:- Make sure you have `python3-dev` incase you are facing problem with insta
   sudo apt-get install python3-dev
 ```
 
-(Recommended) You should to bind to 0.0.0.0 when running in
-<i>production</i> and on a different host than SNARE.
+(Recommended) You should bind to 0.0.0.0 when running in <i>production</i> and on a different host than SNARE.
 
 ### Install and run TANNER using docker container
 
-  In case you want to run the TANNER service using docker or facing any problem
-  in setting up TANNER on your machine, you can follow these steps.
+In case you want to run the TANNER service using docker or facing any problem
+in setting up TANNER on your machine, you can follow these steps.
 
 #### Docker build instructions
 1. Change the current directory to `tanner/docker`
