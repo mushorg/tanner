@@ -35,7 +35,6 @@ class PostgresClient:
             exit()
         return postgres_client
 
-
     async def add_postgres_session(self, valid_data, postgres_client):
         print('herer')
         async with postgres_client.acquire() as conn:
@@ -115,7 +114,6 @@ class PostgresClient:
                 cur.close()
             conn.close()
         return data
-
 
     async def set(self, key, value, postgres_client):
         async with postgres_client.acquire() as conn:

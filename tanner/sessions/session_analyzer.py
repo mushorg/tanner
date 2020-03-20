@@ -39,8 +39,8 @@ class SessionAnalyzer:
             del_key = session['sess_uuid']
             try:
                 #NEED TO UPDATE
-                await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session))
-                await self.pg_client.delete(del_key, db_client)
+                await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session), db_client)
+                await self.pg_client.delete(del_key, db_client, db_client)
             except Exception as db_error:
                 self.logger.exception('Error with database. Session will be returned to the queue: %s', db_error)
                 self.queue.put(session)

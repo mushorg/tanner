@@ -75,14 +75,14 @@ class SessionManager:
 
         return hashlib.md5(sess_id_string.encode()).hexdigest()
 
-    async def delete_old_sessions(self, redis_client):
+    async def delete_old_sessions(self, db_client):
         print('in delete_old_sessions')
         id_for_deletion = []
         for sess_id, session in self.sessions.items():
             if not session.is_expired():
                 continue
             print(session.get_uuid(), session.to_json())
-            is_deleted = await self.delete_session(session, redis_client)
+            is_deleted = await self.delete_session(session, db_client)
             if is_deleted:
                 id_for_deletion.append(sess_id)
 
@@ -92,13 +92,13 @@ class SessionManager:
             except ValueError:
                 continue
 
-    async def delete_sessions_on_shutdown(self, redis_client):
+    async def delete_sessions_on_shutdown(self, db_client):
         print('in delete_sessions_on_shutdown')
         # print(self.sessions)
         for sess_id, sess in self.sessions.items():
             print('deleating...')
             # print(sess.get_uuid(), sess.to_json())
-            is_deleted = await self.delete_session(sess, redis_client)
+            is_deleted = await self.delete_session(sess, db_client)
             if is_deleted:
                 del self.sessions[sess_id]
 
@@ -112,7 +112,7 @@ class SessionManager:
             await self.pg_client.set(sess.get_uuid(), sess.to_json(), db_client)
             await self.analyzer.analyze(sess.get_uuid(), db_client)
         except aioredis.ProtocolError as redis_error:
-            self.logger.exception('Error connect to redis, session stay in memory. %s', redis_error)
+            self.logger.exception('Error connect to redis, session stay in memory. %s', db_client)
             print('Error connect to redis, session stay in memory. %s', redis_error)
             return False
         else:
