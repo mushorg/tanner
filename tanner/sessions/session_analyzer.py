@@ -8,6 +8,7 @@ import aioredis
 from tanner.postgres_client import PostgresClient
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
+from psycopg2 import DatabaseError
 
 
 class SessionAnalyzer:
@@ -17,35 +18,40 @@ class SessionAnalyzer:
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
         self.pg_client=PostgresClient()
-    async def analyze(self, session_key, db_client):
+    async def analyze(self, session_key, db_client, database):
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await self.pg_client.get(session_key, db_client)
-            # print(session, type(session))
+            if database=='postgres':
+                session = await self.pg_client.get(session_key, db_client)
+            else:
+                session = await redis_client.get(session_key, encoding='utf-8')
             session = json.loads(session)
-            # print(session, type(session))
-        except (aioredis.ProtocolError, TypeError, ValueError) as error:
+        except (aioredis.ProtocolError, TypeError, ValueError, DatabaseError) as error:
             self.logger.exception('Can\'t get session for analyze: %s', error)
         else:
-            result = await self.create_stats(session, db_client)
+            result = await self.create_stats(session, db_client, database)
             await self.queue.put(result)
-            await self.save_session(db_client)
+            await self.save_session(db_client, database)
 
-    async def save_session(self, db_client):
+    async def save_session(self, db_client, database):
         while not self.queue.empty():
             session = await self.queue.get()
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
                 #NEED TO UPDATE
-                await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session), db_client)
-                await self.pg_client.delete(del_key, db_client, db_client)
-            except Exception as db_error:
+                if database=='postgres':
+                    await self.pg_client.zadd(s_key, session['start_time'], json.dumps(session), db_client)
+                    await self.pg_client.delete(del_key, db_client)
+                else:
+                    await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
+                    await redis_client.delete(*[del_key])
+            except (aioredis.ProtocolError, DatabaseError) as db_error:
                 self.logger.exception('Error with database. Session will be returned to the queue: %s', db_error)
                 self.queue.put(session)
 
-    async def create_stats(self, session, db_client):
+    async def create_stats(self, session, db_client, database):
         sess_duration = session['end_time'] - session['start_time']
         referer = None
         if sess_duration != 0:
@@ -56,7 +62,8 @@ class SessionAnalyzer:
             None, self.find_location, session['peer']['ip']
         )
         tbr, errors, hidden_links, attack_types = await self.analyze_paths(session['paths'],
-                                                                           db_client)
+                                                                           db_client,
+                                                                           database)
         attack_count = self.set_attack_count(attack_types)
 
         stats = dict(
@@ -85,12 +92,14 @@ class SessionAnalyzer:
         return stats
 
     @staticmethod
-    async def analyze_paths(self, paths, db_client):
+    async def analyze_paths(self, paths, db_client, database):
         tbr = []
         attack_types = []
         current_path = paths[0]
-        dorks = await self.pg_client.smembers(DorksManager.dorks_key)
-        print(dorks, type(dorks))
+        if database=='postgres':
+            dorks = await self.pg_client.smembers(DorksManager.dorks_key)
+        else:
+            dorks = await redis_client.smembers(DorksManager.dorks_key)
         for _, path in enumerate(paths, start=1):
             tbr.append(path['timestamp'] - current_path['timestamp'])
             current_path = path

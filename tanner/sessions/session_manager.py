@@ -4,6 +4,7 @@ import asyncio
 import aiopg
 import time
 from psycopg2.extras import Json
+from psycopg2 import DatabaseError
 import aioredis
 from tanner.postgres_client import PostgresClient
 from tanner.sessions.session import Session
@@ -75,14 +76,13 @@ class SessionManager:
 
         return hashlib.md5(sess_id_string.encode()).hexdigest()
 
-    async def delete_old_sessions(self, db_client):
-        print('in delete_old_sessions')
+    async def delete_old_sessions(self, db_client, database):
         id_for_deletion = []
         for sess_id, session in self.sessions.items():
             if not session.is_expired():
                 continue
             print(session.get_uuid(), session.to_json())
-            is_deleted = await self.delete_session(session, db_client)
+            is_deleted = await self.delete_session(session, db_client, database)
             if is_deleted:
                 id_for_deletion.append(sess_id)
 
@@ -92,28 +92,31 @@ class SessionManager:
             except ValueError:
                 continue
 
-    async def delete_sessions_on_shutdown(self, db_client):
-        print('in delete_sessions_on_shutdown')
-        # print(self.sessions)
+    async def delete_sessions_on_shutdown(self, db_client, database):
         for sess_id, sess in self.sessions.items():
-            print('deleating...')
-            # print(sess.get_uuid(), sess.to_json())
-            is_deleted = await self.delete_session(sess, db_client)
+            is_deleted = await self.delete_session(sess, db_client, database)
             if is_deleted:
                 del self.sessions[sess_id]
 
-    async def delete_session(self, sess, db_client):
+    async def delete_session(self, sess, db_client, database):
         print('in delete_session')
         await sess.remove_associated_db()
         if sess.associated_env is not None:
             await sess.remove_associated_env()
         try:
             # print(sess.get_uuid(), sess.to_json())
-            await self.pg_client.set(sess.get_uuid(), sess.to_json(), db_client)
-            await self.analyzer.analyze(sess.get_uuid(), db_client)
+            if database=='postgres':
+                await self.pg_client.set(sess.get_uuid(), sess.to_json(), db_client)
+            else:
+                await redis_client.set(sess.get_uuid(), sess.to_json())
+            await self.analyzer.analyze(sess.get_uuid(), db_client, database)
         except aioredis.ProtocolError as redis_error:
             self.logger.exception('Error connect to redis, session stay in memory. %s', db_client)
             print('Error connect to redis, session stay in memory. %s', redis_error)
+            return False
+        except DatabaseError as postgres_error:
+            self.logger.exception('Error connect to postgresql, session stay in memory. %s', db_client)
+            print('Error connect to postgresql, session stay in memory. %s', postgres_error)
             return False
         else:
             return True
