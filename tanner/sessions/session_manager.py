@@ -77,29 +77,28 @@ class SessionManager:
         return hashlib.md5(sess_id_string.encode()).hexdigest()
 
     async def delete_old_sessions(self, db_client, database):
-        id_for_deletion = []
-        for sess_id, session in self.sessions.items():
-            if not session.is_expired():
-                continue
-            print(session.get_uuid(), session.to_json())
-            is_deleted = await self.delete_session(session, db_client, database)
-            if is_deleted:
-                id_for_deletion.append(sess_id)
-
+        id_for_deletion = [sess_id for sess_id, sess in self.sessions.items() if sess.is_expired()]
         for sess_id in id_for_deletion:
-            try:
-                del self.sessions[sess_id]
-            except ValueError:
-                continue
+            is_deleted = await self.delete_session(self.sessions[sess_id], db_client, database)
+            if is_deleted:
+                try:
+                    del self.sessions[sess_id]
+                except ValueError:
+                    continue
 
     async def delete_sessions_on_shutdown(self, db_client, database):
-        for sess_id, sess in self.sessions.items():
-            is_deleted = await self.delete_session(sess, db_client, database)
+        id_for_deletion = list(self.sessions.keys())
+
+        for sess_id in id_for_deletion:
+            is_deleted = await self.delete_session(self.sessions[sess_id], db_client, database)
             if is_deleted:
                 del self.sessions[sess_id]
-
+        try:
+            assert len(self.sessions) == 0
+        except AssertionError:
+            self.logger.exception("Not all sessions were moved to the storage!")
+    
     async def delete_session(self, sess, db_client, database):
-        print('in delete_session')
         await sess.remove_associated_db()
         if sess.associated_env is not None:
             await sess.remove_associated_env()

@@ -9,18 +9,24 @@
   </tr>
   <tr>
     <td><b>No of Sessions</b></td>
-    <td>{{snare_stats.total_sessions}}</td>
+    {% if 'total_sessions' in snare_stats %}
+      <td>{{snare_stats.total_sessions}}</td>
+    {% endif %}
   </tr>
   <tr>
     <td><b>Total Duration</b></td>
-    <td>{{snare_stats.total_duration}}</td>
+    {% if 'total_duration' in snare_stats %}
+      <td>{{snare_stats.total_duration}}</td>
+    {% endif %}
   </tr>
   <tr>
     <td><b>Attack Frequency</b></td>
     <td>
-    {% for key, val in snare_stats.attack_frequency.items() %}
-      {{key}} : {{val}} <br>
-    {% endfor %}
+      {% if 'attack_frequency' in snare_stats %}
+        {% for key, val in snare_stats.attack_frequency.items() %}
+          {{key}} : {{val}} <br>
+        {% endfor %}
+      {% endif %}
     </td>
   </tr>  
 </table>
