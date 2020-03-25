@@ -37,4 +37,4 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
 # Start tanner
 USER nobody:nobody
 WORKDIR /opt/tanner
-CMD tanner
+CMD tanner --config /opt/tanner/tanner/data/config.yaml
