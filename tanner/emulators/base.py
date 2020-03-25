@@ -5,16 +5,29 @@ import yarl
 
 from tanner import __version__ as tanner_version
 from tanner.config import TannerConfig
-from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, xxe_injection, template_injection   # noqa
+from tanner.emulators import lfi, rfi, sqli, xss, cmd_exec, php_code_injection, php_object_injection, crlf, \
+    xxe_injection, template_injection  # noqa
 from tanner.utils import patterns
 
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
-        self.emulator_enabled = TannerConfig.get_section('EMULATOR_ENABLED')
+        self.emulator_enabled = {
+            'rfi': TannerConfig.get('EMULATOR_ENABLED', 'rfi'),
+            'sqli': TannerConfig.get('EMULATOR_ENABLED', 'sqli'),
+            'lfi': TannerConfig.get('EMULATOR_ENABLED', 'lfi'),
+            'xss': TannerConfig.get('EMULATOR_ENABLED', 'xss'),
+            'cmd_exec': TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec'),
+            'php_code_injection': TannerConfig.get('EMULATOR_ENABLED', 'php_code_injection'),
+            'php_object_injection': TannerConfig.get('EMULATOR_ENABLED', 'php_object_injection'),
+            'crlf': TannerConfig.get('EMULATOR_ENABLED', 'crlf'),
+            'xxe_injection': TannerConfig.get('EMULATOR_ENABLED', 'xxe_injection'),
+            'template_injection': TannerConfig.get('EMULATOR_ENABLED', 'template_injection')
+            }
 
         self.emulators = {
-            'rfi': rfi.RfiEmulator(base_dir, loop) if self.emulator_enabled['rfi'] else None,
+            'rfi': rfi.RfiEmulator(base_dir, loop=loop, allow_insecure=TannerConfig.get("RFI", 'allow_insecure'))
+            if self.emulator_enabled['rfi'] else None,
             'lfi': lfi.LfiEmulator() if self.emulator_enabled['lfi'] else None,
             'xss': xss.XssEmulator() if self.emulator_enabled['xss'] else None,
             'sqli': sqli.SqliEmulator(db_name, base_dir) if self.emulator_enabled['sqli'] else None,

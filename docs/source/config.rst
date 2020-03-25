@@ -1,10 +1,12 @@
 Configuration file
 ==================
-Tanner uses ``INI`` like format for configuration file. It's value can specified by using ``config`` flag
+Tanner uses ``YAML`` like format for configuration file. It's value can specified by using ``config`` flag.
+
+The use of ``INI`` configuration file is obsolete now.
 
 There are 8 different sections :
   * **DATA**
-
+    # Data configuration
     :db_config: Location of SQLI database configuration
     :dorks: Location of dorks
     :user_dorks: Location of user dorks
@@ -13,11 +15,11 @@ There are 8 different sections :
     :host: The host at which Tanner is running
     :port: The port at which Tanner is running
   * **WEB**
-
+    # Tanner web configuration
     :host: The host at which Tanner Web UI is running
     :port: The port at which Tanner Web UI is running
   * **API**
-
+    # Tanner API configuration
     :Host: The host at which Tanner API is running
     :Port: The port at which Tanner API is running
   * **PHPOX**
@@ -25,17 +27,18 @@ There are 8 different sections :
     :Host: The host at which PHPOX is running
     :Port: The port at which PHPOX is running
   * **REDIS**
-
+    # Configure redis if it's running on some different port or network.
+    
     :host: The host address at which redis is running
     :port: The port at which which redis is running
     :poolsize: The poolsize of redis server
     :timeout: The duration of timeout for redis server
   * **EMULATORS**
-
+    
     :root_dir: The root directory for emulators that need data storing such as SQLI and LFI. Data will be stored in this directory
 
     * **EMULATOR_ENABLED**
-
+      # Enable or disable emulators by setting value true or false respectively.
       :sqli: True if this emulator is enabled else False
       :rfi: True if this emulator is enabled else False
       :lfi: True if this emulator is enabled else False
@@ -73,23 +76,100 @@ There are 8 different sections :
     :enabled: Check local(temporary) logging is enabled
     :PATH: Location of file for local(temporary) logging
 
-If no file is specified, following json will be used as default:
+If no file is specified, following YAML will be used as default:
 
 .. code-block:: python
 
-    {'DATA': {'db_config': '/opt/tanner/db/db_config.json', 'dorks': '/opt/tanner/data/dorks.pickle',
-              'user_dorks': '/opt/tanner/data/user_dorks.pickle',
-     'TANNER': {'host': '0.0.0.0', 'port': 8090},
-     'WEB': {'host': '0.0.0.0', 'port': 8091},
-     'API': {'host': '0.0.0.0', 'port': 8092},
-     'PHPOX': {'host': '0.0.0.0', 'port': 8088},
-     'REDIS': {'host': 'localhost', 'port': 6379, 'poolsize': 80, 'timeout': 1},
-     'EMULATORS': {'root_dir': '/opt/tanner'},
-     'EMULATOR_ENABLED': {'sqli': 'True', 'rfi': 'True', 'lfi': 'True', 'xss': 'True', 'cmd_exec': 'True'},
-     'SQLI': {'type':'SQLITE', 'db_name': 'tanner_db', 'host':'localhost', 'user':'root', 'password':'user_pass'},
-     'DOCKER': {'host_image': 'busybox:latest'},
-     'LOGGER': {'log_file': '/opt/tanner/tanner.log'},
-     'MONGO': {'enabled': 'False', 'URI': 'mongodb://localhost'},
-     'LOCALLOG': {'enabled': 'False', 'PATH': '/tmp/tanner_report.json'},
-     'CLEANLOG': {'enabled': 'False'}
-     }
+  DATA:
+    db_config: /opt/tanner/db/db_config.json
+    dorks: /opt/tanner/data/dorks.pickle
+    user_dorks: /opt/tanner/data/user_dorks.pickle
+    crawler_stats: /opt/tanner/data/crawler_user_agents.txt
+    geo_db: /opt/tanner/db/GeoLite2-City.mmdb
+    tornado: /opt/tanner/data/tornado.py
+    mako: /opt/tanner/data/mako.py
+
+  TANNER:
+    host: 0.0.0.0
+    port: 8090
+
+  WEB:
+    host: 0.0.0.0
+    port: 8091,
+
+  API:
+    host: 0.0.0.0
+    port: 8092
+    auth: False
+    auth_signature: tanner_api_auth
+
+  PHPOX:
+    host: 0.0.0.0
+    port: 8088
+
+  REDIS:
+    host: localhost
+    port: 6379
+    poolsize: 80
+    timeout: 1
+
+  EMULATORS:
+    root_dir: /opt/tanner
+
+  EMULATOR_ENABLED:
+    sqli: True
+    rfi: True
+    lfi: True
+    xss: True
+    cmd_exec: True
+    php_code_injection: True
+    php_object_injection: True
+    crlf: True
+    xxe_injection: True
+    template_injection: True
+
+  SQLI:
+    type: SQLITE
+    db_name: tanner_db
+    host: localhost
+    user: root
+    password: user_pass
+
+  XXE_INJECTION:
+    OUT_OF_BAND: False
+
+  RFI:
+    allow_insecure: False
+
+  DOCKER:
+    host_image: busybox:latest
+
+  LOGGER:
+    log_debug: /opt/tanner/tanner.log
+    log_err: /opt/tanner/tanner.err
+
+  MONGO:
+    enabled: False
+    URI: mongodb://localhost
+
+  HPFEEDS:
+    enabled: False
+    HOST: localhost
+    PORT: 10000
+    IDENT: ''
+    SECRET: ''
+    CHANNEL: tanner.events
+
+  LOCALLOG:
+    enabled: False
+    PATH: /tmp/tanner_report.json
+
+  CLEANLOG:
+    enabled: False
+
+  REMOTE_DOCKERFILE:
+    GITHUB: "https://raw.githubusercontent.com/mushorg/tanner/master/docker/tanner/template_injection/Dockerfile"
+
+  SESSIONS:
+    delete_timeout: 300
+

@@ -1,35 +1,39 @@
 import logging
+import hashlib
+import asyncio
+import time
 
 import aioredis
 
-from tanner.session import Session
-from tanner.session_analyzer import SessionAnalyzer
+from tanner.sessions.session import Session
+from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
 class SessionManager:
     def __init__(self, loop=None):
-        self.sessions = []
+        self.sessions = {}
         self.analyzer = SessionAnalyzer(loop=loop)
         self.logger = logging.getLogger(__name__)
 
     async def add_or_update_session(self, raw_data, redis_client):
-        # prepare the list of sessions
-        await self.delete_old_sessions(redis_client)
+
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
         await redis_client.sadd('snare_ids', *[valid_data['uuid']])
-        session = self.get_session(valid_data)
-        if session is None:
+        session_id = self.get_session_id(valid_data)
+        if session_id not in self.sessions:
             try:
                 new_session = Session(valid_data)
             except KeyError as key_error:
                 self.logger.exception('Error during session creation: %s', key_error)
                 return
-            self.sessions.append(new_session)
-            return new_session
-        session.update_session(valid_data)
-        return session
+            self.sessions[session_id] = new_session
+            return new_session, session_id
+        else:
+            self.sessions[session_id].update_session(valid_data)
+        # prepare the list of sessions
+        return self.sessions[session_id], session_id
 
     @staticmethod
     def validate_data(data):
@@ -53,33 +57,37 @@ class SessionManager:
 
         return data
 
-    def get_session(self, data):
-        session = None
+    def get_session_id(self, data):
         ip = data['peer']['ip']
         user_agent = data['headers']['user-agent']
         sess_uuid = data['cookies']['sess_uuid']
-        for sess in self.sessions:
-            if sess.ip == ip and sess.user_agent == user_agent and sess_uuid == sess.get_uuid():
-                session = sess
-                break
-        return session
+
+        sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
+
+        return hashlib.md5(sess_id_string.encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
-        for sess in self.sessions:
-            if not sess.is_expired():
-                continue
-            is_deleted = await self.delete_session(sess, redis_client)
+        id_for_deletion = [sess_id for sess_id, sess in self.sessions.items() if sess.is_expired()]
+        for sess_id in id_for_deletion:
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
             if is_deleted:
                 try:
-                    self.sessions.remove(sess)
+                    del self.sessions[sess_id]
                 except ValueError:
                     continue
 
     async def delete_sessions_on_shutdown(self, redis_client):
-        for sess in self.sessions:
-            is_deleted = await self.delete_session(sess, redis_client)
+        id_for_deletion = list(self.sessions.keys())
+
+        for sess_id in id_for_deletion:
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
             if is_deleted:
-                self.sessions.remove(sess)
+                del self.sessions[sess_id]
+
+        try:
+            assert len(self.sessions) == 0
+        except AssertionError:
+            self.logger.exception("Not all sessions were moved to the storage!")
 
     async def delete_session(self, sess, redis_client):
         await sess.remove_associated_db()
