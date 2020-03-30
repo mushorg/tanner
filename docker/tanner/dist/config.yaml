@@ -37,7 +37,7 @@ EMULATORS:
 EMULATOR_ENABLED:
   sqli: True
   rfi: True
-  lfi: True
+  lfi: False
   xss: True
   cmd_exec: False
   php_code_injection: True
