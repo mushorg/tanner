@@ -67,25 +67,27 @@ class SessionManager:
         return hashlib.md5(sess_id_string.encode()).hexdigest()
 
     async def delete_old_sessions(self, redis_client):
-        id_for_deletion = []
-        for sess_id, session in self.sessions.items():
-            if not session.is_expired():
-                continue
-            is_deleted = await self.delete_session(session, redis_client)
-            if is_deleted:
-                id_for_deletion.append(sess_id)
-
+        id_for_deletion = [sess_id for sess_id, sess in self.sessions.items() if sess.is_expired()]
         for sess_id in id_for_deletion:
-            try:
-                del self.sessions[sess_id]
-            except ValueError:
-                continue
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
+            if is_deleted:
+                try:
+                    del self.sessions[sess_id]
+                except ValueError:
+                    continue
 
     async def delete_sessions_on_shutdown(self, redis_client):
-        for sess_id, sess in self.sessions.items():
-            is_deleted = await self.delete_session(sess, redis_client)
+        id_for_deletion = list(self.sessions.keys())
+
+        for sess_id in id_for_deletion:
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
             if is_deleted:
                 del self.sessions[sess_id]
+
+        try:
+            assert len(self.sessions) == 0
+        except AssertionError:
+            self.logger.exception("Not all sessions were moved to the storage!")
 
     async def delete_session(self, sess, redis_client):
         await sess.remove_associated_db()
