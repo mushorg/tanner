@@ -56,20 +56,20 @@ class RfiEmulator:
                     rfile.write(data.encode('utf-8'))
         return file_name
 
-    def download_file_ftp(self, url):
+    async def download_file_ftp(self, url):
         host = url.host
         ftp_path = url.path.rsplit('/', 1)[0][1:]
         name = url.name
         try:
-            ftp = ftplib.FTP(host)
-            ftp.login()
-            ftp.cwd(ftp_path)
+            ftp = aioftp.Client()
+            await ftp.connect(host)
+            await ftp.login()
+            await ftp.change_directory(ftp_path)
             tmp_filename = name + str(time.time())
             file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
-            with open(os.path.join(self.script_dir, file_name), 'wb') as ftp_script:
-                self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
-                ftp.retrbinary('RETR %s' % name, ftp_script.write)
-        except ftplib.all_errors as ftp_errors:
+            self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
+            await ftp.download(name, os.path.join(self.script_dir, file_name))
+        except aioftp.aioftp.errors.__all__ as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
         else:
