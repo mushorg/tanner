@@ -6,7 +6,6 @@ import os
 import re
 import ssl
 import time
-from concurrent.futures import ThreadPoolExecutor
 from aioftp.errors import AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort
 import aiohttp
 import yarl
@@ -35,7 +34,6 @@ class RfiEmulator:
             os.makedirs(self.script_dir)
 
         if url.scheme == "ftp":
-            pool = ThreadPoolExecutor()
             file_name = await self.download_file_ftp(url)
 
         else:
