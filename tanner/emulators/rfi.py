@@ -7,7 +7,7 @@ import re
 import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor
-
+from aioftp.errors import AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort
 import aiohttp
 import yarl
 
@@ -37,7 +37,7 @@ class RfiEmulator:
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
             file_name = await self.download_file_ftp(url)
-            
+
         else:
             ssl_context = False if self.allow_insecure else ssl.create_default_context()
             try:
@@ -67,7 +67,7 @@ class RfiEmulator:
             self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
             await ftp.download(ftp_path, os.path.join(self.script_dir, file_name), write_into=True)
             await ftp.quit()
-        except aioftp.errors.AIOFTPException as ftp_errors:
+        except (AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort) as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
         else:
