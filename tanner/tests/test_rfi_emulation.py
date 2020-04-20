@@ -22,10 +22,10 @@ class TestRfiEmulator(unittest.TestCase):
         self.assertIsNone(filename)
 
     def test_ftp_download(self):
-        self.handler.download_file_ftp = mock.MagicMock()
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
-        data = self.loop.run_until_complete(self.handler.download_file(path))
-        self.handler.download_file_ftp.assert_called_with(yarl.URL(path))
+        result = self.loop.run_until_complete(self.handler.download_file_ftp(yarl.URL(path)))
+        self.assertIsNotNone(result)
+
 
     def test_ftp_download_fail(self):
         path = 'ftp://mirror.yandex.ru/archlinux/foobar'

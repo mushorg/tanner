@@ -26,7 +26,6 @@ class RfiEmulator:
     async def download_file(self, path):
         file_name = None
         url = re.match(patterns.REMOTE_FILE_URL, path)
-
         if url is None:
             return None
         url = url.group(1)
@@ -37,9 +36,8 @@ class RfiEmulator:
 
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
-            ftp_future = await self._loop.run_in_executor(pool, self.download_file_ftp, url)
-            file_name = await ftp_future
-
+            file_name = await self.download_file_ftp(url)
+            
         else:
             ssl_context = False if self.allow_insecure else ssl.create_default_context()
             try:
@@ -69,7 +67,7 @@ class RfiEmulator:
             self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
             await ftp.download(ftp_path, os.path.join(self.script_dir, file_name), write_into=True)
             await ftp.quit()
-        except aioftp.aioftp.errors.__all__ as ftp_errors:
+        except aioftp.errors.AIOFTPException as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
         else:
