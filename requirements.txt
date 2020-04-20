@@ -16,3 +16,4 @@ aiodocker
 tornado
 mako
 pyjwt
+aioftp

@@ -37,7 +37,7 @@ class RfiEmulator:
 
         if url.scheme == "ftp":
             pool = ThreadPoolExecutor()
-            ftp_future = self._loop.run_in_executor(pool, self.download_file_ftp, url)
+            ftp_future = await self._loop.run_in_executor(pool, self.download_file_ftp, url)
             file_name = await ftp_future
 
         else:
