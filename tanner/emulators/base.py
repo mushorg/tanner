@@ -12,7 +12,18 @@ from tanner.utils import patterns
 
 class BaseHandler:
     def __init__(self, base_dir, db_name, loop=None):
-        self.emulator_enabled = TannerConfig.get_section('EMULATOR_ENABLED')
+        self.emulator_enabled = {
+            'rfi': TannerConfig.get('EMULATOR_ENABLED', 'rfi'),
+            'sqli': TannerConfig.get('EMULATOR_ENABLED', 'sqli'),
+            'lfi': TannerConfig.get('EMULATOR_ENABLED', 'lfi'),
+            'xss': TannerConfig.get('EMULATOR_ENABLED', 'xss'),
+            'cmd_exec': TannerConfig.get('EMULATOR_ENABLED', 'cmd_exec'),
+            'php_code_injection': TannerConfig.get('EMULATOR_ENABLED', 'php_code_injection'),
+            'php_object_injection': TannerConfig.get('EMULATOR_ENABLED', 'php_object_injection'),
+            'crlf': TannerConfig.get('EMULATOR_ENABLED', 'crlf'),
+            'xxe_injection': TannerConfig.get('EMULATOR_ENABLED', 'xxe_injection'),
+            'template_injection': TannerConfig.get('EMULATOR_ENABLED', 'template_injection')
+            }
 
         self.emulators = {
             'rfi': rfi.RfiEmulator(base_dir, loop=loop, allow_insecure=TannerConfig.get("RFI", 'allow_insecure'))
