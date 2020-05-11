@@ -23,8 +23,10 @@ class TestRfiEmulator(unittest.TestCase):
 
     def test_ftp_download(self):
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
+        data = self.loop.run_until_complete(self.handler.download_file(path))
         result = self.loop.run_until_complete(self.handler.download_file_ftp(yarl.URL(path)))
-
+        self.assertIsNotNone(result)
+        
     def test_ftp_download_fail(self):
         path = 'ftp://mirror.yandex.ru/archlinux/foobar'
 

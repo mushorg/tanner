@@ -57,14 +57,11 @@ class RfiEmulator:
         ftp_path = url.path
         name = url.name
         try:
-            ftp = aioftp.Client()
-            await ftp.connect(host)
-            await ftp.login()
-            tmp_filename = name + str(time.time())
-            file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
-            self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
-            await ftp.download(ftp_path, os.path.join(self.script_dir, file_name), write_into=True)
-            await ftp.quit()
+            async with aioftp.ClientSession(host) as ftp:
+                tmp_filename = name + str(time.time())
+                file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
+                self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
+                await ftp.download(ftp_path, os.path.join(self.script_dir, file_name), write_into=True)
         except (AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort) as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
