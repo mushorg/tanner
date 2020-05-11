@@ -51,4 +51,6 @@ Docker build instructions
 2. ``docker-compose build``
 3. ``docker-compose up``
 
+**Note**: Running docker with default ``docker-compose.yml`` setting will start tanner, tannerapi, tannerweb, tanner redis, tannerphpox but only tanner and tannerweb will be accesible from the outside network.
+
 More information about running ``docker-compose`` can be found `here <https://docs.docker.com/compose/gettingstarted/>`_.
