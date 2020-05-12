@@ -21,3 +21,4 @@ pyjwt
 pyyaml
 sqlalchemy
 aioftp
+asynctest
