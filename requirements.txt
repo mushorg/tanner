@@ -17,4 +17,5 @@ tornado
 mako
 pyjwt
 aioftp
+pyyaml
 asynctest

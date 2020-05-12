@@ -16,8 +16,8 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
                python3 \
                python3-dev && \
 # Setup Tanner
-    git clone --depth=1 https://github.com/mushorg/tanner /opt/tanner && \
-    cp /root/dist/config.py /opt/tanner/tanner/ && \
+    git clone --depth=1 https://github.com/mushorg/tanner -b develop /opt/tanner && \
+    cp /root/dist/config.yaml /opt/tanner/tanner/data/ && \
     cd /opt/tanner/ && \
     pip3 install --no-cache-dir setuptools && \
     pip3 install --no-cache-dir -r requirements.txt && \
@@ -37,4 +37,4 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
 # Start tanner
 USER nobody:nobody
 WORKDIR /opt/tanner
-CMD tanner
+CMD tanner --config /opt/tanner/tanner/data/config.yaml
