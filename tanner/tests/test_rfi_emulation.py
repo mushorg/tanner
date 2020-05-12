@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 from tanner.emulators import rfi
 import yarl
-
+from asynctest import CoroutineMock
 
 class TestRfiEmulator(unittest.TestCase):
     def setUp(self):
@@ -22,11 +22,11 @@ class TestRfiEmulator(unittest.TestCase):
         self.assertIsNone(filename)
 
     def test_ftp_download(self):
+        self.handler.download_file_ftp = CoroutineMock()
         path = 'ftp://mirror.yandex.ru/archlinux/lastupdate'
         data = self.loop.run_until_complete(self.handler.download_file(path))
-        result = self.loop.run_until_complete(self.handler.download_file_ftp(yarl.URL(path)))
-        self.assertIsNotNone(result)
-        
+        self.handler.download_file_ftp.assert_awaited_with(yarl.URL(path))
+
     def test_ftp_download_fail(self):
         path = 'ftp://mirror.yandex.ru/archlinux/foobar'
 
