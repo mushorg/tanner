@@ -53,6 +53,15 @@ SQLI:
   user: root
   password: user_pass
 
+POSTGRES:
+  db_name: tanner
+  host: localhost
+  port: 5432
+  user: user_name
+  password: user_password
+  poolsize: 80
+  timeout: 1
+
 XXE_INJECTION: 
   OUT_OF_BAND: False
 
