@@ -35,20 +35,20 @@ class PostgresClient:
                 async with conn.cursor() as cur:
                     await cur.execute(
                         """
-                    CREATE TABLE IF NOT EXISTS "Paths" (
-                        "sess_uuid" TEXT PRIMARY KEY NOT NULL UNIQUE,
+                    CREATE TABLE IF NOT EXISTS "paths" (
+                        "sess_uuid" UUID PRIMARY KEY NOT NULL UNIQUE,
                         "path" TEXT NOT NULL,
                         "timestamp" FLOAT NOT NULL,
                         "response_status" INT NOT NULL,
-                        "attack_type" TEXT NOT NULL
+                        "attack_type" INT NOT NULL
                     )
                     """
                     )
 
                     await cur.execute(
                         """
-                    CREATE TABLE IF NOT EXISTS "Cookies" (
-                        "sess_uuid" TEXT PRIMARY KEY NOT NULL UNIQUE,
+                    CREATE TABLE IF NOT EXISTS "cookies" (
+                        "sess_uuid" UUID PRIMARY KEY NOT NULL UNIQUE,
                         "key" TEXT NULL,
                         "value" TEXT NULL
                     )
@@ -58,9 +58,9 @@ class PostgresClient:
                     await cur.execute(
                         """
                     CREATE TABLE IF NOT EXISTS "session_data" (
-                        "sess_uuid" TEXT NOT NULL PRIMARY KEY,
+                        "sess_uuid" UUID NOT NULL PRIMARY KEY,
                         "snare_uuid" TEXT NOT NULL,
-                        "peer.ip" TEXT NOT NULL,
+                        "peer.ip" INET NOT NULL,
                         "peer.port" INT NOT NULL,
                         "location.country" TEXT NULL,
                         "location.country_code" TEXT NULL,
@@ -75,8 +75,8 @@ class PostgresClient:
                         "errors" INT NULL,
                         "hidden_links" INT NULL,
                         "attack_count.index" INT NULL,
-                        "paths" TEXT REFERENCES "Paths"(sess_uuid),
-                        "cookies" TEXT REFERENCES "Cookies"(sess_uuid),
+                        "paths" UUID REFERENCES "paths"(sess_uuid),
+                        "cookies" UUID REFERENCES "cookies"(sess_uuid),
                         "referer" TEXT NULL,
                         "possible_owners.user" INT NULL
                         )
@@ -84,8 +84,8 @@ class PostgresClient:
                     )
                     await cur.execute("CREATE INDEX ON session_data(sess_uuid)")
                     await cur.execute("CREATE INDEX ON session_data(snare_uuid)")
-                    await cur.execute('CREATE INDEX ON "Paths"(sess_uuid)')
-                    await cur.execute('CREATE INDEX ON "Cookies"(sess_uuid)')
+                    await cur.execute('CREATE INDEX ON "paths"(sess_uuid)')
+                    await cur.execute('CREATE INDEX ON "cookies"(sess_uuid)')
                 cur.close()
             conn.close()
         except asyncio.TimeoutError as timeout_error:
