@@ -38,7 +38,7 @@ class PostgresClient:
                     CREATE TABLE IF NOT EXISTS "paths" (
                         "sess_uuid" UUID PRIMARY KEY NOT NULL UNIQUE,
                         "path" TEXT NOT NULL,
-                        "timestamp" FLOAT NOT NULL,
+                        "timestamp" TIMESTAMP NOT NULL,
                         "response_status" INT NOT NULL,
                         "attack_type" INT NOT NULL
                     )
@@ -74,11 +74,13 @@ class PostgresClient:
                         "accepted_paths" INT NULL,
                         "errors" INT NULL,
                         "hidden_links" INT NULL,
-                        "attack_count.index" INT NULL,
                         "paths" UUID REFERENCES "paths"(sess_uuid),
                         "cookies" UUID REFERENCES "cookies"(sess_uuid),
                         "referer" TEXT NULL,
-                        "possible_owners.user" INT NULL
+                        "possible_owners.user" FLOAT NULL,
+                        "possible_owners.type" FLOAT NULL,
+                        "possible_owners.tool" FLOAT NULL,
+                        "possible_owners.crawler" FLOAT NULL
                         )
                     """
                     )
