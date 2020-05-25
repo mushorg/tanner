@@ -17,7 +17,7 @@ class CreateTables:
                     """
                 CREATE TABLE IF NOT EXISTS "sessions" (
                     "id" UUID PRIMARY KEY,
-                    "sensor_id" TEXT NOT NULL,
+                    "sensor_id" UUID NOT NULL,
                     "peer.ip" INET NOT NULL,
                     "peer.port" INT NOT NULL,
                     "location.country" TEXT NULL,
@@ -43,9 +43,9 @@ class CreateTables:
                 await cur.execute(
                     """
                 CREATE TABLE IF NOT EXISTS "paths" (
-                    "sess_uuid" UUID REFERENCES sessions(id),
+                    "session_id" UUID REFERENCES sessions(id),
                     "path" TEXT NOT NULL,
-                    "created_at" TIMESTAMP NOT NULL,
+                    "created_at" TIMESTAMP DEFAULT now(),
                     "response_status" INT NOT NULL,
                     "attack_type" INT NOT NULL
                 )
@@ -55,7 +55,7 @@ class CreateTables:
                 await cur.execute(
                     """
                 CREATE TABLE IF NOT EXISTS "cookies" (
-                    "sess_uuid" UUID REFERENCES sessions(id),
+                    "session_id" UUID REFERENCES sessions(id),
                     "key" TEXT NULL,
                     "value" TEXT NULL
                 )
@@ -63,7 +63,7 @@ class CreateTables:
                 )
                 await cur.execute("comment on column sessions.rps is 'requests per second'")
                 await cur.execute("CREATE INDEX ON sessions(sensor_id)")
-                await cur.execute('CREATE INDEX ON "paths"(sess_uuid)')
-                await cur.execute('CREATE INDEX ON "cookies"(sess_uuid)')
+                await cur.execute('CREATE INDEX ON "paths"(session_id)')
+                await cur.execute('CREATE INDEX ON "cookies"(session_id)')
             cur.close()
         conn.close()
