@@ -103,14 +103,14 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
-        await self.session_manager.delete_sessions_on_shutdown(self.redis_client)
+        await self.session_manager.delete_sessions_on_shutdown(self.redis_client, self.pg_client)
         self.redis_client.close()
         await self.redis_client.wait_closed()
 
     async def delete_sessions(self):
         try:
             while True:
-                await self.session_manager.delete_old_sessions(self.redis_client)
+                await self.session_manager.delete_old_sessions(self.redis_client, self.pg_client)
                 await asyncio.sleep(self.delete_timeout)
         except asyncio.CancelledError:
             pass

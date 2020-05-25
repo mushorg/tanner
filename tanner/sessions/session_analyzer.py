@@ -8,6 +8,8 @@ import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
 
+COOKIE_INSERT_QUERY = "INSERT INTO cookies(sess_uuid, key, value) VALUES({uuid}, {k}, {v})"
+
 
 class SessionAnalyzer:
     def __init__(self, loop=None):
@@ -16,7 +18,7 @@ class SessionAnalyzer:
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
-    async def analyze(self, session_key, redis_client):
+    async def analyze(self, session_key, redis_client, pg_client):
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
@@ -27,15 +29,22 @@ class SessionAnalyzer:
         else:
             result = await self.create_stats(session, redis_client)
             await self.queue.put(result)
-            await self.save_session(redis_client)
+            await self.save_session(redis_client, pg_client)
 
-    async def save_session(self, redis_client):
+    async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():
             session = await self.queue.get()
             s_key = session['snare_uuid']
             del_key = session['sess_uuid']
             try:
-                await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
+                # TODO: pg_client to insert
+                async with pg_client.acquire() as conn:
+                    async with conn.cursor() as cur:
+                        for k, v in session["cookies"].items():
+                            await cur.execute(COOKIE_INSERT_QUERY.format(uuid=del_key, key=k, value=v))
+                    cur.close()
+                conn.close()
+
                 await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
                 self.logger.exception('Error with redis. Session will be returned to the queue: %s', redis_error)
