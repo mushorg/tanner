@@ -32,11 +32,7 @@ class CreateTables:
                     "accepted_paths" INT NULL,
                     "errors" INT NULL,
                     "hidden_links" INT NULL,
-                    "referer" TEXT NULL,
-                    "possible_owners.user" FLOAT NULL,
-                    "possible_owners.type" FLOAT NULL,
-                    "possible_owners.tool" FLOAT NULL,
-                    "possible_owners.crawler" FLOAT NULL
+                    "referer" TEXT NULL
                     )
                 """
                 )
@@ -61,9 +57,19 @@ class CreateTables:
                 )
                 """
                 )
+                await cur.execute(
+                    """
+                CREATE TABLE IF NOT EXISTS "owners" (
+                    "session_id" UUID REFERENCES sessions(id),
+                    "key" TEXT,
+                    "value" TEXT
+                )
+                """
+                )
                 await cur.execute("comment on column sessions.rps is 'requests per second'")
                 await cur.execute("CREATE INDEX ON sessions(sensor_id)")
                 await cur.execute('CREATE INDEX ON "paths"(session_id)')
                 await cur.execute('CREATE INDEX ON "cookies"(session_id)')
+                await cur.execute('CREATE INDEX ON "owners"(session_id)')
             cur.close()
         conn.close()
