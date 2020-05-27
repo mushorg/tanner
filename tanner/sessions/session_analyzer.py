@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import socket
+from datetime import datetime
 from geoip2.database import Reader
 import geoip2
 import aioredis
@@ -34,14 +35,18 @@ class SessionAnalyzer:
 
     async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():
-            columns = """
-            id, sensor_id, ip, port, {}, user_agent, start_time,
-            end_time, rps, atbr, accepted_paths, errors,hidden_links, referer"""
+            columns = (
+                'id, sensor_id, ip, port, {}, user_agent, start_time, '
+                'end_time, rps, atbr, accepted_paths, errors, hidden_links, referer'
+            )
 
             session = await self.queue.get()
             s_key = session["snare_uuid"]
             del_key = session["sess_uuid"]
             print("Printing sessions")
+
+            start_time = datetime.fromtimestamp(session["start_time"]).strftime('%Y-%m-%d %H:%M:%S')
+            end_time = datetime.fromtimestamp(session["end_time"]).strftime('%Y-%m-%d %H:%M:%S')
 
             # Some of the sessions have location as NA
             try:
@@ -53,7 +58,6 @@ class SessionAnalyzer:
             except (TypeError, KeyError):
                 country_info = False
                 location = session["location"]
-            print("Passed country info")
 
             try:
                 # TODO: pg_client to insert
@@ -62,11 +66,12 @@ class SessionAnalyzer:
                         "country, country_code, city, zip_code"
                     )
 
-                    sessions_query = """
-                    INSERT INTO sessions ({cols})
-                                VALUES ({uuid},'{sensor}','{ip}',{port},{country},
-                                        {ccode},{city},{zcode},'{ua}',{st},{et},{rps},
-                                        {atbr},{apaths},{err},{hlinks},'{referer}');""".format(
+                    sessions_query = (
+                        "INSERT INTO sessions ({cols}) "
+                        "VALUES ('{uuid}','{sensor}','{ip}',{port},{country},"
+                        "{ccode},{city},{zcode},'{ua}','{st}','{et}',{rps},"
+                        "{atbr},{apaths},{err},{hlinks},'{referer}');"
+                    ).format(
                         cols=all_columns,
                         uuid=session["sess_uuid"],
                         sensor=session["snare_uuid"],
@@ -77,8 +82,8 @@ class SessionAnalyzer:
                         city=city,
                         zcode=zip_code,
                         ua=session["user_agent"],
-                        st=session["start_time"],
-                        et=session["end_time"],
+                        st=start_time,
+                        et=end_time,
                         rps=session["requests_in_second"],
                         atbr=session["approx_time_between_requests"],
                         apaths=session["accepted_paths"],
@@ -88,12 +93,12 @@ class SessionAnalyzer:
                     )
                 else:
                     all_columns = columns.format("country")
-                    print(all_columns.strip())
-                    sessions_query = """
-                    INSERT INTO sessions ({cols})
-                                VALUES ({uuid},'{sensor}','{ip}',{port},'{ua}',
-                                {st},{et},{rps},{atbr},{apaths},{err},{hlinks},
-                                '{referer}');""".format(
+                    sessions_query = (
+                        "INSERT INTO sessions ({cols}) "
+                        "VALUES ('{uuid}','{sensor}','{ip}',{port},'{country}',"
+                        "'{ua}','{st}','{et}',{rps},{atbr},{apaths},{err},{hlinks},"
+                        "'{referer}');"
+                    ).format(
                         cols=all_columns.strip(),
                         uuid=session["sess_uuid"],
                         sensor=session["snare_uuid"],
@@ -101,8 +106,8 @@ class SessionAnalyzer:
                         port=session["peer_port"],
                         country=location,
                         ua=session["user_agent"],
-                        st=session["start_time"],
-                        et=session["end_time"],
+                        st=start_time,
+                        et=end_time,
                         rps=session["requests_in_second"],
                         atbr=session["approx_time_between_requests"],
                         apaths=session["accepted_paths"],
@@ -116,10 +121,10 @@ class SessionAnalyzer:
                     async with conn.cursor() as cur:
                         await cur.execute(sessions_query)
                         print("Executed session query")
-                        for k, v in session["cookies"].items():
-                            await cur.execute(
-                                COOKIE_INSERT_QUERY.format(uuid=del_key, key=k, value=v)
-                            )
+                        # for k, v in session["cookies"].items():
+                        #     await cur.execute(
+                        #         COOKIE_INSERT_QUERY.format(uuid=del_key, key=k, value=v)
+                        #     )
                     cur.close()
                 conn.close()
 
