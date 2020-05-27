@@ -18,21 +18,21 @@ class CreateTables:
                 CREATE TABLE IF NOT EXISTS "sessions" (
                     "id" UUID PRIMARY KEY,
                     "sensor_id" UUID NOT NULL,
-                    "peer.ip" INET NOT NULL,
-                    "peer.port" INT NOT NULL,
-                    "location.country" TEXT NULL,
-                    "location.country_code" TEXT NULL,
-                    "location.city" TEXT NULL,
-                    "location.zip_code" INT NULL,
+                    "ip" INET NOT NULL,
+                    "port" INT NOT NULL,
+                    "country" TEXT NULL,
+                    "country_code" TEXT NULL,
+                    "city" TEXT NULL,
+                    "zip_code" INT NULL,
                     "user_agent" TEXT NOT NULL,
                     "start_time" TIMESTAMP DEFAULT NOW(),
                     "end_time" TIMESTAMP DEFAULT NOW(),
-                    "rps" FLOAT NULL,
-                    "approx_time_between_requests" FLOAT NULL,
-                    "accepted_paths" INT NULL,
-                    "errors" INT NULL,
-                    "hidden_links" INT NULL,
-                    "referer" TEXT NULL
+                    "rps" FLOAT NOT NULL,
+                    "atbr" FLOAT NOT NULL,
+                    "accepted_paths" INT NOT NULL,
+                    "errors" INT NOT NULL,
+                    "hidden_links" INT NOT NULL,
+                    "referer" TEXT NOT NULL
                     )
                 """
                 )
@@ -67,6 +67,7 @@ class CreateTables:
                 """
                 )
                 await cur.execute("comment on column sessions.rps is 'requests per second'")
+                await cur.execute("comment on column sessions.atbr is 'approx_time_between_requests'")
                 await cur.execute("CREATE INDEX ON sessions(sensor_id)")
                 await cur.execute('CREATE INDEX ON "paths"(session_id)')
                 await cur.execute('CREATE INDEX ON "cookies"(session_id)')
