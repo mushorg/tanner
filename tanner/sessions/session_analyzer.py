@@ -9,8 +9,10 @@ import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
 
-# TODO: Move it from here
-COOKIE_INSERT_QUERY = "INSERT INTO cookies(session_id, key, value) VALUES({uuid}, {k}, {v});"
+# TODO: Move Query from here
+COOKIE_INSERT_QUERY = "INSERT INTO cookies(session_id, key, value) VALUES('{uuid}', '{key}', '{value}');"
+# TODO: Better way to resolve the value to int
+ATTACK_TYPE = {"index": 1, "sqli": 2, "rfi": 3, "lfi": 4}
 
 
 class SessionAnalyzer:
@@ -120,11 +122,34 @@ class SessionAnalyzer:
                 async with pg_client.acquire() as conn:
                     async with conn.cursor() as cur:
                         await cur.execute(sessions_query)
-                        print("Executed session query")
-                        # for k, v in session["cookies"].items():
-                        #     await cur.execute(
-                        #         COOKIE_INSERT_QUERY.format(uuid=del_key, key=k, value=v)
-                        #     )
+                        # TODO: Log instead of printing
+
+                        for k, v in session["cookies"].items():
+                            await cur.execute(
+                                COOKIE_INSERT_QUERY.format(uuid=session["sess_uuid"], key=k, value=v)
+                            )
+                        for path in session["paths"]:
+                            timestamp = datetime.fromtimestamp(path["timestamp"]).strftime('%Y-%m-%d %H:%M:%S')
+                            paths_query = (
+                                "INSERT INTO paths (session_id, path, created_at, response_status, attack_type) "
+                                "VALUES ('{id}','{path}','{time}',{res},{atype});"
+                            ).format(
+                                id=session["sess_uuid"],
+                                path=path["path"],
+                                time=timestamp,
+                                res=path["response_status"],
+                                atype=ATTACK_TYPE[path["attack_type"]]
+                            )
+
+                            await cur.execute(paths_query)
+
+                        owners_query = (
+                            "INSERT INTO owners (session_id, key, value) "
+                            "VALUES ('{id}', '{key}', '{val}');"
+                        )
+                        for k, v in session["possible_owners"].items():
+                            await cur.execute(owners_query.format(id=session["sess_uuid"], key=k, val=v))
+
                     cur.close()
                 conn.close()
 
