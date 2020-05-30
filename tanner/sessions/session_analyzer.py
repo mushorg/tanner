@@ -264,7 +264,13 @@ class SessionAnalyzer:
                 zip_code=location.postal.code,
             )
         except geoip2.errors.AddressNotFoundError:
-            info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
+            # When IP doesn't exist in the db, set info as "NA - Not Available"
+            info = dict(
+                country=None,
+                country_code=None,
+                city=None,
+                zip_code=0,
+            )
         return info
 
     async def detect_crawler(self, stats, bots_owner, crawler_hosts):
