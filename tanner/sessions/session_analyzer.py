@@ -9,15 +9,14 @@ import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
 from tanner.utils.attack_type import AttackType
-
-# TODO: Move Query from here
-COOKIE_INSERT_QUERY = "INSERT INTO cookies(session_id, key, value) VALUES('{uuid}', '{key}', '{value}');"
+from tanner.dbutils import InsertionQueries
 
 
 class SessionAnalyzer:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.queue = asyncio.Queue(loop=self._loop)
+        self.insert_query = InsertionQueries
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
@@ -49,105 +48,49 @@ class SessionAnalyzer:
             start_time = datetime.fromtimestamp(session["start_time"]).strftime('%Y-%m-%d %H:%M:%S')
             end_time = datetime.fromtimestamp(session["end_time"]).strftime('%Y-%m-%d %H:%M:%S')
 
-            # Some of the sessions have location as NA
             try:
-                country_info = True
-                country = session["location"]["country"]
-                country_code = session["location"]["country_code"]
-                city = session["location"]["city"]
-                zip_code = session["location"]["zip_code"]
-            except (TypeError, KeyError):
-                country_info = False
-                location = session["location"]
-
-            try:
-                # TODO: pg_client to insert
-                if country_info:
-                    all_columns = columns.format(
-                        "country, country_code, city, zip_code"
-                    )
-
-                    sessions_query = (
-                        "INSERT INTO sessions ({cols}) "
-                        "VALUES ('{uuid}','{sensor}','{ip}',{port},{country},"
-                        "{ccode},{city},{zcode},'{ua}','{st}','{et}',{rps},"
-                        "{atbr},{apaths},{err},{hlinks},'{referer}');"
-                    ).format(
-                        cols=all_columns,
-                        uuid=session["sess_uuid"],
-                        sensor=session["snare_uuid"],
-                        ip=session["peer_ip"],
-                        port=session["peer_port"],
-                        country=country,
-                        ccode=country_code,
-                        city=city,
-                        zcode=zip_code,
-                        ua=session["user_agent"],
-                        st=start_time,
-                        et=end_time,
-                        rps=session["requests_in_second"],
-                        atbr=session["approx_time_between_requests"],
-                        apaths=session["accepted_paths"],
-                        err=session["errors"],
-                        hlinks=session["hidden_links"],
-                        referer=session["referer"]
-                    )
-                else:
-                    all_columns = columns.format("country")
-                    sessions_query = (
-                        "INSERT INTO sessions ({cols}) "
-                        "VALUES ('{uuid}','{sensor}','{ip}',{port},'{country}',"
-                        "'{ua}','{st}','{et}',{rps},{atbr},{apaths},{err},{hlinks},"
-                        "'{referer}');"
-                    ).format(
-                        cols=all_columns.strip(),
-                        uuid=session["sess_uuid"],
-                        sensor=session["snare_uuid"],
-                        ip=session["peer_ip"],
-                        port=session["peer_port"],
-                        country=location,
-                        ua=session["user_agent"],
-                        st=start_time,
-                        et=end_time,
-                        rps=session["requests_in_second"],
-                        atbr=session["approx_time_between_requests"],
-                        apaths=session["accepted_paths"],
-                        err=session["errors"],
-                        hlinks=session["hidden_links"],
-                        referer=session["referer"],
-                    )
-                    print(sessions_query)
+                sessions_query = self.insert_query.Sessions.format(
+                    uuid=session["sess_uuid"],
+                    sensor=session["snare_uuid"],
+                    ip=session["peer_ip"],
+                    port=session["peer_port"],
+                    country=session["location"]["country"],
+                    ccode=session["location"]["country_code"],
+                    city=session["location"]["city"],
+                    zcode=session["location"]["zip_code"],
+                    ua=session["user_agent"],
+                    st=start_time,
+                    et=end_time,
+                    rps=session["requests_in_second"],
+                    atbr=session["approx_time_between_requests"],
+                    apaths=session["accepted_paths"],
+                    err=session["errors"],
+                    hlinks=session["hidden_links"],
+                    referer=session["referer"]
+                )
 
                 async with pg_client.acquire() as conn:
                     async with conn.cursor() as cur:
                         await cur.execute(sessions_query)
-                        # TODO: Log instead of printing
-
                         for k, v in session["cookies"].items():
                             await cur.execute(
-                                COOKIE_INSERT_QUERY.format(uuid=session["sess_uuid"], key=k, value=v)
+                                self.insert_query.Cookies.format(uuid=session["sess_uuid"], key=k, value=v)
                             )
+
                         for path in session["paths"]:
                             timestamp = datetime.fromtimestamp(path["timestamp"]).strftime('%Y-%m-%d %H:%M:%S')
-                            paths_query = (
-                                "INSERT INTO paths (session_id, path, created_at, response_status, attack_type) "
-                                "VALUES ('{id}','{path}','{time}',{res},{atype});"
-                            ).format(
+                            paths_query = self.insert_query.Paths.format(
                                 id=session["sess_uuid"],
                                 path=path["path"],
                                 time=timestamp,
                                 res=path["response_status"],
-                                atype=AttackType[path["attack_type"]]
+                                atype=AttackType[path["attack_type"]].value
                             )
 
                             await cur.execute(paths_query)
 
-                        owners_query = (
-                            "INSERT INTO owners (session_id, key, value) "
-                            "VALUES ('{id}', '{key}', '{val}');"
-                        )
                         for k, v in session["possible_owners"].items():
-                            await cur.execute(owners_query.format(id=session["sess_uuid"], key=k, val=v))
+                            await cur.execute(self.insert_query.Owners.format(id=session["sess_uuid"], key=k, val=v))
 
                     cur.close()
                 conn.close()

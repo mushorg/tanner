@@ -79,3 +79,22 @@ class CreateTables:
             cur.close()
         conn.close()
 
+
+class InsertionQueries:
+    Cookies = "INSERT INTO cookies(session_id, key, value) VALUES('{uuid}', '{key}', '{value}');"
+    Sessions = (
+        "INSERT INTO sessions (id, sensor_id, ip, port, country,"
+        "country_code, city, zip_code, user_agent, start_time,"
+        "end_time, rps, atbr, accepted_paths, errors, hidden_links, referer) "
+        "VALUES ('{uuid}','{sensor}','{ip}',{port},'{country}',"
+        "'{ccode}','{city}',{zcode},'{ua}','{st}','{et}',{rps},"
+        "{atbr},{apaths},{err},{hlinks},'{referer}');"
+    )
+    Paths = (
+        "INSERT INTO paths (session_id, path, created_at, response_status, attack_type) "
+        "VALUES ('{id}','{path}','{time}',{res},{atype});"
+    )
+    Owners = (
+        "INSERT INTO owners (session_id, owner_type, probability) "
+        "VALUES ('{id}', '{key}', '{val}');"
+    )
