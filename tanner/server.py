@@ -7,7 +7,7 @@ import uvloop
 import yarl
 from aiohttp import web
 
-from tanner import dorks_manager, redis_client, postgres_client, create_tables
+from tanner import dorks_manager, redis_client, postgres_client, dbutils
 from tanner.sessions import session_manager
 from tanner.config import TannerConfig
 from tanner.emulators import base
@@ -143,7 +143,7 @@ class TannerServer:
             postgres_client.PostgresClient().get_pg_client()
         )
         loop.run_until_complete(
-            create_tables.CreateTables.create_data_tables(self.pg_client)
+            dbutils.CreateTables.create_data_tables(self.pg_client)
         )
 
         app = self.create_app(loop)

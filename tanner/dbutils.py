@@ -61,16 +61,21 @@ class CreateTables:
                     """
                 CREATE TABLE IF NOT EXISTS "owners" (
                     "session_id" UUID REFERENCES sessions(id),
-                    "key" TEXT,
-                    "value" TEXT
+                    "owner_type" TEXT,
+                    "probability" TEXT
                 )
                 """
                 )
-                await cur.execute("comment on column sessions.rps is 'requests per second'")
-                await cur.execute("comment on column sessions.atbr is 'approx_time_between_requests'")
+                await cur.execute(
+                    "comment on column sessions.rps is 'requests per second'"
+                )
+                await cur.execute(
+                    "comment on column sessions.atbr is 'approx_time_between_requests'"
+                )
                 await cur.execute("CREATE INDEX ON sessions(sensor_id)")
                 await cur.execute('CREATE INDEX ON "paths"(session_id)')
                 await cur.execute('CREATE INDEX ON "cookies"(session_id)')
                 await cur.execute('CREATE INDEX ON "owners"(session_id)')
             cur.close()
         conn.close()
+
