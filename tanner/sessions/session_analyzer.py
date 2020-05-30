@@ -8,11 +8,10 @@ import geoip2
 import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
+from tanner.utils.attack_type import AttackType
 
 # TODO: Move Query from here
 COOKIE_INSERT_QUERY = "INSERT INTO cookies(session_id, key, value) VALUES('{uuid}', '{key}', '{value}');"
-# TODO: Better way to resolve the value to int
-ATTACK_TYPE = {"index": 1, "sqli": 2, "rfi": 3, "lfi": 4}
 
 
 class SessionAnalyzer:
@@ -138,7 +137,7 @@ class SessionAnalyzer:
                                 path=path["path"],
                                 time=timestamp,
                                 res=path["response_status"],
-                                atype=ATTACK_TYPE[path["attack_type"]]
+                                atype=AttackType[path["attack_type"]]
                             )
 
                             await cur.execute(paths_query)
