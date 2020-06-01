@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import aiopg
+import psycopg2
 
 from tanner.config import TannerConfig
 
@@ -30,7 +31,7 @@ class PostgresClient:
             pg_client = await asyncio.wait_for(
                 aiopg.create_pool(dsn, maxsize=self.poolsize), timeout=int(self.timeout)
             )
-        except asyncio.TimeoutError as timeout_error:
-            LOGGER.exception("Failed to connect to postgres {}".format(timeout_error))
+        except (asyncio.TimeoutError, psycopg2.ProgrammingError) as error:
+            LOGGER.exception("Failed to connect to postgres {}".format(error))
             exit()
         return pg_client
