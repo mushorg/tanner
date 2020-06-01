@@ -143,7 +143,7 @@ class TannerServer:
             postgres_client.PostgresClient().get_pg_client()
         )
         loop.run_until_complete(
-            dbutils.CreateTables.create_data_tables(self.pg_client)
+            dbutils.DBUtils.create_data_tables(self.pg_client)
         )
 
         app = self.create_app(loop)

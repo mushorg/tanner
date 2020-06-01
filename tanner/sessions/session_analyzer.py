@@ -8,15 +8,13 @@ import geoip2
 import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
-from tanner.utils.attack_type import AttackType
-from tanner.dbutils import InsertionQueries
+from tanner.dbutils import DBUtils
 
 
 class SessionAnalyzer:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.queue = asyncio.Queue(loop=self._loop)
-        self.insert_query = InsertionQueries
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
@@ -35,66 +33,12 @@ class SessionAnalyzer:
 
     async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():
-            columns = (
-                'id, sensor_id, ip, port, {}, user_agent, start_time, '
-                'end_time, rps, atbr, accepted_paths, errors, hidden_links, referer'
-            )
-
             session = await self.queue.get()
-            s_key = session["snare_uuid"]
             del_key = session["sess_uuid"]
-            print("Printing sessions")
 
-            start_time = datetime.fromtimestamp(session["start_time"]).strftime('%Y-%m-%d %H:%M:%S')
-            end_time = datetime.fromtimestamp(session["end_time"]).strftime('%Y-%m-%d %H:%M:%S')
+            await DBUtils.insert_queries(session, pg_client)
 
             try:
-                sessions_query = self.insert_query.Sessions.format(
-                    uuid=session["sess_uuid"],
-                    sensor=session["snare_uuid"],
-                    ip=session["peer_ip"],
-                    port=session["peer_port"],
-                    country=session["location"]["country"],
-                    ccode=session["location"]["country_code"],
-                    city=session["location"]["city"],
-                    zcode=session["location"]["zip_code"],
-                    ua=session["user_agent"],
-                    st=start_time,
-                    et=end_time,
-                    rps=session["requests_in_second"],
-                    atbr=session["approx_time_between_requests"],
-                    apaths=session["accepted_paths"],
-                    err=session["errors"],
-                    hlinks=session["hidden_links"],
-                    referer=session["referer"]
-                )
-
-                async with pg_client.acquire() as conn:
-                    async with conn.cursor() as cur:
-                        await cur.execute(sessions_query)
-                        for k, v in session["cookies"].items():
-                            await cur.execute(
-                                self.insert_query.Cookies.format(uuid=session["sess_uuid"], key=k, value=v)
-                            )
-
-                        for path in session["paths"]:
-                            timestamp = datetime.fromtimestamp(path["timestamp"]).strftime('%Y-%m-%d %H:%M:%S')
-                            paths_query = self.insert_query.Paths.format(
-                                id=session["sess_uuid"],
-                                path=path["path"],
-                                time=timestamp,
-                                res=path["response_status"],
-                                atype=AttackType[path["attack_type"]].value
-                            )
-
-                            await cur.execute(paths_query)
-
-                        for k, v in session["possible_owners"].items():
-                            await cur.execute(self.insert_query.Owners.format(id=session["sess_uuid"], key=k, val=v))
-
-                    cur.close()
-                conn.close()
-
                 await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
                 self.logger.exception(
