@@ -36,7 +36,7 @@ class SessionAnalyzer:
             session = await self.queue.get()
             del_key = session["sess_uuid"]
 
-            await DBUtils.insert_queries(session, pg_client)
+            await DBUtils.add_analyzed_data(session, pg_client)
 
             try:
                 await redis_client.delete(*[del_key])

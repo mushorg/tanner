@@ -67,7 +67,7 @@ class DBUtils:
                 CREATE TABLE IF NOT EXISTS "owners" (
                     "session_id" UUID REFERENCES sessions(id),
                     "owner_type" TEXT,
-                    "probability" TEXT
+                    "probability" FLOAT
                 )
                 """
                 )
@@ -85,7 +85,7 @@ class DBUtils:
         conn.close()
 
     @staticmethod
-    async def insert_queries(session, pg_client):
+    async def add_analyzed_data(session, pg_client):
         """Insert analyzed sessions into postgres
 
         Arguments:
@@ -117,7 +117,7 @@ class DBUtils:
         )
         Owners = (
             "INSERT INTO owners (session_id, owner_type, probability) "
-            "VALUES ('{id}', '{key}', '{val}');"
+            "VALUES ('{id}', '{key}', {val});"
         )
 
         start_time = time_convertor(session["start_time"])
@@ -149,12 +149,10 @@ class DBUtils:
             async with pg_client.acquire() as conn:
                 async with conn.cursor() as cur:
                     await cur.execute(sessions_query)
-                    print("Inserted sessions")
                     for k, v in session["cookies"].items():
                         await cur.execute(
                             Cookies.format(uuid=session["sess_uuid"], key=k, value=v)
                         )
-                    print("Inserted Cookies")
 
                     for path in session["paths"]:
                         timestamp = time_convertor(path["timestamp"])
@@ -167,12 +165,10 @@ class DBUtils:
                         )
 
                         await cur.execute(paths_query)
-                    print("Inserted Paths")
 
                     for k, v in session["possible_owners"].items():
                         await cur.execute(Owners.format(id=session["sess_uuid"], key=k, val=v))
 
-                    print("Inserted owners")
                 cur.close()
             conn.close()
 
