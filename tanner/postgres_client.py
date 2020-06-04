@@ -31,7 +31,11 @@ class PostgresClient:
             pg_client = await asyncio.wait_for(
                 aiopg.create_pool(dsn, maxsize=self.poolsize), timeout=int(self.timeout)
             )
-        except (asyncio.TimeoutError, psycopg2.ProgrammingError) as error:
+        except (
+            asyncio.TimeoutError,
+            psycopg2.ProgrammingError,
+            psycopg2.OperationalError
+        ) as error:
             LOGGER.exception("Failed to connect to postgres {}".format(error))
             exit()
         return pg_client
