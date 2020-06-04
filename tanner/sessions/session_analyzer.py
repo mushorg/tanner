@@ -144,11 +144,13 @@ class SessionAnalyzer:
         reader = Reader(TannerConfig.get('DATA', 'geo_db'))
         try:
             location = reader.city(ip)
+            if location.postal.code is None:
+                zcode = 0
             info = dict(
                 country=location.country.name,
                 country_code=location.country.iso_code,
                 city=location.city.name,
-                zip_code=location.postal.code,
+                zip_code=int(zcode),
             )
         except geoip2.errors.AddressNotFoundError:
             # When IP doesn't exist in the db, set info as "NA - Not Available"
