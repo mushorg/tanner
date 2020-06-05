@@ -106,6 +106,8 @@ class TannerServer:
         await self.session_manager.delete_sessions_on_shutdown(self.redis_client, self.pg_client)
         self.redis_client.close()
         await self.redis_client.wait_closed()
+        self.pg_client.close()
+        await self.pg_client.wait_closed()
 
     async def delete_sessions(self):
         try:
