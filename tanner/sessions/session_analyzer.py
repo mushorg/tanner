@@ -146,6 +146,9 @@ class SessionAnalyzer:
             location = reader.city(ip)
             if location.postal.code is None:
                 zcode = 0
+            else:
+                zcode = location.postal.code
+
             info = dict(
                 country=location.country.name,
                 country_code=location.country.iso_code,
