@@ -2,11 +2,13 @@ import asyncio
 import json
 import logging
 import socket
+from datetime import datetime
 from geoip2.database import Reader
 import geoip2
 import aioredis
 from tanner.dorks_manager import DorksManager
 from tanner.config import TannerConfig
+from tanner.dbutils import DBUtils
 
 
 class SessionAnalyzer:
@@ -16,7 +18,7 @@ class SessionAnalyzer:
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
-    async def analyze(self, session_key, redis_client):
+    async def analyze(self, session_key, redis_client, pg_client):
         session = None
         await asyncio.sleep(1, loop=self._loop)
         try:
@@ -27,18 +29,22 @@ class SessionAnalyzer:
         else:
             result = await self.create_stats(session, redis_client)
             await self.queue.put(result)
-            await self.save_session(redis_client)
+            await self.save_session(redis_client, pg_client)
 
-    async def save_session(self, redis_client):
+    async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():
             session = await self.queue.get()
-            s_key = session['snare_uuid']
-            del_key = session['sess_uuid']
+            del_key = session["sess_uuid"]
+
+            await DBUtils.add_analyzed_data(session, pg_client)
+
             try:
-                await redis_client.zadd(s_key, session['start_time'], json.dumps(session))
                 await redis_client.delete(*[del_key])
             except aioredis.ProtocolError as redis_error:
-                self.logger.exception('Error with redis. Session will be returned to the queue: %s', redis_error)
+                self.logger.exception(
+                    "Error with redis. Session will be returned to the queue: %s",
+                    redis_error,
+                )
                 self.queue.put(session)
 
     async def create_stats(self, session, redis_client):
@@ -138,14 +144,25 @@ class SessionAnalyzer:
         reader = Reader(TannerConfig.get('DATA', 'geo_db'))
         try:
             location = reader.city(ip)
+            if location.postal.code is None:
+                zcode = 0
+            else:
+                zcode = location.postal.code
+
             info = dict(
                 country=location.country.name,
                 country_code=location.country.iso_code,
                 city=location.city.name,
-                zip_code=location.postal.code,
+                zip_code=int(zcode),
             )
         except geoip2.errors.AddressNotFoundError:
-            info = "NA"  # When IP doesn't exist in the db, set info as "NA - Not Available"
+            # When IP doesn't exist in the db, set info as "NA - Not Available"
+            info = dict(
+                country=None,
+                country_code=None,
+                city=None,
+                zip_code=0,
+            )
         return info
 
     async def detect_crawler(self, stats, bots_owner, crawler_hosts):

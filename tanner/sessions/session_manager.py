@@ -66,21 +66,21 @@ class SessionManager:
 
         return hashlib.md5(sess_id_string.encode()).hexdigest()
 
-    async def delete_old_sessions(self, redis_client):
+    async def delete_old_sessions(self, redis_client, pg_client):
         id_for_deletion = [sess_id for sess_id, sess in self.sessions.items() if sess.is_expired()]
         for sess_id in id_for_deletion:
-            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client, pg_client)
             if is_deleted:
                 try:
                     del self.sessions[sess_id]
                 except ValueError:
                     continue
 
-    async def delete_sessions_on_shutdown(self, redis_client):
+    async def delete_sessions_on_shutdown(self, redis_client, pg_client):
         id_for_deletion = list(self.sessions.keys())
 
         for sess_id in id_for_deletion:
-            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client)
+            is_deleted = await self.delete_session(self.sessions[sess_id], redis_client, pg_client)
             if is_deleted:
                 del self.sessions[sess_id]
 
@@ -89,13 +89,13 @@ class SessionManager:
         except AssertionError:
             self.logger.exception("Not all sessions were moved to the storage!")
 
-    async def delete_session(self, sess, redis_client):
+    async def delete_session(self, sess, redis_client, pg_client):
         await sess.remove_associated_db()
         if sess.associated_env is not None:
             await sess.remove_associated_env()
         try:
             await redis_client.set(sess.get_uuid(), sess.to_json())
-            await self.analyzer.analyze(sess.get_uuid(), redis_client)
+            await self.analyzer.analyze(sess.get_uuid(), redis_client, pg_client)
         except aioredis.ProtocolError as redis_error:
             self.logger.exception('Error connect to redis, session stay in memory. %s', redis_error)
             return False
