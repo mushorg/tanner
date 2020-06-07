@@ -5,7 +5,7 @@ from aiohttp import web
 from aiohttp.web import middleware
 
 from tanner.api import api
-from tanner import redis_client
+from tanner import redis_client, postgres_client
 from tanner.config import TannerConfig
 from tanner.utils.api_key_generator import generate
 
@@ -38,7 +38,7 @@ class ApiServer:
 
     async def handle_snare_info(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        result = await self.api.return_snare_info(snare_uuid, 50)
+        result = await self.api.return_snare_info(snare_uuid)
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
@@ -109,7 +109,10 @@ class ApiServer:
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
-        self.api = api.Api(self.redis_client)
+        self.pg_client = loop.run_until_complete(
+            postgres_client.PostgresClient().get_pg_client()
+        )
+        self.api = api.Api(self.redis_client, self.pg_client)
         set_auth = TannerConfig.get('API', 'auth')
         app = self.create_app(loop, set_auth)
         host = TannerConfig.get('API', 'host')

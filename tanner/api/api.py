@@ -2,12 +2,16 @@ import json
 import logging
 import operator
 import aioredis
+import psycopg2
+from collections import ChainMap
+from tanner.utils.attack_type import AttackType
 
 
 class Api:
-    def __init__(self, redis_client):
+    def __init__(self, redis_client, pg_client):
         self.logger = logging.getLogger('tanner.api.Api')
         self.redis_client = redis_client
+        self.pg_client = pg_client
 
     async def return_snares(self):
         """Returns a list of all the snares that are
@@ -17,11 +21,15 @@ class Api:
             [list] -- List containing UUID of all snares
         """
         query_res = []
-        try:
-            query_res = await self.redis_client.smembers('snare_ids', encoding='utf-8')
-        except aioredis.ProtocolError as connection_error:
-            self.logger.exception('Can not connect to redis %s', connection_error)
-        return list(query_res)
+        async with self.pg_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT DISTINCT sensor_id FROM sessions")
+                ans = await cur.fetchall()
+                for r in ans:
+                    query_res.append(str(r[0]))
+            cur.close()
+        conn.close()
+        return query_res
 
     async def return_snare_stats(self, snare_uuid):
         """Returns the stats of the given snare
@@ -48,13 +56,13 @@ class Api:
         result['total_sessions'] = len(sessions)
         for sess in sessions:
             result['total_duration'] += sess['end_time'] - sess['start_time']
-            for attack in sess['attack_types']:
-                if attack in result['attack_frequency']:
-                    result['attack_frequency'][attack] += 1
+            for path in sess['paths']:
+                if path['attack_type'] in result['attack_frequency']:
+                    result['attack_frequency'][path['attack_type']] += 1
 
         return result
 
-    async def return_snare_info(self, uuid, count=-1):
+    async def return_snare_info(self, uuid):
         """Returns JSON data that contains information about
          all the sessions a single snare instance have.
 
@@ -62,17 +70,93 @@ class Api:
             uuid [string] - Snare UUID
         """
         query_res = []
-        try:
-            query_res = await self.redis_client.zrevrangebyscore(
-                uuid, offset=0, count=count, encoding='utf-8'
-            )
-        except aioredis.ProtocolError as connection_error:
-            self.logger.exception('Can not connect to redis %s', connection_error)
-        else:
-            if not query_res:
-                return 'Invalid SNARE UUID'
-            for (i, val) in enumerate(query_res):
-                query_res[i] = json.loads(val)
+        async with self.pg_client.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    """
+                    SELECT * FROM sessions
+                    WHERE
+                        sessions.sensor_id = '%s'
+                    """ % (uuid)
+                )
+                session = await cur.fetchall()
+                for r in session:
+                    sess = {
+                        'sess_uuid': str(r[0]),
+                        'snare_uuid': str(r[1]),
+                        'ip': r[2],
+                        'port': r[3],
+                        'location': {
+                            'country': r[4],
+                            'country_code': r[5],
+                            'city': r[6],
+                            'zip_code': r[7],
+                        },
+                        'user_agent': r[8],
+                        'start_time': r[9].timestamp(),
+                        'end_time': r[10].timestamp(),
+                        'request_per_second': r[11],
+                        'approx_time_between_requests': r[12],
+                        'accepted_paths': r[13],
+                        'errors': r[14],
+                        'hidden_links': r[15],
+                        'referrer': r[16]
+                    }
+
+                    await cur.execute(
+                        """
+                        SELECT * FROM cookies WHERE cookies.session_id = '%s'
+                        """ % (str(r[0]))
+                    )
+                    cookies = await cur.fetchall()
+
+                    all_cookies = []
+                    for r in cookies:
+                        all_cookies.append(
+                            {
+                                r[1]: r[2]
+                            }
+                        )
+                    sess['cookies'] = dict(ChainMap(*all_cookies))
+
+                    await cur.execute(
+                        """
+                        SELECT * FROM paths WHERE paths.session_id = '%s'
+                        """ % (str(r[0]))
+                    )
+                    paths = await cur.fetchall()
+                    all_paths = []
+
+                    for p in paths:
+                        all_paths.append(
+                            {
+                                "path": p[1],
+                                "timestamp": p[2].timestamp(),
+                                "response_status": p[3],
+                                "attack_type": AttackType(p[4]).name
+                            }
+                        )
+                    sess['paths'] = dict(ChainMap(*all_paths))
+
+                    await cur.execute(
+                        """
+                        SELECT * FROM owners WHERE owners.session_id = '%s'
+                        """ % (str(r[0]))
+                    )
+
+                    owners = await cur.fetchall()
+                    owner_type = []
+
+                    for o in owners:
+                        owner_type.append(
+                            {
+                                o[1]: o[2]
+                            }
+                        )
+                    sess['owners'] = dict(ChainMap(*owner_type))
+                    query_res.append(sess)
+            cur.close()
+        conn.close()
         return query_res
 
     async def return_session_info(self, sess_uuid, snare_uuid=None):
@@ -109,7 +193,6 @@ class Api:
 
                 if match_count == len(filters):
                     matching_sessions.append(sess)
-
         return matching_sessions
 
     async def return_latest_session(self):
