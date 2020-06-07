@@ -10,6 +10,12 @@ class Api:
         self.redis_client = redis_client
 
     async def return_snares(self):
+        """Returns a list of all the snares that are
+        connected to the tanner.
+
+        Returns:
+            [list] -- List containing UUID of all snares
+        """
         query_res = []
         try:
             query_res = await self.redis_client.smembers('snare_ids', encoding='utf-8')
@@ -18,6 +24,14 @@ class Api:
         return list(query_res)
 
     async def return_snare_stats(self, snare_uuid):
+        """Returns the stats of the given snare
+
+        Arguments:
+            snare_uuid {uuid} -- UUID of snare
+
+        Returns:
+            [dict] -- Dictionary containing all stats snare.
+        """
         result = {}
         result['total_sessions'] = 0
         result['total_duration'] = 0
@@ -41,6 +55,12 @@ class Api:
         return result
 
     async def return_snare_info(self, uuid, count=-1):
+        """Returns JSON data that contains information about
+         all the sessions a single snare instance have.
+
+        Returns:
+            uuid [string] - Snare UUID
+        """
         query_res = []
         try:
             query_res = await self.redis_client.zrevrangebyscore(
