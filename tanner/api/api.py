@@ -66,7 +66,7 @@ class Api:
         """Returns JSON data that contains information about
          all the sessions a single snare instance have.
 
-        Returns:
+        Arguments:
             uuid [string] - Snare UUID
         """
         query_res = []
