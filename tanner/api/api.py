@@ -79,82 +79,104 @@ class Api:
                         sessions.sensor_id = '%s'
                     """ % (uuid)
                 )
-                session = await cur.fetchall()
-                for r in session:
-                    sess = {
-                        'sess_uuid': str(r[0]),
-                        'snare_uuid': str(r[1]),
-                        'ip': r[2],
-                        'port': r[3],
-                        'location': {
-                            'country': r[4],
-                            'country_code': r[5],
-                            'city': r[6],
-                            'zip_code': r[7],
-                        },
-                        'user_agent': r[8],
-                        'start_time': r[9].timestamp(),
-                        'end_time': r[10].timestamp(),
-                        'request_per_second': r[11],
-                        'approx_time_between_requests': r[12],
-                        'accepted_paths': r[13],
-                        'errors': r[14],
-                        'hidden_links': r[15],
-                        'referrer': r[16]
-                    }
+                while True:
+                    session = await cur.fetchmany(size=200)
 
-                    await cur.execute(
-                        """
-                        SELECT * FROM cookies WHERE cookies.session_id = '%s'
-                        """ % (str(r[0]))
-                    )
-                    cookies = await cur.fetchall()
+                    if not session:
+                        break
 
-                    all_cookies = []
-                    for r in cookies:
-                        all_cookies.append(
-                            {
-                                r[1]: r[2]
-                            }
+                    for r in session:
+                        sess = {
+                            'sess_uuid': str(r[0]),
+                            'snare_uuid': str(r[1]),
+                            'ip': r[2],
+                            'port': r[3],
+                            'location': {
+                                'country': r[4],
+                                'country_code': r[5],
+                                'city': r[6],
+                                'zip_code': r[7],
+                            },
+                            'user_agent': r[8],
+                            'start_time': r[9].timestamp(),
+                            'end_time': r[10].timestamp(),
+                            'request_per_second': r[11],
+                            'approx_time_between_requests': r[12],
+                            'accepted_paths': r[13],
+                            'errors': r[14],
+                            'hidden_links': r[15],
+                            'referrer': r[16]
+                        }
+
+                        #Extracting all cookies
+                        await cur.execute(
+                            """
+                            SELECT * FROM cookies WHERE cookies.session_id = '%s'
+                            """ % (str(r[0]))
                         )
-                    sess['cookies'] = dict(ChainMap(*all_cookies))
+                            
+                        while True:
+                            cookies = await cur.fetchmany(size=200)
 
-                    await cur.execute(
-                        """
-                        SELECT * FROM paths WHERE paths.session_id = '%s'
-                        """ % (str(r[0]))
-                    )
-                    paths = await cur.fetchall()
-                    all_paths = []
+                            if not cookies:
+                                break
 
-                    for p in paths:
-                        all_paths.append(
-                            {
-                                "path": p[1],
-                                "timestamp": p[2].timestamp(),
-                                "response_status": p[3],
-                                "attack_type": AttackType(p[4]).name
-                            }
+                            all_cookies = []
+                            for r in cookies:
+                                all_cookies.append(
+                                    {
+                                        r[1]: r[2]
+                                    }
+                                )
+                        sess['cookies'] = dict(ChainMap(*all_cookies))
+                        
+                        #Extracting all paths 
+                        await cur.execute(
+                            """
+                            SELECT * FROM paths WHERE paths.session_id = '%s'
+                            """ % (str(r[0]))
                         )
-                    sess['paths'] = dict(ChainMap(*all_paths))
 
-                    await cur.execute(
-                        """
-                        SELECT * FROM owners WHERE owners.session_id = '%s'
-                        """ % (str(r[0]))
-                    )
+                        while True:
+                            paths = await cur.fetchmany(size=200)
 
-                    owners = await cur.fetchall()
-                    owner_type = []
+                            if not paths:
+                                break
+                            all_paths = []
 
-                    for o in owners:
-                        owner_type.append(
-                            {
-                                o[1]: o[2]
-                            }
+                            for p in paths:
+                                all_paths.append(
+                                    {
+                                        "path": p[1],
+                                        "timestamp": p[2].timestamp(),
+                                        "response_status": p[3],
+                                        "attack_type": AttackType(p[4]).name
+                                    }
+                                )
+                        sess['paths'] = all_paths
+
+                        # Extracting all owners
+                        await cur.execute(
+                            """
+                            SELECT * FROM owners WHERE owners.session_id = '%s'
+                            """ % (str(r[0]))
                         )
-                    sess['owners'] = dict(ChainMap(*owner_type))
-                    query_res.append(sess)
+ 
+                        while True:
+                            owners = await cur.fetchmany(size=200)
+
+                            if not owners:
+                                break
+                            owner_type = []
+
+                            for o in owners:
+                                owner_type.append(
+                                    {
+                                        o[1]: o[2]
+                                    }
+                                )
+                        sess['owners'] = dict(ChainMap(*owner_type))
+                        query_res.append(sess)
             cur.close()
         conn.close()
         return query_res
