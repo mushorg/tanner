@@ -3,6 +3,8 @@ import logging
 import operator
 import aioredis
 import psycopg2
+from asyncio import TimeoutError
+from uuid import UUID
 from collections import ChainMap
 from tanner.utils.attack_type import AttackType
 
@@ -69,9 +71,13 @@ class Api:
         Arguments:
             uuid [string] - Snare UUID
         """
-        query_res = []
-        async with self.pg_client.acquire() as conn:
-            async with conn.cursor() as cur:
+        try:
+            #generates a ValueError if invalid UUID is given
+            UUID(uuid)
+            
+            query_res = []
+            async with self.pg_client.acquire() as conn:
+              async with conn.cursor() as cur:
                 await cur.execute(
                     """
                     SELECT * FROM sessions
@@ -177,8 +183,16 @@ class Api:
                                 )
                         sess['owners'] = dict(ChainMap(*owner_type))
                         query_res.append(sess)
-            cur.close()
-        conn.close()
+                cur.close()
+            conn.close()
+        except (
+            ValueError,
+            TimeoutError,
+            psycopg2.ProgrammingError,
+            psycopg2.OperationalError
+        ):
+            query_res = 'Invalid SNARE UUID'
+        
         return query_res
 
     async def return_session_info(self, sess_uuid, snare_uuid=None):
