@@ -19,7 +19,7 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
                musl-dev \
                python3-dev && \
 # Setup Tanner
-    git clone --depth=1 https://github.com/mushorg/tanner -b develop /opt/tanner && \
+    git clone --depth=1 https://github.com/mushorg/tanner /opt/tanner && \
     cp /root/dist/config.yaml /opt/tanner/tanner/data/ && \
     cd /opt/tanner/ && \
     pip3 install --no-cache-dir setuptools && \
