@@ -1,7 +1,6 @@
 import json
 import logging
 import operator
-import aioredis
 import psycopg2
 from asyncio import TimeoutError
 from uuid import UUID
@@ -10,9 +9,8 @@ from tanner.utils.attack_type import AttackType
 
 
 class Api:
-    def __init__(self, redis_client, pg_client):
+    def __init__(self, pg_client):
         self.logger = logging.getLogger('tanner.api.Api')
-        self.redis_client = redis_client
         self.pg_client = pg_client
 
     async def return_snares(self):
