@@ -1,6 +1,9 @@
 import asyncio
 
 import logging
+from sqlalchemy.sql.ddl import CreateTable
+from sqlalchemy.dialects.postgresql import UUID, INET, TIMESTAMP, FLOAT
+from sqlalchemy import MetaData, Table, Column, Integer, String, ForeignKey
 import psycopg2
 from datetime import datetime
 from tanner.utils.attack_type import AttackType
@@ -15,74 +18,58 @@ class DBUtils:
         Arguments:
             pg_client {aiopg.pool.Pool}
         """
+        meta = MetaData()
+        sessions = Table(
+            'sessions', meta,
+            Column('id', UUID(as_uuid=True), primary_key=True, unique=True),
+            Column('sensor_id', UUID(as_uuid=True), primary_key=True, index=True, nullable=False),
+            Column('ip', INET, nullable=False),
+            Column('port', Integer, nullable=False),
+            Column('country', String, nullable=True),
+            Column('country_code', String, nullable=True),
+            Column('city', String, nullable=True),
+            Column('zip_code', Integer, nullable=True),
+            Column('user_agent', String, nullable=False),
+            Column('start_time', TIMESTAMP, nullable=False),
+            Column('end_time', TIMESTAMP, nullable=False),
+            Column('rps', FLOAT, nullable=False, comment='requests per second'),
+            Column('atbr', FLOAT, nullable=False, comment='approx_time_between_requests'),
+            Column('accepted_paths', Integer, nullable=False),
+            Column('errors', Integer, nullable=False),
+            Column('hidden_links', Integer, nullable=False),
+            Column('referer', String, nullable=False),
+
+        )
+
+        paths = Table(
+            'paths', meta,
+            Column('session_id', UUID(as_uuid=True), ForeignKey('sessions.id'), index=True),
+            Column('path', String, nullable=False),
+            Column('created_at', TIMESTAMP),
+            Column('response_status', Integer, nullable=False),
+            Column('attack_type', Integer, nullable=False)
+        )
+        cookies = Table(
+            'cookies', meta,
+            Column('session_id', UUID(as_uuid=True), ForeignKey('sessions.id'), index=True),
+            Column('key', String),
+            Column('value', String)
+        )
+        owners = Table(
+            'owners', meta,
+            Column('session_id', UUID(as_uuid=True), ForeignKey('sessions.id'), index=True),
+            Column('owner_type', String),
+            Column('probability', FLOAT)
+        )
         async with pg_client.acquire() as conn:
-            async with conn.cursor() as cur:
-
-                await cur.execute(
-                    """
-                CREATE TABLE IF NOT EXISTS "sessions" (
-                    "id" UUID PRIMARY KEY,
-                    "sensor_id" UUID NOT NULL,
-                    "ip" INET NOT NULL,
-                    "port" INT NOT NULL,
-                    "country" TEXT NULL,
-                    "country_code" TEXT NULL,
-                    "city" TEXT NULL,
-                    "zip_code" INT NULL,
-                    "user_agent" TEXT NOT NULL,
-                    "start_time" TIMESTAMP DEFAULT NOW(),
-                    "end_time" TIMESTAMP DEFAULT NOW(),
-                    "rps" FLOAT NOT NULL,
-                    "atbr" FLOAT NOT NULL,
-                    "accepted_paths" INT NOT NULL,
-                    "errors" INT NOT NULL,
-                    "hidden_links" INT NOT NULL,
-                    "referer" TEXT NOT NULL
-                    )
-                """
-                )
-                await cur.execute(
-                    """
-                CREATE TABLE IF NOT EXISTS "paths" (
-                    "session_id" UUID REFERENCES sessions(id),
-                    "path" TEXT NOT NULL,
-                    "created_at" TIMESTAMP DEFAULT now(),
-                    "response_status" INT NOT NULL,
-                    "attack_type" INT NOT NULL
-                )
-                """
-                )
-
-                await cur.execute(
-                    """
-                CREATE TABLE IF NOT EXISTS "cookies" (
-                    "session_id" UUID REFERENCES sessions(id),
-                    "key" TEXT NULL,
-                    "value" TEXT NULL
-                )
-                """
-                )
-                await cur.execute(
-                    """
-                CREATE TABLE IF NOT EXISTS "owners" (
-                    "session_id" UUID REFERENCES sessions(id),
-                    "owner_type" TEXT,
-                    "probability" FLOAT
-                )
-                """
-                )
-                await cur.execute(
-                    "comment on column sessions.rps is 'requests per second'"
-                )
-                await cur.execute(
-                    "comment on column sessions.atbr is 'approx_time_between_requests'"
-                )
-                await cur.execute("CREATE INDEX ON sessions(sensor_id)")
-                await cur.execute('CREATE INDEX ON "paths"(session_id)')
-                await cur.execute('CREATE INDEX ON "cookies"(session_id)')
-                await cur.execute('CREATE INDEX ON "owners"(session_id)')
-            cur.close()
-        conn.close()
+            await conn.execute('DROP TABLE IF EXISTS cookies')
+            await conn.execute('DROP TABLE IF EXISTS paths')
+            await conn.execute('DROP TABLE IF EXISTS owners')
+            await conn.execute('DROP TABLE IF EXISTS sessions')
+            await conn.execute(CreateTable(sessions))
+            await conn.execute(CreateTable(paths))
+            await conn.execute(CreateTable(cookies))
+            await conn.execute(CreateTable(owners))
 
     @staticmethod
     async def add_analyzed_data(session, pg_client):
