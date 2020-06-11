@@ -14,6 +14,9 @@ RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
                linux-headers \
                py3-yarl \
                python3 \
+               postgresql-dev \
+               gcc \
+               musl-dev \
                python3-dev && \
 # Setup Tanner
     git clone --depth=1 https://github.com/mushorg/tanner -b develop /opt/tanner && \
