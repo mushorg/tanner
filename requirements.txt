@@ -6,6 +6,7 @@ mimesis<3.0.0
 yarl
 redis
 aioredis
+psycopg2
 aiopg
 uvloop
 pymongo
