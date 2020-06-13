@@ -33,7 +33,7 @@ class PostgresClient:
                     user=self.user,
                     password=self.password,
                     database=self.db_name,
-                    maxsize=self.poolsize
+                    maxsize=self.poolsize,
                 ),
                 timeout=int(self.timeout)
             )
