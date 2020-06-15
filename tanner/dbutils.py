@@ -100,49 +100,43 @@ class DBUtils:
         logger = logging.getLogger(__name__)
 
         try:
-            sessions_query = insert(SESSIONS).values(
-                id=session["sess_uuid"],
-                sensor_id=session["snare_uuid"],
-                ip=session["peer_ip"],
-                port=session["peer_port"],
-                country=session["location"]["country"],
-                country_code=session["location"]["country_code"],
-                city=session["location"]["city"],
-                zip_code=session["location"]["zip_code"],
-                user_agent=session["user_agent"],
-                start_time=start_time,
-                end_time=end_time,
-                rps=session["requests_in_second"],
-                atbr=session["approx_time_between_requests"],
-                accepted_paths=session["accepted_paths"],
-                errors=session["errors"],
-                hidden_links=session["hidden_links"],
-                referer=session["referer"],
-            )
-
             async with pg_client.acquire() as conn:
-                await conn.execute(sessions_query)
+                await conn.execute(
+                    SESSIONS.insert(), 
+                    id=session["sess_uuid"], sensor_id=session["snare_uuid"],
+                    ip=session["peer_ip"], port=session["peer_port"],
+                    country=session["location"]["country"],
+                    country_code=session["location"]["country_code"],
+                    city=session["location"]["city"],
+                    zip_code=session["location"]["zip_code"],
+                    user_agent=session["user_agent"],
+                    start_time=start_time, end_time=end_time,
+                    rps=session["requests_in_second"],
+                    atbr=session["approx_time_between_requests"],
+                    accepted_paths=session["accepted_paths"],
+                    errors=session["errors"],
+                    hidden_links=session["hidden_links"],
+                    referer=session["referer"],
+                )
 
                 print("Inserted sessions")
                 for k, v in session["cookies"].items():
                     await conn.execute(
-                        insert(COOKIES).values(
-                            session_id=session["sess_uuid"], key=k, value=v
-                        )
+                        COOKIES.insert(),
+                        session_id=session["sess_uuid"], key=k, value=v
                     )
                 print("Inserted Cookies")
 
                 for path in session["paths"]:
                     timestamp = time_convertor(path["timestamp"])
                     await conn.execute(
-                        insert(PATHS).values(
-                            session_id=session["sess_uuid"],
-                            path=path["path"],
-                            created_at=timestamp,
-                            response_status=path["response_status"],
-                            attack_type=AttackType[path["attack_type"]].value,
+                        PATHS.insert(), 
+                        session_id=session["sess_uuid"],
+                        path=path["path"], created_at=timestamp,
+                        response_status=path["response_status"],
+                        attack_type=AttackType[path["attack_type"]].value,
                         )
-                    )
+
                 print("Inserted Paths")
 
                 for k, v in session["possible_owners"].items():
