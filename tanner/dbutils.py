@@ -1,11 +1,13 @@
 import asyncio
-
 import logging
-from sqlalchemy.sql.ddl import CreateTable
-from sqlalchemy.dialects.postgresql import UUID, INET, TIMESTAMP, FLOAT
-from sqlalchemy import MetaData, Table, Column, Integer, String, ForeignKey, insert, inspect
-import psycopg2
 from datetime import datetime
+
+import psycopg2
+from sqlalchemy import (Column, ForeignKey, Integer, MetaData, String, Table,
+                        insert, inspect)
+from sqlalchemy.dialects.postgresql import FLOAT, INET, TIMESTAMP, UUID
+from sqlalchemy.sql.ddl import CreateTable
+
 from tanner.utils.attack_type import AttackType
 
 meta = MetaData()
@@ -75,7 +77,7 @@ class DBUtils:
                     await conn.execute(CreateTable(table))
                 except psycopg2.errors.DuplicateTable:
                     continue
-    
+
     @staticmethod
     async def add_analyzed_data(session, pg_client):
         """Insert analyzed sessions into postgres
@@ -102,7 +104,7 @@ class DBUtils:
         try:
             async with pg_client.acquire() as conn:
                 await conn.execute(
-                    SESSIONS.insert(), 
+                    SESSIONS.insert(),
                     id=session["sess_uuid"], sensor_id=session["snare_uuid"],
                     ip=session["peer_ip"], port=session["peer_port"],
                     country=session["location"]["country"],
@@ -130,7 +132,7 @@ class DBUtils:
                 for path in session["paths"]:
                     timestamp = time_convertor(path["timestamp"])
                     await conn.execute(
-                        PATHS.insert(), 
+                        PATHS.insert(),
                         session_id=session["sess_uuid"],
                         path=path["path"], created_at=timestamp,
                         response_status=path["response_status"],

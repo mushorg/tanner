@@ -1,15 +1,16 @@
-from json import dumps, loads
+import datetime
 import logging
 import operator
-import psycopg2
-import datetime
 from asyncio import TimeoutError
-from uuid import UUID
-from sqlalchemy import select
-# from sqlalchemy.sql.expression import Select
 from collections import ChainMap
+from json import dumps, loads
+from uuid import UUID
+
+import psycopg2
+from sqlalchemy import select
+
+from tanner.dbutils import COOKIES, OWNERS, PATHS, SESSIONS
 from tanner.utils.attack_type import AttackType
-from tanner.dbutils import SESSIONS, PATHS, COOKIES, OWNERS
 
 
 def alchemyencoder(obj):
@@ -19,8 +20,8 @@ def alchemyencoder(obj):
     elif isinstance(obj, UUID):
         return str(obj)
 
+
 class Api:
-    
     def __init__(self, pg_client):
         self.logger = logging.getLogger("tanner.api.Api")
         self.pg_client = pg_client
@@ -33,14 +34,13 @@ class Api:
             [list] -- List containing UUID of all snares
         """
         query_res = []
-        
+
         async with self.pg_client.acquire() as conn:
             stmt = select([SESSIONS.c.sensor_id], distinct=True)
             rows = await (await conn.execute(stmt)).fetchall()
             for r in rows:
                 query_res.append(str(r[0]))
-        
-        
+
         return query_res
 
     async def return_snare_stats(self, snare_uuid):
@@ -69,11 +69,11 @@ class Api:
             for r in rows:
                 attack_type = AttackType(r[0]).name
                 if attack_type in result["attack_frequency"]:
-                    result["attack_frequency"][attack_type] += 1       
+                    result["attack_frequency"][attack_type] += 1
 
-            time_stmt = select(
-                [SESSIONS.c.start_time, SESSIONS.c.end_time]
-            ).where(SESSIONS.c.sensor_id == snare_uuid)     
+            time_stmt = select([SESSIONS.c.start_time, SESSIONS.c.end_time]).where(
+                SESSIONS.c.sensor_id == snare_uuid
+            )
 
             times = await (await conn.execute(time_stmt)).fetchall()
 
@@ -99,27 +99,33 @@ class Api:
             async with self.pg_client.acquire() as conn:
                 stmt = select([SESSIONS]).where(SESSIONS.c.sensor_id == uuid)
                 query = await (await conn.execute(stmt)).fetchall()
-        
+
                 for row in query:
                     session = loads(dumps(dict(row), default=alchemyencoder))
-        
-                    cookies_query = select([COOKIES]).where(COOKIES.c.session_id == session.get("id"))
+
+                    cookies_query = select([COOKIES]).where(
+                        COOKIES.c.session_id == session.get("id")
+                    )
                     cookies = await (await conn.execute(cookies_query)).fetchall()
-                    
+
                     all_cookies = []
                     for r in cookies:
                         all_cookies.append({r[1]: r[2]})
                     session["cookies"] = dict(ChainMap(*all_cookies))
 
-                    paths_query = select([PATHS]).where(PATHS.c.session_id == session.get("id"))
+                    paths_query = select([PATHS]).where(
+                        PATHS.c.session_id == session.get("id")
+                    )
                     paths = await (await conn.execute(paths_query)).fetchall()
-                    
+
                     all_paths = []
                     for p in paths:
                         all_paths.append(dumps(dict(p), default=alchemyencoder))
                     session["paths"] = all_cookies
 
-                    owners_query = select([OWNERS]).where(OWNERS.c.session_id == session.get("id"))
+                    owners_query = select([OWNERS]).where(
+                        OWNERS.c.session_id == session.get("id")
+                    )
                     owners = await (await conn.execute(owners_query)).fetchall()
 
                     owner_type = []
