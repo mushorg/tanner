@@ -51,7 +51,7 @@ class ApiServer:
     async def handle_sessions(self, request):
         snare_uuid = request.match_info['snare_uuid']
         params = request.url.query
-        applied_filters = {'snare_uuid': snare_uuid}
+        applied_filters = {'sensor_id': snare_uuid}
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
@@ -65,7 +65,7 @@ class ApiServer:
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
-            sess_uuids = [sess['sess_uuid'] for sess in sessions]
+            sess_uuids = [sess['id'] for sess in sessions]
             result = sess_uuids
         response_msg = self._make_response(result)
         return web.json_response(response_msg)

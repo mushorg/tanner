@@ -1,14 +1,26 @@
-import json
+from json import dumps, loads
 import logging
 import operator
 import psycopg2
+import datetime
 from asyncio import TimeoutError
 from uuid import UUID
+from sqlalchemy import select
+# from sqlalchemy.sql.expression import Select
 from collections import ChainMap
 from tanner.utils.attack_type import AttackType
+from tanner.dbutils import SESSIONS, PATHS, COOKIES, OWNERS
 
+
+def alchemyencoder(obj):
+    """JSON encoder function for SQLAlchemy special classes."""
+    if isinstance(obj, datetime.date):
+        return obj.isoformat()
+    elif isinstance(obj, UUID):
+        return str(obj)
 
 class Api:
+    
     def __init__(self, pg_client):
         self.logger = logging.getLogger("tanner.api.Api")
         self.pg_client = pg_client
@@ -21,14 +33,14 @@ class Api:
             [list] -- List containing UUID of all snares
         """
         query_res = []
+        
         async with self.pg_client.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute("SELECT DISTINCT sensor_id FROM sessions")
-                ans = await cur.fetchall()
-                for r in ans:
-                    query_res.append(str(r[0]))
-            cur.close()
-        conn.close()
+            stmt = select([SESSIONS.c.sensor_id], distinct=True)
+            rows = await (await conn.execute(stmt)).fetchall()
+            for r in rows:
+                query_res.append(str(r[0]))
+        
+        
         return query_res
 
     async def return_snare_stats(self, snare_uuid):
@@ -50,17 +62,25 @@ class Api:
             "rfi": 0,
             "cmd_exec": 0,
         }
+        async with self.pg_client.acquire() as conn:
+            stmt = select([PATHS.c.attack_type])
+            rows = await (await conn.execute(stmt)).fetchall()
+            result["total_sessions"] = len(rows)
+            for r in rows:
+                attack_type = AttackType(r[0]).name
+                if attack_type in result["attack_frequency"]:
+                    result["attack_frequency"][attack_type] += 1       
 
-        sessions = await self.return_snare_info(snare_uuid)
-        if sessions == "Invalid SNARE UUID":
-            return result
+            time_stmt = select(
+                [SESSIONS.c.start_time, SESSIONS.c.end_time]
+            ).where(SESSIONS.c.sensor_id == snare_uuid)     
 
-        result["total_sessions"] = len(sessions)
-        for sess in sessions:
-            result["total_duration"] += sess["end_time"] - sess["start_time"]
-            for path in sess["paths"]:
-                if path["attack_type"] in result["attack_frequency"]:
-                    result["attack_frequency"][path["attack_type"]] += 1
+            times = await (await conn.execute(time_stmt)).fetchall()
+
+            for t in times:
+                start = t[0].timestamp()
+                end = t[1].timestamp()
+                result["total_duration"] += end - start
 
         return result
 
@@ -77,110 +97,37 @@ class Api:
 
             query_res = []
             async with self.pg_client.acquire() as conn:
-                async with conn.cursor() as cur:
-                    await cur.execute(
-                        """
-                    SELECT * FROM sessions
-                    WHERE
-                        sessions.sensor_id = '%s'
-                    """
-                        % (uuid)
-                    )
-                    while True:
-                        session = await cur.fetchmany(size=200)
+                stmt = select([SESSIONS]).where(SESSIONS.c.sensor_id == uuid)
+                query = await (await conn.execute(stmt)).fetchall()
+        
+                for row in query:
+                    session = loads(dumps(dict(row), default=alchemyencoder))
+        
+                    cookies_query = select([COOKIES]).where(COOKIES.c.session_id == session.get("id"))
+                    cookies = await (await conn.execute(cookies_query)).fetchall()
+                    
+                    all_cookies = []
+                    for r in cookies:
+                        all_cookies.append({r[1]: r[2]})
+                    session["cookies"] = dict(ChainMap(*all_cookies))
 
-                        if not session:
-                            break
+                    paths_query = select([PATHS]).where(PATHS.c.session_id == session.get("id"))
+                    paths = await (await conn.execute(paths_query)).fetchall()
+                    
+                    all_paths = []
+                    for p in paths:
+                        all_paths.append(dumps(dict(p), default=alchemyencoder))
+                    session["paths"] = all_cookies
 
-                        for r in session:
-                            sess = {
-                                "sess_uuid": str(r[0]),
-                                "snare_uuid": str(r[1]),
-                                "ip": r[2],
-                                "port": r[3],
-                                "location": {
-                                    "country": r[4],
-                                    "country_code": r[5],
-                                    "city": r[6],
-                                    "zip_code": r[7],
-                                },
-                                "user_agent": r[8],
-                                "start_time": r[9].timestamp(),
-                                "end_time": r[10].timestamp(),
-                                "request_per_second": r[11],
-                                "approx_time_between_requests": r[12],
-                                "accepted_paths": r[13],
-                                "errors": r[14],
-                                "hidden_links": r[15],
-                                "referrer": r[16],
-                            }
+                    owners_query = select([OWNERS]).where(OWNERS.c.session_id == session.get("id"))
+                    owners = await (await conn.execute(owners_query)).fetchall()
 
-                            # Extracting all cookies
-                            await cur.execute(
-                                """
-                            SELECT * FROM cookies WHERE cookies.session_id = '%s'
-                            """
-                                % (str(r[0]))
-                            )
+                    owner_type = []
+                    for o in owners:
+                        owner_type.append({o[1]: o[2]})
+                    session["owners"] = dict(ChainMap(*owner_type))
 
-                            while True:
-                                cookies = await cur.fetchmany(size=200)
-
-                                if not cookies:
-                                    break
-
-                                all_cookies = []
-                                for r in cookies:
-                                    all_cookies.append({r[1]: r[2]})
-                            sess["cookies"] = dict(ChainMap(*all_cookies))
-
-                            # Extracting all paths
-                            await cur.execute(
-                                """
-                            SELECT * FROM paths WHERE paths.session_id = '%s'
-                            """
-                                % (str(r[0]))
-                            )
-
-                            while True:
-                                paths = await cur.fetchmany(size=200)
-
-                                if not paths:
-                                    break
-                                all_paths = []
-
-                                for p in paths:
-                                    all_paths.append(
-                                        {
-                                            "path": p[1],
-                                            "timestamp": p[2].timestamp(),
-                                            "response_status": p[3],
-                                            "attack_type": AttackType(p[4]).name,
-                                        }
-                                    )
-                            sess["paths"] = all_paths
-
-                            # Extracting all owners
-                            await cur.execute(
-                                """
-                            SELECT * FROM owners WHERE owners.session_id = '%s'
-                            """
-                                % (str(r[0]))
-                            )
-
-                            while True:
-                                owners = await cur.fetchmany(size=200)
-
-                                if not owners:
-                                    break
-                                owner_type = []
-
-                                for o in owners:
-                                    owner_type.append({o[1]: o[2]})
-                            sess["owners"] = dict(ChainMap(*owner_type))
-                            query_res.append(sess)
-                    cur.close()
-            conn.close()
+                    query_res.append(session)
         except (
             ValueError,
             TimeoutError,
@@ -202,7 +149,7 @@ class Api:
             if sessions == "Invalid SNARE UUID":
                 continue
             for sess in sessions:
-                if sess["sess_uuid"] == sess_uuid:
+                if sess["id"] == sess_uuid:
                     return sess
 
     async def return_sessions(self, filters):
@@ -251,7 +198,7 @@ class Api:
             "possible_owners": operator.contains,
             "start_time": operator.le,
             "end_time": operator.ge,
-            "snare_uuid": operator.eq,
+            "sensor_id": operator.eq,
             "location": operator.contains,
         }
 
