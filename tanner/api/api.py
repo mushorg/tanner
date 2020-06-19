@@ -7,7 +7,7 @@ from json import dumps, loads, JSONEncoder
 from uuid import UUID
 
 import psycopg2
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from tanner.dbutils import COOKIES, OWNERS, PATHS, SESSIONS
 from tanner.utils.attack_type import AttackType
@@ -65,30 +65,77 @@ class Api:
             "cmd_exec": 0,
         }
         async with self.pg_client.acquire() as conn:
-            stmt = select([PATHS.c.attack_type])
+            stmt = select(
+                [PATHS.c.attack_type, func.count(PATHS.c.attack_type)]
+            ).group_by(PATHS.c.attack_type)
             rows = await (await conn.execute(stmt)).fetchall()
-            result["total_sessions"] = len(rows)
+
             for r in rows:
+                result["total_sessions"] += r[1]
                 attack_type = AttackType(r[0]).name
                 if attack_type in result["attack_frequency"]:
-                    result["attack_frequency"][attack_type] += 1
+                    result["attack_frequency"][attack_type] = r[1]
 
-            time_stmt = select([SESSIONS.c.start_time, SESSIONS.c.end_time]).where(
-                SESSIONS.c.sensor_id == snare_uuid
-            )
+            time_stmt = select(
+                [func.sum(SESSIONS.c.start_time - SESSIONS.c.end_time)]
+            ).where(SESSIONS.c.sensor_id == snare_uuid)
 
             times = await (await conn.execute(time_stmt)).fetchall()
-
-            for t in times:
-                start = t[0].timestamp()
-                end = t[1].timestamp()
-                result["total_duration"] += end - start
+            result["total_duration"] = str(times[0][0])
 
         return result
 
-    async def return_snare_info(self, uuid):
+    async def return_session_info(self, sess_uuid):
+        """This function returns information about single session.
+
+        Args:
+            sess_uuid (str): UUID of the session for which
+                                the information has to be returned
+
+        Returns:
+            [dict]: Dictionary having infromation about the session.
+        """
+        try:
+            UUID(sess_uuid)
+        except ValueError:
+            return {"Invalid SESSOIN UUID"}
+
+        async with self.pg_client.acquire() as conn:
+            stmt = select([SESSIONS]).where(SESSIONS.c.id == sess_uuid)
+            query = await (await conn.execute(stmt)).fetchone()
+            session = loads(dumps(dict(query), cls=AlchemyEncoder))
+
+            cookies_query = select([COOKIES]).where(COOKIES.c.session_id == sess_uuid)
+            cookies = await (await conn.execute(cookies_query)).fetchall()
+
+            all_cookies = []
+            for r in cookies:
+                all_cookies.append({r[1]: r[2]})
+            session["cookies"] = dict(ChainMap(*all_cookies))
+
+            paths_query = select([PATHS]).where(PATHS.c.session_id == session.get("id"))
+            paths = await (await conn.execute(paths_query)).fetchall()
+
+            all_paths = []
+            for p in paths:
+                all_paths.append(dumps(dict(p), cls=AlchemyEncoder))
+            session["paths"] = all_cookies
+
+            owners_query = select([OWNERS]).where(
+                OWNERS.c.session_id == session.get("id")
+            )
+            owners = await (await conn.execute(owners_query)).fetchall()
+
+            owner_type = []
+            for o in owners:
+                owner_type.append({o[1]: o[2]})
+            session["owners"] = dict(ChainMap(*owner_type))
+
+        return session
+
+    async def return_snare_info(self, uuid, count, offset):
         """Returns JSON data that contains information about
-         all the sessions a single snare instance have.
+            all the sessions a single snare instance have.
 
         Arguments:
             uuid [string] - Snare UUID
@@ -99,43 +146,18 @@ class Api:
 
             query_res = []
             async with self.pg_client.acquire() as conn:
-                stmt = select([SESSIONS]).where(SESSIONS.c.sensor_id == uuid)
+                stmt = (
+                    select([SESSIONS])
+                    .where(SESSIONS.c.sensor_id == uuid)
+                    .offset(offset)
+                    .limit(count)
+                )
                 query = await (await conn.execute(stmt)).fetchall()
 
                 for row in query:
-                    session = loads(dumps(dict(row), default=alchemyencoder))
-
-                    cookies_query = select([COOKIES]).where(
-                        COOKIES.c.session_id == session.get("id")
-                    )
-                    cookies = await (await conn.execute(cookies_query)).fetchall()
-
-                    all_cookies = []
-                    for r in cookies:
-                        all_cookies.append({r[1]: r[2]})
-                    session["cookies"] = dict(ChainMap(*all_cookies))
-
-                    paths_query = select([PATHS]).where(
-                        PATHS.c.session_id == session.get("id")
-                    )
-                    paths = await (await conn.execute(paths_query)).fetchall()
-
-                    all_paths = []
-                    for p in paths:
-                        all_paths.append(dumps(dict(p), default=alchemyencoder))
-                    session["paths"] = all_cookies
-
-                    owners_query = select([OWNERS]).where(
-                        OWNERS.c.session_id == session.get("id")
-                    )
-                    owners = await (await conn.execute(owners_query)).fetchall()
-
-                    owner_type = []
-                    for o in owners:
-                        owner_type.append({o[1]: o[2]})
-                    session["owners"] = dict(ChainMap(*owner_type))
-
-                    query_res.append(session)
+                    session = loads(dumps(dict(row), cls=AlchemyEncoder))
+                    session_info = await self.return_session_info(session.get("id"))
+                    query_res.append(session_info)
         except (
             ValueError,
             TimeoutError,
@@ -146,11 +168,6 @@ class Api:
 
         return query_res
 
-    async def return_session_info(self, sess_uuid, snare_uuid=None):
-        if snare_uuid:
-            snare_uuids = [snare_uuid]
-        else:
-            snare_uuids = await self.return_snares()
     async def return_sessions(self, filters):
         """Returns the list of all the sessions.
         Uses apply_filters function in this class
