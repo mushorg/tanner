@@ -38,7 +38,15 @@ class ApiServer:
 
     async def handle_snare_info(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        result = await self.api.return_snare_info(snare_uuid)
+        try:
+            count = int(request.rel_url.query['count'])
+            offset = int(request.rel_url.query['offset'])
+        except KeyError:
+            # Set default values
+            count = 1000
+            offset = 0
+
+        result = await self.api.return_snare_info(snare_uuid, count, offset)
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
@@ -65,9 +73,7 @@ class ApiServer:
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
-            sess_uuids = [sess['id'] for sess in sessions]
-            result = sess_uuids
-        response_msg = self._make_response(result)
+        response_msg = self._make_response(sessions)
         return web.json_response(response_msg)
 
     async def handle_session_info(self, request):
