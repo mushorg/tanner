@@ -3,7 +3,7 @@ import logging
 import operator
 from asyncio import TimeoutError
 from collections import ChainMap
-from json import dumps, loads
+from json import dumps, loads, JSONEncoder
 from uuid import UUID
 
 import psycopg2
@@ -13,12 +13,14 @@ from tanner.dbutils import COOKIES, OWNERS, PATHS, SESSIONS
 from tanner.utils.attack_type import AttackType
 
 
-def alchemyencoder(obj):
-    """JSON encoder function for SQLAlchemy special classes."""
-    if isinstance(obj, datetime.date):
-        return obj.isoformat()
-    elif isinstance(obj, UUID):
-        return str(obj)
+class AlchemyEncoder(JSONEncoder):
+    def default(self, obj):
+        """JSON encoder function for SQLAlchemy special classes.
+            """
+        if isinstance(obj, datetime.date):
+            return obj.isoformat()
+        elif isinstance(obj, UUID):
+            return str(obj)
 
 
 class Api:
