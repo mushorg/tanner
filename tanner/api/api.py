@@ -151,36 +151,27 @@ class Api:
             snare_uuids = [snare_uuid]
         else:
             snare_uuids = await self.return_snares()
-
-        for snare_id in snare_uuids:
-            sessions = await self.return_snare_info(snare_id)
-            if sessions == "Invalid SNARE UUID":
-                continue
-            for sess in sessions:
-                if sess["id"] == sess_uuid:
-                    return sess
-
     async def return_sessions(self, filters):
-        snare_uuids = await self.return_snares()
+        """Returns the list of all the sessions.
+        Uses apply_filters function in this class
+        to make the query accordingly.
 
-        matching_sessions = []
-        for snare_id in snare_uuids:
-            result = await self.return_snare_info(snare_id)
-            if result == "Invalid SNARE UUID":
-                return "Invalid filter : SNARE UUID"
-            sessions = result
-            for sess in sessions:
-                match_count = 0
-                for filter_name, filter_value in filters.items():
-                    try:
-                        if self.apply_filter(filter_name, filter_value, sess):
-                            match_count += 1
-                    except KeyError:
-                        return "Invalid filter : %s" % filter_name
+        Args:
+            filters (dict): all the filters that is to be applied
 
-                if match_count == len(filters):
-                    matching_sessions.append(sess)
-        return matching_sessions
+        Returns:
+            [list]: list of sessions
+        """
+        results = []
+        stmt = self.apply_filters(filters)
+        async with self.pg_client.acquire() as conn:
+            query = await (await conn.execute(stmt)).fetchall()
+
+            for row in query:
+                results.append(str(row[0]))
+        
+        return list(set(results))
+
 
     async def return_latest_session(self):
         latest_time = -1
@@ -198,22 +189,35 @@ class Api:
             return None
         return latest_session
 
-    def apply_filter(self, filter_name, filter_value, sess):
-        available_filters = {
-            "user_agent": operator.contains,
-            "peer_ip": operator.eq,
-            "attack_types": operator.contains,
-            "possible_owners": operator.contains,
-            "start_time": operator.le,
-            "end_time": operator.ge,
-            "sensor_id": operator.eq,
-            "location": operator.contains,
-        }
+    def apply_filters(self, filters):
+        """Makes SQL query according to the give filters
 
-        try:
-            if available_filters[filter_name] is operator.contains:
-                return available_filters[filter_name](sess[filter_name], filter_value)
-            else:
-                return available_filters[filter_name](filter_value, sess[filter_name])
-        except KeyError:
-            raise
+        Args:
+            filters (dict): all the filters that is to be applied
+
+        Returns:
+            [str]: A sql query in string format
+        """
+        tables = "sessions S"
+        columns = "S.id"
+        where = "S.sensor_id='%s'"%(filters["sensor_id"])
+
+        if "attack_type" in filters:
+            tables += ", paths P"
+            columns += ", P.session_id"
+            where += " AND P.attack_type=%s"%(filters["attack_type"])
+        elif "owners" in filters:
+            tables += ", owners O"
+            columns += ", O.session_id"
+            where += " AND O.owner_type='%s'"%(filters["owners"])
+        elif "start_time" in filters:
+            where += " AND S.start_time=%s"%(filters["start_time"])
+        elif "end_time" in filters:
+            where += " AND S.end_time=%s"%(filters["end_time"])
+        elif "peer_ip" in filters:
+            where += " ANDS.ip='%s'"%(filters["peer_ip"])
+        elif "user_agent" in filters:
+            where += " AND S.user_agent='%s'"%(filters["user_agent"])
+
+        stmt = "SELECT %s FROM %s WHERE %s"%(columns, tables, where)
+        return stmt
