@@ -121,13 +121,11 @@ class DBUtils:
                     referer=session["referer"],
                 )
 
-                print("Inserted sessions")
                 for k, v in session["cookies"].items():
                     await conn.execute(
                         COOKIES.insert(),
                         session_id=session["sess_uuid"], key=k, value=v
                     )
-                print("Inserted Cookies")
 
                 for path in session["paths"]:
                     timestamp = time_convertor(path["timestamp"])
@@ -139,7 +137,6 @@ class DBUtils:
                         attack_type=AttackType[path["attack_type"]].value,
                         )
 
-                print("Inserted Paths")
 
                 for k, v in session["possible_owners"].items():
                     await conn.execute(
@@ -148,8 +145,6 @@ class DBUtils:
                         )
                     )
 
-                print("Inserted Owners")
-            await conn.close()
 
         except psycopg2.ProgrammingError as pg_error:
             logger.exception(
