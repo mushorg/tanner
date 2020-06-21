@@ -57,13 +57,7 @@ class Api:
         result = {}
         result["total_sessions"] = 0
         result["total_duration"] = 0
-        result["attack_frequency"] = {
-            "sqli": 0,
-            "lfi": 0,
-            "xss": 0,
-            "rfi": 0,
-            "cmd_exec": 0,
-        }
+        result["attack_frequency"] = {}
         async with self.pg_client.acquire() as conn:
             stmt = select(
                 [PATHS.c.attack_type, func.count(PATHS.c.attack_type)]
@@ -73,11 +67,10 @@ class Api:
             for r in rows:
                 result["total_sessions"] += r[1]
                 attack_type = AttackType(r[0]).name
-                if attack_type in result["attack_frequency"]:
-                    result["attack_frequency"][attack_type] = r[1]
+                result["attack_frequency"][attack_type] = r[1]
 
             time_stmt = select(
-                [func.sum(SESSIONS.c.start_time - SESSIONS.c.end_time)]
+                [func.sum(SESSIONS.c.end_time - SESSIONS.c.start_time)]
             ).where(SESSIONS.c.sensor_id == snare_uuid)
 
             times = await (await conn.execute(time_stmt)).fetchall()
@@ -119,7 +112,7 @@ class Api:
             all_paths = []
             for p in paths:
                 all_paths.append(dumps(dict(p), cls=AlchemyEncoder))
-            session["paths"] = all_cookies
+            session["paths"] = all_paths
 
             owners_query = select([OWNERS]).where(
                 OWNERS.c.session_id == session.get("id")
