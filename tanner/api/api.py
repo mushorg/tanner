@@ -216,17 +216,17 @@ class Api:
             tables += ", paths P"
             columns += ", P.session_id"
             where += " AND P.attack_type=%s"%(filters["attack_type"])
-        elif "owners" in filters:
+        if "owners" in filters:
             tables += ", owners O"
             columns += ", O.session_id"
             where += " AND O.owner_type='%s'"%(filters["owners"])
-        elif "start_time" in filters:
+        if "start_time" in filters:
             where += " AND S.start_time=%s"%(filters["start_time"])
-        elif "end_time" in filters:
+        if "end_time" in filters:
             where += " AND S.end_time=%s"%(filters["end_time"])
-        elif "peer_ip" in filters:
+        if "peer_ip" in filters:
             where += " ANDS.ip='%s'"%(filters["peer_ip"])
-        elif "user_agent" in filters:
+        if "user_agent" in filters:
             where += " AND S.user_agent='%s'"%(filters["user_agent"])
 
         stmt = "SELECT %s FROM %s WHERE %s"%(columns, tables, where)
