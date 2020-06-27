@@ -3,8 +3,16 @@ import logging
 from datetime import datetime
 
 import psycopg2
-from sqlalchemy import (Column, ForeignKey, Integer, MetaData, String, Table,
-                        insert, inspect)
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    insert,
+    inspect,
+)
 from sqlalchemy.dialects.postgresql import FLOAT, INET, TIMESTAMP, UUID
 from sqlalchemy.sql.ddl import CreateTable
 
@@ -105,14 +113,17 @@ class DBUtils:
             async with pg_client.acquire() as conn:
                 await conn.execute(
                     SESSIONS.insert(),
-                    id=session["sess_uuid"], sensor_id=session["snare_uuid"],
-                    ip=session["peer_ip"], port=session["peer_port"],
+                    id=session["sess_uuid"],
+                    sensor_id=session["snare_uuid"],
+                    ip=session["peer_ip"],
+                    port=session["peer_port"],
                     country=session["location"]["country"],
                     country_code=session["location"]["country_code"],
                     city=session["location"]["city"],
                     zip_code=session["location"]["zip_code"],
                     user_agent=session["user_agent"],
-                    start_time=start_time, end_time=end_time,
+                    start_time=start_time,
+                    end_time=end_time,
                     rps=session["requests_in_second"],
                     atbr=session["approx_time_between_requests"],
                     accepted_paths=session["accepted_paths"],
@@ -124,7 +135,9 @@ class DBUtils:
                 for k, v in session["cookies"].items():
                     await conn.execute(
                         COOKIES.insert(),
-                        session_id=session["sess_uuid"], key=k, value=v
+                        session_id=session["sess_uuid"],
+                        key=k,
+                        value=v,
                     )
 
                 for path in session["paths"]:
@@ -132,11 +145,11 @@ class DBUtils:
                     await conn.execute(
                         PATHS.insert(),
                         session_id=session["sess_uuid"],
-                        path=path["path"], created_at=timestamp,
+                        path=path["path"],
+                        created_at=timestamp,
                         response_status=path["response_status"],
                         attack_type=AttackType[path["attack_type"]].value,
-                        )
-
+                    )
 
                 for k, v in session["possible_owners"].items():
                     await conn.execute(
@@ -145,9 +158,7 @@ class DBUtils:
                         )
                     )
 
-
         except psycopg2.ProgrammingError as pg_error:
             logger.exception(
-                "Error with Postgres. Session not added to postgres: %s",
-                pg_error,
+                "Error with Postgres. Session not added to postgres: %s", pg_error,
             )
