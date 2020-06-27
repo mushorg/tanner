@@ -91,7 +91,7 @@ class Api:
         try:
             UUID(sess_uuid)
         except ValueError:
-            return {"Invalid SESSOIN UUID"}
+            return {"Invalid SESSION UUID"}
 
         async with self.pg_client.acquire() as conn:
             stmt = select([SESSIONS]).where(SESSIONS.c.id == sess_uuid)
@@ -173,15 +173,33 @@ class Api:
             [list]: list of sessions
         """
         results = []
-        stmt = self.apply_filters(filters)
-        async with self.pg_client.acquire() as conn:
-            query = await (await conn.execute(stmt)).fetchall()
+        invalid_filters = []
+        filter_list = [
+            "attack_type",
+            "owners",
+            "start_time",
+            "end_time",
+            "peer_ip",
+            "user_agent",
+            "sensor_id",
+        ]
 
-            for row in query:
-                results.append(str(row[0]))
-        
-        return list(set(results))
+        for fil in filters:
+            if fil not in filter_list:
+                invalid_filters.append(fil)
 
+        if invalid_filters:
+            results = "Invalid filters"
+        else:
+            stmt = self.apply_filters(filters)
+            async with self.pg_client.acquire() as conn:
+                query = await (await conn.execute(stmt)).fetchall()
+
+                for row in query:
+                    results.append(str(row[0]))
+            results = list(set(results))
+
+        return results
 
     async def return_latest_session(self):
         latest_time = -1
@@ -210,24 +228,24 @@ class Api:
         """
         tables = "sessions S"
         columns = "S.id"
-        where = "S.sensor_id='%s'"%(filters["sensor_id"])
+        where = "S.sensor_id='%s'" % (filters["sensor_id"])
 
         if "attack_type" in filters:
             tables += ", paths P"
             columns += ", P.session_id"
-            where += " AND P.attack_type=%s"%(filters["attack_type"])
+            where += " AND P.attack_type=%s" % (filters["attack_type"])
         if "owners" in filters:
             tables += ", owners O"
             columns += ", O.session_id"
-            where += " AND O.owner_type='%s'"%(filters["owners"])
+            where += " AND O.owner_type='%s'" % (filters["owners"])
         if "start_time" in filters:
-            where += " AND S.start_time=%s"%(filters["start_time"])
+            where += " AND S.start_time=%s" % (filters["start_time"])
         if "end_time" in filters:
-            where += " AND S.end_time=%s"%(filters["end_time"])
+            where += " AND S.end_time=%s" % (filters["end_time"])
         if "peer_ip" in filters:
-            where += " ANDS.ip='%s'"%(filters["peer_ip"])
+            where += " ANDS.ip='%s'" % (filters["peer_ip"])
         if "user_agent" in filters:
-            where += " AND S.user_agent='%s'"%(filters["user_agent"])
+            where += " AND S.user_agent='%s'" % (filters["user_agent"])
 
-        stmt = "SELECT %s FROM %s WHERE %s"%(columns, tables, where)
+        stmt = "SELECT %s FROM %s WHERE %s" % (columns, tables, where)
         return stmt
