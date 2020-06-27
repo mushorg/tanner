@@ -66,7 +66,7 @@ class TannerServer:
             self.logger.info("Requested path %s", path)
             await self.dorks.extract_path(path, self.redis_client)
             detection = await self.base_handler.handle(data, session)
-            session.set_attack_type(path, detection["name"])
+            session.set_attack_type(data['path'], detection["name"])
 
             response_msg = self._make_response(
                 msg=dict(detection=detection, sess_uuid=session.get_uuid())
