@@ -142,13 +142,17 @@ class DBUtils:
 
                 for path in session["paths"]:
                     timestamp = time_convertor(path["timestamp"])
+                    try:
+                        attackType = AttackType[path["attack_type"]].value
+                    except KeyError:
+                        attackType = 0
                     await conn.execute(
                         PATHS.insert(),
                         session_id=session["sess_uuid"],
                         path=path["path"],
                         created_at=timestamp,
                         response_status=path["response_status"],
-                        attack_type=AttackType[path["attack_type"]].value,
+                        attack_type=attackType,
                     )
 
                 for k, v in session["possible_owners"].items():
