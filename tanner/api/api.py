@@ -7,6 +7,7 @@ from json import dumps, loads, JSONEncoder
 from uuid import UUID
 
 import psycopg2
+from sqlalchemy.sql.expression import join
 from sqlalchemy import select, func
 
 from tanner.dbutils import COOKIES, OWNERS, PATHS, SESSIONS
@@ -62,6 +63,9 @@ class Api:
             stmt = select(
                 [PATHS.c.attack_type, func.count(PATHS.c.attack_type)]
             ).group_by(PATHS.c.attack_type)
+            stmt = stmt.select_from(
+                join(SESSIONS, PATHS, SESSIONS.c.id == PATHS.c.session_id)
+            ).where(SESSIONS.c.sensor_id == snare_uuid)
             rows = await (await conn.execute(stmt)).fetchall()
 
             for r in rows:
@@ -192,12 +196,15 @@ class Api:
             results = "Invalid filters"
         else:
             stmt = self.apply_filters(filters)
-            async with self.pg_client.acquire() as conn:
-                query = await (await conn.execute(stmt)).fetchall()
+            if stmt != "Invalid filter value":
+                async with self.pg_client.acquire() as conn:
+                    query = await (await conn.execute(stmt)).fetchall()
 
-                for row in query:
-                    results.append(str(row[0]))
-            results = list(set(results))
+                    for row in query:
+                        results.append(str(row[0]))
+                results = list(set(results))
+            else:
+                results = stmt
 
         return results
 
@@ -233,17 +240,24 @@ class Api:
         if "attack_type" in filters:
             tables += ", paths P"
             columns += ", P.session_id"
-            where += " AND P.attack_type=%s" % (filters["attack_type"])
+            try:
+                attack_type = AttackType[filters["attack_type"]].value
+            except KeyError:
+                return "Invalid filter value"
+
+            where += " AND P.attack_type=%s AND S.id=P.session_id" % (attack_type)
         if "owners" in filters:
             tables += ", owners O"
             columns += ", O.session_id"
-            where += " AND O.owner_type='%s'" % (filters["owners"])
+            where += " AND O.owner_type='%s' AND S.id=O.session_id" % (
+                filters["owners"]
+            )
         if "start_time" in filters:
             where += " AND S.start_time=%s" % (filters["start_time"])
         if "end_time" in filters:
             where += " AND S.end_time=%s" % (filters["end_time"])
         if "peer_ip" in filters:
-            where += " ANDS.ip='%s'" % (filters["peer_ip"])
+            where += " AND S.ip='%s'" % (filters["peer_ip"])
         if "user_agent" in filters:
             where += " AND S.user_agent='%s'" % (filters["user_agent"])
 
