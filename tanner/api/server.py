@@ -63,11 +63,11 @@ class ApiServer:
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
-                    applied_filters[filt.split(':')[0]] = filt.split(':')[1]
+                    applied_filters[filt.split(':', 1)[0]] = filt.split(':', 1)[1]
                 if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = float(applied_filters['start_time'])
+                    applied_filters['start_time'] = applied_filters['start_time']
                 if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = float(applied_filters['end_time'])
+                    applied_filters['end_time'] = applied_filters['end_time']
         except Exception as e:
             self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'

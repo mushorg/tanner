@@ -239,6 +239,24 @@ class Api:
         Returns:
             [str]: A sql query in string format
         """
+
+        def check_time(time):
+            """Check the format of the time passed in filters
+
+            Args:
+                time ([str]): Time in RFC format
+
+            Returns:
+                [str]: Time in humar readable format
+            """
+            try:
+                formatted_time = datetime.datetime.strptime(time, "%d-%m-%YT%H:%M:%S")
+            except ValueError:
+                time = time + "T00:00:00"
+                formatted_time = datetime.datetime.strptime(time, "%d-%m-%YT%H:%M:%S")
+
+            return str(formatted_time)
+
         tables = "sessions S"
         columns = "S.id"
         where = "S.sensor_id='%s'" % (filters["sensor_id"])
@@ -259,9 +277,11 @@ class Api:
                 filters["owners"]
             )
         if "start_time" in filters:
-            where += " AND S.start_time=%s" % (filters["start_time"])
+            start_time = check_time(filters["start_time"])
+            where += " AND S.start_time>='%s'" % (start_time)
         if "end_time" in filters:
-            where += " AND S.end_time=%s" % (filters["end_time"])
+            end_time = check_time(filters["end_time"])
+            where += " AND S.end_time<='%s'" % (end_time)
         if "peer_ip" in filters:
             where += " AND S.ip='%s'" % (filters["peer_ip"])
         if "user_agent" in filters:
