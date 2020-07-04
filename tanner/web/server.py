@@ -5,7 +5,7 @@ import jinja2
 
 from aiohttp import web
 from tanner.api import api
-from tanner import redis_client
+from tanner import postgres_client
 from tanner.config import TannerConfig
 from tanner import __version__ as tanner_version
 
@@ -54,21 +54,26 @@ class TannerWebServer:
         snare_uuid = request.match_info['snare_uuid']
         page_id = int(request.match_info['page_id'])
         params = request.url.query
-        applied_filters = {'snare_uuid': snare_uuid}
+        applied_filters = {'sensor_id': snare_uuid}
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
-                    applied_filters[filt.split(':')[0]] = filt.split(':')[1]
+                    applied_filters[filt.split(':', 1)[0]] = filt.split(':', 1)[1]
                 if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = float(applied_filters['start_time'])
+                    applied_filters['start_time'] = applied_filters['start_time']
                 if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = float(applied_filters['end_time'])
+                    applied_filters['end_time'] = applied_filters['end_time']
         except Exception as e:
             self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
+            result = []
             sessions = await self.api.return_sessions(applied_filters)
-            result = sessions[15 * (page_id - 1):15 * page_id]
+            partial_sessions = sessions[15 * (page_id - 1):15 * page_id]
+            for sess in partial_sessions:
+                info = await self.api.return_session_info(sess)
+                result.append({"sess_uuid": info["id"], "peer_ip": info["ip"], "possible_owners": info["owners"]})
+
             next_val = None
             pre_val = None
             if page_id * 15 <= len(sessions):
@@ -120,8 +125,10 @@ class TannerWebServer:
 
     def start(self):
         loop = asyncio.get_event_loop()
-        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
-        self.api = api.Api(self.redis_client)
+        self.pg_client = loop.run_until_complete(
+            postgres_client.PostgresClient().get_pg_client()
+        )
+        self.api = api.Api(self.pg_client)
         app = self.create_app(loop)
         host = TannerConfig.get('WEB', 'host')
         port = int(TannerConfig.get('WEB', 'port'))

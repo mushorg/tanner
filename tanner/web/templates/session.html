@@ -11,19 +11,29 @@
   </tr>
   <tr>
     <td><b>UUID</b></td>
-    <td>{{session.sess_uuid}}</td>
+    <td>{{session.id}}</td>
   </tr>
   <tr>
     <td><b>IP</b></td>
-    <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=peer_ip:{{session.peer_ip}}">{{session.peer_ip}}</a></td>
+    <td><a href="/{{session.sensor_id}}/sessions/page/1?filters=peer_ip:{{session.ip}}">{{session.ip}}</a></td>
   </tr>
-  <tr>
-    <td><b>Location</b></td>
-    <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=location:{{session.location}}">{{session.location}}</a></td>
-  </tr>
+  {% if session.country and session.city and session.zip_code %}
+      <tr>
+        <td><b>Country</b></td>
+        <td>{{session.country}}</td>
+      </tr>
+        <tr>
+          <td><b>Country</b></td>
+          <td>{{session.country}}</td>
+        </tr>
+        <tr>
+          <td><b>Country</b></td>
+          <td>{{session.country}}</td>
+        </tr>
+    {% endif %}
   <tr>
     <td><b>Port</b></td>
-    <td>{{session.peer_port}}</td>
+    <td>{{session.port}}</td>
   </tr>
   <tr>
     <td><b>User Agents</b></td>
@@ -31,23 +41,23 @@
   </tr>
   <tr>
     <td><b>Snare UUID</b></td>
-    <td>{{session.snare_uuid}}</td>
+    <td>{{session.sensor_id}}</td>
   </tr>
   <tr>
     <td><b>Start time</b></td>
-    <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=start_time:{{session.start_time}}">{{session.start_time}}</a></td>
+    <td><a href="/{{session.sensor_id}}/sessions/page/1?filters=start_time:{{session.start_time}}">{{session.start_time}}</a></td>
   </tr>
   <tr>
     <td><b>End time</b></td>
-    <td><a href="/{{session.snare_uuid}}/sessions/page/1?filters=end_time:{{session.end_time}}">{{session.end_time}}</a></td>
+    <td><a href="/{{session.sensor_id}}/sessions/page/1?filters=end_time:{{session.end_time}}">{{session.end_time}}</a></td>
   </tr>
   <tr>
     <td><b>Requests/sec</b></td>
-    <td>{{session.requests_in_second}}</td>
+    <td>{{session.rps}}</td>
   </tr>
   <tr>
     <td><b>Time between requests</b></td>
-    <td>{{session.approx_time_between_requests}}</td>
+    <td>{{session.atbr}}</td>
   </tr>
   <tr>
     <td><b>Paths</b></td>
@@ -61,14 +71,7 @@
     <td><b>Hidden Links</b></td>
     <td>{{session.hidden_links}}</td>
   </tr>
-  <tr>
-    <td><b>Attacks</b></td>
-    <td>
-    {% for attack, v in session.attack_count.items() %}
-      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=attack_types:{{attack}}">{{attack}}</a> - {{v}}<br>
-    {% endfor %}
-    </td>
-  </tr>
+  
   <tr>
     <td><b>Paths</b></td>
     <td>
@@ -92,8 +95,8 @@
   <tr>
     <td><b>Possible Owners</b></td>
     <td>
-    {% for owner, cf in session.possible_owners.items() %}
-      <a href="/{{session.snare_uuid}}/sessions/page/1?filters=possible_owners:{{owner}}">{{owner}} : {{cf}}</a><br>
+    {% for owner, cf in session.owners.items() %}
+      <a href="/{{session.sensor_id}}/sessions/page/1?filters=owners:{{owner}}">{{owner}} : {{cf}}</a><br>
     {% endfor %}
     </td>
   </tr>
