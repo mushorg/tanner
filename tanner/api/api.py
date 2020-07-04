@@ -103,36 +103,48 @@ class Api:
         except ValueError:
             return {"Invalid SESSION UUID"}
 
-        async with self.pg_client.acquire() as conn:
-            stmt = select([SESSIONS]).where(SESSIONS.c.id == sess_uuid)
-            query = await (await conn.execute(stmt)).fetchone()
-            session = loads(dumps(dict(query), cls=AlchemyEncoder))
+        try:
+            async with self.pg_client.acquire() as conn:
+                stmt = select([SESSIONS]).where(SESSIONS.c.id == sess_uuid)
+                query = await (await conn.execute(stmt)).fetchone()
+                session = loads(dumps(dict(query), cls=AlchemyEncoder))
 
-            cookies_query = select([COOKIES]).where(COOKIES.c.session_id == sess_uuid)
-            cookies = await (await conn.execute(cookies_query)).fetchall()
+                cookies_query = select([COOKIES]).where(
+                    COOKIES.c.session_id == sess_uuid
+                )
+                cookies = await (await conn.execute(cookies_query)).fetchall()
 
-            all_cookies = []
-            for r in cookies:
-                all_cookies.append({r[1]: r[2]})
-            session["cookies"] = dict(ChainMap(*all_cookies))
+                all_cookies = []
+                for r in cookies:
+                    all_cookies.append({r[1]: r[2]})
+                session["cookies"] = dict(ChainMap(*all_cookies))
 
-            paths_query = select([PATHS]).where(PATHS.c.session_id == session.get("id"))
-            paths = await (await conn.execute(paths_query)).fetchall()
+                paths_query = select([PATHS]).where(
+                    PATHS.c.session_id == session.get("id")
+                )
+                paths = await (await conn.execute(paths_query)).fetchall()
 
-            all_paths = []
-            for p in paths:
-                all_paths.append(dumps(dict(p), cls=AlchemyEncoder))
-            session["paths"] = all_paths
+                all_paths = []
+                for p in paths:
+                    all_paths.append(dumps(dict(p), cls=AlchemyEncoder))
+                session["paths"] = all_paths
 
-            owners_query = select([OWNERS]).where(
-                OWNERS.c.session_id == session.get("id")
-            )
-            owners = await (await conn.execute(owners_query)).fetchall()
+                owners_query = select([OWNERS]).where(
+                    OWNERS.c.session_id == session.get("id")
+                )
+                owners = await (await conn.execute(owners_query)).fetchall()
 
-            owner_type = []
-            for o in owners:
-                owner_type.append({o[1]: o[2]})
-            session["owners"] = dict(ChainMap(*owner_type))
+                owner_type = []
+                for o in owners:
+                    owner_type.append({o[1]: o[2]})
+                session["owners"] = dict(ChainMap(*owner_type))
+        except (
+            TypeError,
+            TimeoutError,
+            psycopg2.ProgrammingError,
+            psycopg2.OperationalError,
+        ):
+            session = {"error": "Invalid session ID"}
 
         return session
 
