@@ -69,9 +69,15 @@ class Api:
             rows = await (await conn.execute(stmt)).fetchall()
 
             for r in rows:
-                result["total_sessions"] += r[1]
                 attack_type = AttackType(r[0]).name
                 result["attack_frequency"][attack_type] = r[1]
+
+            total_session_stmt = select(
+                [func.count(SESSIONS.c.id)], distinct=True
+            ).where(SESSIONS.c.sensor_id == snare_uuid)
+            total_count = await (await conn.execute(total_session_stmt)).first()
+
+            result["total_sessions"] = total_count[0]
 
             time_stmt = select(
                 [func.sum(SESSIONS.c.end_time - SESSIONS.c.start_time)]
