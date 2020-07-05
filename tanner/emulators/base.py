@@ -1,6 +1,6 @@
 import mimetypes
 import re
-import urllib.parse
+from urllib.parse import unquote, parse_qsl, urlparse
 import yarl
 
 from tanner import __version__ as tanner_version
@@ -52,14 +52,11 @@ class BaseHandler:
         """
         Return all the GET parameter
         :param path (str): The URL path from which GET parameters are to be extracted
-        :return: A MultiDictProxy object containg name and value of parameters
+        :return: A dict containg name and value of parameters
         """
-        path = urllib.parse.unquote(path)
-        encodings = [('&&', '%26%26'), (';', '%3B')]
-        for value, encoded_value in encodings:
-            path = path.replace(value, encoded_value)
-        get_data = yarl.URL(path).query
-        return get_data
+        path = urlparse(path)
+        queries = parse_qsl(unquote(path.query))
+        return dict(queries)
 
     async def get_emulation_result(self, session, data, target_emulators):
         """

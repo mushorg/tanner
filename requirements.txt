@@ -19,3 +19,4 @@ tornado
 mako
 pyjwt
 pyyaml
+sqlalchemy

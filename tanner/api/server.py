@@ -5,7 +5,7 @@ from aiohttp import web
 from aiohttp.web import middleware
 
 from tanner.api import api
-from tanner import redis_client
+from tanner import postgres_client
 from tanner.config import TannerConfig
 from tanner.utils.api_key_generator import generate
 
@@ -38,7 +38,15 @@ class ApiServer:
 
     async def handle_snare_info(self, request):
         snare_uuid = request.match_info['snare_uuid']
-        result = await self.api.return_snare_info(snare_uuid, 50)
+        try:
+            count = int(request.rel_url.query['count'])
+            offset = int(request.rel_url.query['offset'])
+        except KeyError:
+            # Set default values
+            count = 1000
+            offset = 0
+
+        result = await self.api.return_snare_info(snare_uuid, count, offset)
         response_msg = self._make_response(result)
         return web.json_response(response_msg)
 
@@ -51,23 +59,21 @@ class ApiServer:
     async def handle_sessions(self, request):
         snare_uuid = request.match_info['snare_uuid']
         params = request.url.query
-        applied_filters = {'snare_uuid': snare_uuid}
+        applied_filters = {'sensor_id': snare_uuid}
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
-                    applied_filters[filt.split(':')[0]] = filt.split(':')[1]
+                    applied_filters[filt.split(':', 1)[0]] = filt.split(':', 1)[1]
                 if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = float(applied_filters['start_time'])
+                    applied_filters['start_time'] = applied_filters['start_time']
                 if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = float(applied_filters['end_time'])
+                    applied_filters['end_time'] = applied_filters['end_time']
         except Exception as e:
             self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'
         else:
             sessions = await self.api.return_sessions(applied_filters)
-            sess_uuids = [sess['sess_uuid'] for sess in sessions]
-            result = sess_uuids
-        response_msg = self._make_response(result)
+        response_msg = self._make_response(sessions)
         return web.json_response(response_msg)
 
     async def handle_session_info(self, request):
@@ -77,7 +83,7 @@ class ApiServer:
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
-        self.redis_client.close()
+        self.pg_client.close()
 
     @middleware
     async def auth(self, request, handler):
@@ -108,8 +114,10 @@ class ApiServer:
 
     def start(self):
         loop = asyncio.get_event_loop()
-        self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
-        self.api = api.Api(self.redis_client)
+        self.pg_client = loop.run_until_complete(
+            postgres_client.PostgresClient().get_pg_client()
+        )
+        self.api = api.Api(self.pg_client)
         set_auth = TannerConfig.get('API', 'auth')
         app = self.create_app(loop, set_auth)
         host = TannerConfig.get('API', 'host')

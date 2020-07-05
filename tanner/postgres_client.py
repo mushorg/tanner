@@ -2,6 +2,8 @@ import asyncio
 import logging
 
 import aiopg
+from aiopg.sa import create_engine
+import sqlalchemy as sa
 import psycopg2
 
 from tanner.config import TannerConfig
@@ -24,12 +26,16 @@ class PostgresClient:
     async def get_pg_client(self):
         pg_client = None
         try:
-            dsn = "dbname={} user={} password={} host={} port={}".format(
-                self.db_name, self.user, self.password, self.host, self.port
-            )
-
             pg_client = await asyncio.wait_for(
-                aiopg.create_pool(dsn, maxsize=self.poolsize), timeout=int(self.timeout)
+                create_engine(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    password=self.password,
+                    database=self.db_name,
+                    maxsize=self.poolsize,
+                ),
+                timeout=int(self.timeout)
             )
         except (
             asyncio.TimeoutError,

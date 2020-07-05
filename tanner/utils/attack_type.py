@@ -3,6 +3,7 @@ from enum import Enum, unique
 
 @unique
 class AttackType(Enum):
+    unknown = 0
     rfi = 1
     lfi = 2
     xss = 3

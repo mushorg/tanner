@@ -10,10 +10,10 @@ class TestAPIServer(AioHTTPTestCase):
     def setUp(self):
         self.serv = server.ApiServer()
 
-        redis = mock.Mock()
-        redis.close = mock.Mock()
-        self.serv.redis_client = redis
-        self.serv.api = api.Api(self.serv.redis_client)
+        postgres = mock.Mock()
+        postgres.close = mock.Mock()
+        self.serv.pg_client = postgres
+        self.serv.api = api.Api(self.serv.pg_client)
 
         super(TestAPIServer, self).setUp()
 
@@ -49,8 +49,8 @@ class TestAPIServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_snare_info_request(self):
-        async def mock_return_snare_info(snare_uuid, count):
-            if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4" and count == 50:
+        async def mock_return_snare_info(snare_uuid):
+            if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4":
                 return [{"test_sess1": "sess1_info"}, {"test_sess1": "sess2_info"}]
 
         assert_content = {"version": 1,
