@@ -38,7 +38,7 @@ class TestServer(AioHTTPTestCase):
             sess.get_uuid = mock.Mock(return_value=str(self.test_uuid))
             return sess, sess_id
 
-        async def _delete_sessions_mock(client):
+        async def _delete_sessions_mock(redis_client, pg_client):
             pass
 
         self.serv.session_manager.add_or_update_session = _add_or_update_mock
@@ -55,7 +55,12 @@ class TestServer(AioHTTPTestCase):
         redis.close = mock.Mock()
         redis.wait_closed = AsyncMock()
         self.serv.dorks = dorks
+        postgres = AsyncMock()
+        postgres.close = mock.Mock()
+        postgres.wait_closed = AsyncMock()
+        self.serv.dorks = dorks
         self.serv.redis_client = redis
+        self.serv.pg_client = postgres
 
         super(TestServer, self).setUp()
 
