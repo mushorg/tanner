@@ -49,7 +49,7 @@ class TestAPIServer(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_api_snare_info_request(self):
-        async def mock_return_snare_info(snare_uuid):
+        async def mock_return_snare_info(snare_uuid, count, offset):
             if snare_uuid == "8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4":
                 return [{"test_sess1": "sess1_info"}, {"test_sess1": "sess2_info"}]
 
@@ -88,21 +88,21 @@ class TestAPIServer(AioHTTPTestCase):
     async def test_api_sessions_request(self):
         async def mock_return_sessions(filters):
             if type(filters) is dict and filters['peer_ip'] == "127.0.0.1" and \
-                    filters['start_time'] == 1497890400 and filters['user_agent'] == 'ngnix':
-                return [{"sess_uuid": "f387d46eaeb1454cadf0713a4a55be49"},
-                        {"sess_uuid": "e85ae767b0bb4b1f91b421b3a28082ef"}]
+                    filters['start_time'] == "11-05-2020" and filters['user_agent'] == 'ngnix':
+                return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
 
         assert_content = {"version": 1, "response": {
             "message": ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]}}
         self.serv.api.return_sessions = mock_return_sessions
         request = await self.client.request(
             "GET",
-            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions?filters=peer_ip:127.0.0.1 start_time:1497890400"
+            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions?filters=peer_ip:127.0.0.1 start_time:11-05-2020"
             " user_agent:ngnix&key=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoidGFubmVyX293bmVyIn0."
             "NQ7x_iq2t2SUs20Z9G-FmgqeNBOp5duiXr_auNVmzfU"
         )  # noqa
         assert request.status == 200
         detection = await request.json()
+        print(detection)
         self.assertDictEqual(detection, assert_content)
 
     @unittest_run_loop
