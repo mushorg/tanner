@@ -145,7 +145,7 @@ class TestSessions(unittest.TestCase):
         self.assertEqual(self.handler.sessions[sess_id].count, 2)
 
     def test_deleting_sessions(self):
-        async def analyze(session_key, redis_client):
+        async def analyze(session_key, redis_client, pg_client):
             return None
 
         async def sess_set(key, val):
@@ -169,7 +169,9 @@ class TestSessions(unittest.TestCase):
         self.handler.sessions[sess] = sess
         redis_mock = mock.Mock()
         redis_mock.set = sess_set
-        self.loop.run_until_complete(self.handler.delete_old_sessions(redis_mock))
+        pg_mock = mock.Mock()
+        pg_mock.set = sess_set
+        self.loop.run_until_complete(self.handler.delete_old_sessions(redis_mock, pg_mock))
         self.assertDictEqual(self.handler.sessions, {})
 
     def test_get_uuid(self):

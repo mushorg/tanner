@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 import geoip2
 import aioredis
+import psycopg2
 from tanner.sessions.session_analyzer import SessionAnalyzer
 
 
@@ -39,7 +40,8 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer(loop=self.loop)
         self.res = None
-        geoip2.database.Reader.__init__ = Mock(return_value=None)
+        # TODO: Decide whether to mock geodata or not.
+        # geoip2.database.Reader.__init__ = Mock(return_value=None)
         rvalue = geoip2.models.City(
             {'city': {'geoname_id': 4223379, 'names': {'en': 'Smyrna',
                                                        'ru': 'Смирна', 'zh-CN': '士麦那'}},
@@ -71,18 +73,20 @@ class TestSessionAnalyzer(unittest.TestCase):
                                          'zh-CN': '乔治亚'}}],
              'traits': {'ip_address': '74.217.37.8'}}, ['en']
         )
-        geoip2.database.Reader.city = Mock(return_value=rvalue)
+        # geoip2.database.Reader.city = Mock(return_value=rvalue)
 
     def tests_load_session_fail(self):
 
         async def sess_get(key):
-            return aioredis.ProtocolError
+            return aioredis.ProtocolError, psycopg2.OperationalError
 
         redis_mock = Mock()
         redis_mock.get = sess_get
+        pg_mock = Mock()
+        pg_mock.get = sess_get
         res = None
         with self.assertLogs():
-            self.loop.run_until_complete(self.handler.analyze(None, redis_mock))
+            self.loop.run_until_complete(self.handler.analyze(None, redis_mock, pg_mock))
 
     def test_create_stats(self):
 
@@ -189,6 +193,16 @@ class TestSessionAnalyzer(unittest.TestCase):
             country='United States',
             country_code='US',
             city='Smyrna',
-            zip_code='30080',
+            zip_code=30080,
+        )
+        self.assertEqual(location_stats, expected_res)
+
+    def test_find_location_exception(self):
+        location_stats = self.handler.find_location("0.0.0.0")
+        expected_res = dict(
+            country=None,
+            country_code=None,
+            city=None,
+            zip_code=0,
         )
         self.assertEqual(location_stats, expected_res)
