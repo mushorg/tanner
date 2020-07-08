@@ -14,7 +14,7 @@ class TannerWebServer:
     def __init__(self):
         self.logger = logging.getLogger('tanner.web.tannerwebserver')
         self.api = None
-        self.redis_client = None
+        self.pg_client = None
 
     @aiohttp_jinja2.template('index.html')
     async def handle_index(self, request):
@@ -104,7 +104,7 @@ class TannerWebServer:
         }
 
     async def on_shutdown(self, app):
-        self.redis_client.close()
+        self.pg_client.close()
 
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)
