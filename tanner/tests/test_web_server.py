@@ -100,11 +100,11 @@ class TestWebServer(AioHTTPTestCase):
 
         response = await self.client.request(
             "GET",
-            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions/page/2?filters=peer_ip:127.0.0.1 start_time:11-05-2020 user_agent:Mozilla/5.0",
-        )  # noqa
+            "/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions/page/2?filters=peer_ip:127.0.0.1 start_time:11-05-2020 user_agent:Mozilla/5.0",  # noqa
+        )
         self.returned_content = await response.text()
 
-        self.expected_content = """<th>Session-uuid</th>\n    <th>IP</th>\n    <th>Owner</th>\n  </tr>\n  \n</table>\n<br>\n<div align="center">\n  <a href="/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions/page/1?filters=peer_ip:127.0.0.1 start_time:11-05-2020 user_agent:Mozilla/5.0">"""
+        self.expected_content = """<th>Session-uuid</th>\n    <th>IP</th>\n    <th>Owner</th>\n  </tr>\n  \n</table>\n<br>\n<div align="center">\n  <a href="/8fa6aa98-4283-4085-bfb9-a1cd3a9e56e4/sessions/page/1?filters=peer_ip:127.0.0.1 start_time:11-05-2020 user_agent:Mozilla/5.0">"""  # noqa
 
         self.assertIn(self.expected_content, self.returned_content)
 
@@ -129,7 +129,7 @@ class TestWebServer(AioHTTPTestCase):
 
         self.handler.api.return_session_info = AsyncMock(return_value=session)
 
-        self.expected_content = "<td><b>Cookies</b></td>\n    <td>\n    \n      sess_uuid : 9f82e5d0e6b64047bba996222d45e72c <br>\n    \n    </td>"
+        self.expected_content = "<td><b>Cookies</b></td>\n    <td>\n    \n      sess_uuid : 9f82e5d0e6b64047bba996222d45e72c <br>\n    \n    </td>"  # noqa
 
         response = await self.client.request(
             "GET", "/session/da1811cd19d748058bc02ee5bf9029d4"
