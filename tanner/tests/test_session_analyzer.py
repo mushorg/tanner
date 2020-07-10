@@ -40,8 +40,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.session = json.loads(session.decode('utf-8'))
         self.handler = SessionAnalyzer(loop=self.loop)
         self.res = None
-        # TODO: Decide whether to mock geodata or not.
-        # geoip2.database.Reader.__init__ = Mock(return_value=None)
+        geoip2.database.Reader.__init__ = Mock(return_value=None)
         rvalue = geoip2.models.City(
             {'city': {'geoname_id': 4223379, 'names': {'en': 'Smyrna',
                                                        'ru': 'Смирна', 'zh-CN': '士麦那'}},
@@ -73,7 +72,7 @@ class TestSessionAnalyzer(unittest.TestCase):
                                          'zh-CN': '乔治亚'}}],
              'traits': {'ip_address': '74.217.37.8'}}, ['en']
         )
-        # geoip2.database.Reader.city = Mock(return_value=rvalue)
+        geoip2.database.Reader.city = Mock(return_value=rvalue)
 
     def tests_load_session_fail(self):
 
@@ -194,15 +193,5 @@ class TestSessionAnalyzer(unittest.TestCase):
             country_code='US',
             city='Smyrna',
             zip_code=30080,
-        )
-        self.assertEqual(location_stats, expected_res)
-
-    def test_find_location_exception(self):
-        location_stats = self.handler.find_location("0.0.0.0")
-        expected_res = dict(
-            country=None,
-            country_code=None,
-            city=None,
-            zip_code=0,
         )
         self.assertEqual(location_stats, expected_res)
