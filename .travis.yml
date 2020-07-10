@@ -23,5 +23,5 @@ script:
     - python setup.py install
     - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
     - pycodestyle . --max-line-length=120
-    - test $(docker ps -f name=tanner -q | wc --lines) -eq 5
+    - test $(docker ps -f name=tanner -q | wc --lines) -eq 6
 after_success: coveralls
