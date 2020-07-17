@@ -2,7 +2,7 @@ import unittest
 import asyncio
 import aioredis
 import itertools
-
+import sqlalchemy
 from unittest import mock
 from tanner.api.api import Api
 from tanner import postgres_client
@@ -67,6 +67,13 @@ class TestApi(unittest.TestCase):
         self.conn = None
         self.key = None
 
+        async def create_db():
+            with sqlalchemy.create_engine(
+                "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
+            ).connect() as connection:
+                connection.execute("CREATE DATABASE tanner_test_db")
+                connection.close()
+
         async def connect():
             self.postgres = postgres_client.PostgresClient()
             self.postgres.host = "localhost"
@@ -79,6 +86,7 @@ class TestApi(unittest.TestCase):
             await DBUtils.create_data_tables(self.pg_client)
             await DBUtils.add_analyzed_data(SESSION_DATA, self.pg_client)
 
+        self.loop.run_until_complete(create_db())
         self.loop.run_until_complete(connect())
         self.handler = Api(self.pg_client)
 
@@ -272,5 +280,11 @@ class TestApi(unittest.TestCase):
                 await conn.execute("DROP TABLE owners;")
                 await conn.execute("DROP TABLE paths;")
                 await conn.execute("DROP TABLE sessions;")
+
+            with sqlalchemy.create_engine(
+                "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
+            ).connect() as connection:
+                connection.execute("DROP DATABASE tanner_test_db")
+                connection.close()
 
         self.loop.run_until_complete(close())
