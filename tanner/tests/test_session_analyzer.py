@@ -121,10 +121,10 @@ class TestSessionAnalyzer(unittest.TestCase):
         self.failValue = geoip2.models.City(
             {
                 "city": {"name": None},
-                "continent": {"code":None},
+                "continent": {"code": None},
                 "country": {"name": None, "iso_code": None},
                 "location": {"postal": {"code": 0}},
-                "traits": {"ip_address": "0.0.0.0"}
+                "traits": {"ip_address": "0.0.0.0"},
             },
             ["en"],
         )
@@ -273,7 +273,5 @@ class TestSessionAnalyzer(unittest.TestCase):
     def test_find_location_exception(self):
         geoip2.database.Reader.city = Mock(return_value=self.failValue)
         location_stats = self.handler.find_location("0.0.0.0")
-        expected_res = dict(
-            country=None, country_code=None, city=None, zip_code=0,
-        )
+        expected_res = dict(country=None, country_code=None, city=None, zip_code=0,)
         self.assertEqual(location_stats, expected_res)
