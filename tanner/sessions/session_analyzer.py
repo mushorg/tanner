@@ -19,17 +19,19 @@ class SessionAnalyzer:
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
     async def analyze(self, session_key, redis_client, pg_client):
-        session = None
+        sessions = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            session = await redis_client.get(session_key, encoding='utf-8')
-            session = json.loads(session)
+            sessions = await redis_client.key("[0-9a-f]*")
+            print("got sessions", len(sessions))
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.exception('Can\'t get session for analyze: %s', error)
         else:
-            result = await self.create_stats(session, redis_client)
-            await self.queue.put(result)
-            await self.save_session(redis_client, pg_client)
+            for session in sessions:
+                session = json.loads(session)
+                result = await self.create_stats(session, redis_client)
+                await self.queue.put(result)
+                await self.save_session(redis_client, pg_client)
 
     async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():
