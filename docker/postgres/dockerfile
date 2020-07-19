@@ -1,4 +1,4 @@
-FROM redis:alpine
+FROM postgres:alpine
 
 # Setup apt
 RUN sed -i 's/dl-cdn/dl-2/g' /etc/apk/repositories && \
