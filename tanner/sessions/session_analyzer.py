@@ -18,20 +18,21 @@ class SessionAnalyzer:
         self.logger = logging.getLogger('tanner.session_analyzer.SessionAnalyzer')
         self.attacks = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'cmd_exec', 'crlf']
 
-    async def analyze(self, session_key, redis_client, pg_client):
+    async def analyze(self, redis_client, pg_client):
         sessions = None
         await asyncio.sleep(1, loop=self._loop)
         try:
-            sessions = await redis_client.key("[0-9a-f]*")
-            print("got sessions", len(sessions))
+            sessions = await redis_client.keys("[0-9a-f]*")
+            print(sessions)
         except (aioredis.ProtocolError, TypeError, ValueError) as error:
             self.logger.exception('Can\'t get session for analyze: %s', error)
         else:
-            for session in sessions:
-                session = json.loads(session)
-                result = await self.create_stats(session, redis_client)
-                await self.queue.put(result)
-                await self.save_session(redis_client, pg_client)
+            if sessions:
+                for session in sessions:
+                    session = json.loads(session)
+                    result = await self.create_stats(session, redis_client)
+                    await self.queue.put(result)
+                    await self.save_session(redis_client, pg_client)
 
     async def save_session(self, redis_client, pg_client):
         while not self.queue.empty():

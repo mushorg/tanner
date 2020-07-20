@@ -25,6 +25,7 @@ class TannerServer:
         db_name = TannerConfig.get("SQLI", "db_name")
 
         self.session_manager = session_manager.SessionManager()
+        self.session_analyzer = session_analyzer.SessionAnalyzer()
         self.delete_timeout = TannerConfig.get("SESSIONS", "delete_timeout")
 
         self.dorks = dorks_manager.DorksManager()
@@ -123,8 +124,8 @@ class TannerServer:
 
     async def analyze_sessions(self):
         # try:
-        while True:
-            await self.session_analyzer(self.redis_client, self.pg_client)
+        # while True:
+        await self.session_analyzer.analyze(self.redis_client, self.pg_client)
         # except asyncio.CancelledError:
         # pass
 
