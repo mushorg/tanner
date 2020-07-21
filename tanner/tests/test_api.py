@@ -60,8 +60,6 @@ class TestApi(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         self.pg_client = None
-        self.snare_uuid = "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"
-        self.uuid = "da1811cd19d748058bc02ee5bf9029d4"
         self.returned_content = None
         self.expected_content = None
         self.conn = None
@@ -78,7 +76,7 @@ class TestApi(unittest.TestCase):
             self.postgres = postgres_client.PostgresClient()
             self.postgres.host = "localhost"
             self.postgres.post = 5432
-            self.postgres.db_name = "postgres"
+            self.postgres.db_name = "tanner_test_db"
             self.postgres.user = "postgres"
             self.postgres.password = "postgres"
             self.postgres.maxsize = 80
@@ -109,7 +107,7 @@ class TestApi(unittest.TestCase):
 
         async def test():
             self.returned_content = await self.handler.return_snare_stats(
-                self.snare_uuid
+                SESSION_DATA["snare_uuid"]
             )
 
         self.loop.run_until_complete(test())
@@ -281,10 +279,16 @@ class TestApi(unittest.TestCase):
                 await conn.execute("DROP TABLE paths;")
                 await conn.execute("DROP TABLE sessions;")
 
-            with sqlalchemy.create_engine(
-                "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
-            ).connect() as connection:
-                connection.execute("DROP DATABASE tanner_test_db")
-                connection.close()
-
         self.loop.run_until_complete(close())
+        with sqlalchemy.create_engine(
+            "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
+        ).connect() as connection:
+            connection.execute("REVOKE CONNECT ON DATABASE tanner_test_db FROM public;")
+            connection.execute(
+                """SELECT pg_terminate_backend(pg_stat_activity.pid)
+               FROM pg_stat_activity
+                WHERE pg_stat_activity.datname = 'tanner_test_db';
+            """
+            )
+            connection.execute("DROP database tanner_test_db")
+            connection.close()
