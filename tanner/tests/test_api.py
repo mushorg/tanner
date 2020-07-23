@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import asyncio
 import aioredis
@@ -297,3 +298,7 @@ class TestApi(unittest.TestCase):
                     await conn.execute("DROP database tanner_test_db")
 
         self.loop.run_until_complete(close())
+
+    @pytest.fixture(scope="session")
+    async def close_connection(self):
+        await self.pg_client.close()
