@@ -105,6 +105,7 @@ class TannerWebServer:
 
     async def on_shutdown(self, app):
         self.pg_client.close()
+        await self.pg_client.wait_closed()
 
     def setup_routes(self, app):
         app.router.add_get('/', self.handle_index)

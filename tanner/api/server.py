@@ -84,6 +84,7 @@ class ApiServer:
 
     async def on_shutdown(self, app):
         self.pg_client.close()
+        await self.pg_client.wait_closed()
 
     @middleware
     async def auth(self, request, handler):
