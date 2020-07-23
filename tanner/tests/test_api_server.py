@@ -1,5 +1,6 @@
 import asyncio
 from unittest import mock
+from tanner.utils.asyncmock import AsyncMock
 
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
@@ -10,8 +11,8 @@ class TestAPIServer(AioHTTPTestCase):
     def setUp(self):
         self.serv = server.ApiServer()
 
-        postgres = mock.Mock()
-        postgres.close = mock.Mock()
+        postgres = AsyncMock()
+        postgres.close = AsyncMock()
         self.serv.pg_client = postgres
         self.serv.api = api.Api(self.serv.pg_client)
 
@@ -102,7 +103,6 @@ class TestAPIServer(AioHTTPTestCase):
         )  # noqa
         assert request.status == 200
         detection = await request.json()
-        print(detection)
         self.assertDictEqual(detection, assert_content)
 
     @unittest_run_loop
