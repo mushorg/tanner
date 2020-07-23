@@ -4,6 +4,7 @@ import aioredis
 import itertools
 import sqlalchemy
 from unittest import mock
+from aiopg.sa import create_engine
 from tanner.api.api import Api
 from tanner import postgres_client
 from tanner.dbutils import DBUtils
@@ -66,11 +67,11 @@ class TestApi(unittest.TestCase):
         self.key = None
 
         async def create_db():
-            with sqlalchemy.create_engine(
-                "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
-            ).connect() as connection:
-                connection.execute("CREATE DATABASE tanner_test_db")
-                connection.close()
+            async with create_engine(
+                user="postgres", host="127.0.0.1", password="postgres"
+            ) as engine:
+                async with engine.acquire() as conn:
+                    await conn.execute("CREATE DATABASE tanner_test_db")
 
         async def connect():
             self.postgres = postgres_client.PostgresClient()
@@ -279,16 +280,20 @@ class TestApi(unittest.TestCase):
                 await conn.execute("DROP TABLE paths;")
                 await conn.execute("DROP TABLE sessions;")
 
+            async with create_engine(
+                user="postgres", host="127.0.0.1", password="postgres"
+            ) as engine:
+
+                async with engine.acquire() as conn:
+                    await conn.execute(
+                        "REVOKE CONNECT ON DATABASE tanner_test_db FROM public;"
+                    )
+                    await conn.execute(
+                        """SELECT pg_terminate_backend(pg_stat_activity.pid)
+                    FROM pg_stat_activity
+                        WHERE pg_stat_activity.datname = 'tanner_test_db';
+                    """
+                    )
+                    await conn.execute("DROP database tanner_test_db")
+
         self.loop.run_until_complete(close())
-        with sqlalchemy.create_engine(
-            "postgresql://postgres@/postgres", isolation_level="AUTOCOMMIT"
-        ).connect() as connection:
-            connection.execute("REVOKE CONNECT ON DATABASE tanner_test_db FROM public;")
-            connection.execute(
-                """SELECT pg_terminate_backend(pg_stat_activity.pid)
-               FROM pg_stat_activity
-                WHERE pg_stat_activity.datname = 'tanner_test_db';
-            """
-            )
-            connection.execute("DROP database tanner_test_db")
-            connection.close()
