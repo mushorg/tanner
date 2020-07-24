@@ -117,7 +117,7 @@ class TannerWebServer:
         app.router.add_static('/static/', path='tanner/web/static')
 
     def create_app(self, loop):
-        app = web.Application(loop=loop)
+        app = web.Application()
         aiohttp_jinja2.setup(app,
                              loader=jinja2.FileSystemLoader('tanner/web/templates'))
         app.on_shutdown.append(self.on_shutdown)

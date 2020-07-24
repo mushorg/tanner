@@ -123,7 +123,7 @@ class TestApi(unittest.TestCase):
             self.result = await self.handler.return_snare_info(snare_id, count, offset)
 
         self.loop.run_until_complete(test(SESSION_DATA["snare_uuid"]))
-        self.assertEquals(len(self.result), 1)
+        self.assertEqual(len(self.result), 1)
         self.assertEqual(SESSION_DATA["sess_uuid"], self.result[0]["id"])
         self.assertEqual(
             SESSION_DATA["accepted_paths"], self.result[0]["accepted_paths"]
@@ -145,7 +145,6 @@ class TestApi(unittest.TestCase):
 
         async def test(snare_id):
             self.result = await self.handler.return_snare_info(snare_id, count, offset)
-            print(self.result)
 
         self.loop.run_until_complete(test("9f7d7dd3-ac6b-468b-8cee-"))
         self.assertIn("Invalid SNARE UUID", self.result)
@@ -256,7 +255,7 @@ class TestApi(unittest.TestCase):
         )
 
         self.returned_content = self.handler.apply_filters(filters)
-        self.assertEquals(self.returned_content, self.expected_content)
+        self.assertEqual(self.returned_content, self.expected_content)
 
     def test_apply_filter_end_time(self):
         filters = {
@@ -271,7 +270,7 @@ class TestApi(unittest.TestCase):
         )
 
         self.returned_content = self.handler.apply_filters(filters)
-        self.assertEquals(self.returned_content, self.expected_content)
+        self.assertEqual(self.returned_content, self.expected_content)
 
     def tearDown(self):
         async def close():
