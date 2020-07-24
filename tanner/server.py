@@ -123,11 +123,11 @@ class TannerServer:
             pass
 
     async def analyze_sessions(self):
-        # try:
-        # while True:
-        await self.session_analyzer.analyze(self.redis_client, self.pg_client)
-        # except asyncio.CancelledError:
-        # pass
+        try:
+            while True:
+                await self.session_analyzer.analyze(self.redis_client, self.pg_client)
+        except asyncio.CancelledError:
+            pass
 
     def setup_routes(self, app):
         app.router.add_route("*", "/", self.default_handler)
@@ -150,6 +150,8 @@ class TannerServer:
     async def cleanup_background_tasks(self, app):
         app["session_delete"].cancel()
         await app["session_delete"]
+        app["session_analyze"].cancel()
+        await app["session_analyze"]
 
     def start(self):
         loop = asyncio.get_event_loop()
