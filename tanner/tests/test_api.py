@@ -300,4 +300,5 @@ class TestApi(unittest.TestCase):
 
     @pytest.fixture(scope="session")
     async def close_connection(self):
-        await self.pg_client.close()
+        self.pg_client.close()
+        await self.pg_client.wait_closed()
