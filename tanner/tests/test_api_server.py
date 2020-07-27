@@ -12,7 +12,7 @@ class TestAPIServer(AioHTTPTestCase):
         self.serv = server.ApiServer()
 
         postgres = AsyncMock()
-        postgres.close = AsyncMock()
+        postgres.close = mock.Mock()
         self.serv.pg_client = postgres
         self.serv.api = api.Api(self.serv.pg_client)
 
