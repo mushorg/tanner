@@ -296,10 +296,7 @@ class TestApi(unittest.TestCase):
                     )
                     await conn.execute("DROP database tanner_test_db")
 
-        self.loop.run_until_complete(close())
+            self.pg_client.close()
+            await self.pg_client.wait_closed()
 
-    @pytest.fixture(scope="session", autouse=True)
-    async def close_connection(self):
-        self.pg_client.close()
-        yield
-        await self.pg_client.wait_closed()
+        self.loop.run_until_complete(close())
