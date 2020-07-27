@@ -27,6 +27,7 @@ class TannerServer:
         self.session_manager = session_manager.SessionManager()
         self.session_analyzer = session_analyzer.SessionAnalyzer()
         self.delete_timeout = TannerConfig.get("SESSIONS", "delete_timeout")
+        self.analyze_timeout = TannerConfig.get("SESSIONS", "analyze_timeout")
 
         self.dorks = dorks_manager.DorksManager()
         self.base_handler = base.BaseHandler(base_dir, db_name)
@@ -126,6 +127,7 @@ class TannerServer:
         try:
             while True:
                 await self.session_analyzer.analyze(self.redis_client, self.pg_client)
+                await asyncio.sleep(self.analyze_timeout)
         except asyncio.CancelledError:
             pass
 
