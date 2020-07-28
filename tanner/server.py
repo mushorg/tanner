@@ -124,7 +124,7 @@ class TannerServer:
         app.router.add_get("/version", self.handle_version)
 
     def create_app(self, loop):
-        app = web.Application(loop=loop)
+        app = web.Application()
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app

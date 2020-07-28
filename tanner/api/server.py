@@ -84,6 +84,7 @@ class ApiServer:
 
     async def on_shutdown(self, app):
         self.pg_client.close()
+        await self.pg_client.wait_closed()
 
     @middleware
     async def auth(self, request, handler):
@@ -105,9 +106,9 @@ class ApiServer:
 
     def create_app(self, loop, auth=False):
         if auth:
-            app = web.Application(loop=loop, middlewares=[self.auth])
+            app = web.Application(middlewares=[self.auth])
         else:
-            app = web.Application(loop=loop)
+            app = web.Application()
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app

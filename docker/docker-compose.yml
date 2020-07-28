@@ -5,6 +5,18 @@ networks:
 
 services:
 
+  # Tanner Postgres Service
+  tanner_postgres:
+    build: ./postgres
+    container_name: tanner_postgres
+    restart: always
+    stop_signal: SIGKILL
+    tty: true
+    networks:
+     - tanner_local
+    image: "mushorg/postgres:latest"
+    read_only: true
+
 # Tanner Redis Service
   tanner_redis:
     build: ./redis
