@@ -141,7 +141,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         res = None
         with self.assertLogs():
             self.loop.run_until_complete(
-                self.handler.analyze(None, redis_mock, pg_mock)
+                self.handler.analyze(redis_mock, pg_mock)
             )
 
     def test_create_stats(self):
