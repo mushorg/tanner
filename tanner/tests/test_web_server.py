@@ -11,7 +11,7 @@ class TestWebServer(AioHTTPTestCase):
     def setUp(self):
         self.handler = TannerWebServer()
         postgres = AsyncMock()
-        postgres.close = AsyncMock()
+        postgres.close = mock.Mock()
         self.handler.pg_client = postgres
         self.handler.api = Api(self.handler.pg_client)
 
