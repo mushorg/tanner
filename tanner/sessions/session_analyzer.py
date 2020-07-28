@@ -52,14 +52,15 @@ class SessionAnalyzer:
                         await redis_client.delete(*[del_key])
                     except psycopg2.ProgrammingError as pg_error:
                         self.logger.exception(
-                            "Error with Postgres %s. Session with session-id %s will not be deleted",
+                            "Error with Postgres: %s. Session with session-id %s will not be added to postgres",
                             pg_error,
                             key,
                         )
                     except aioredis.ProtocolError as redis_error:
                         self.logger.exception(
-                            "Error with redis. Session will be returned to the queue: %s",
+                            "Error with redis: %s. Session with session-id %s will not be removed from redis.",
                             redis_error,
+                            key
                         )
                 # This is the key which stores all the dorks.
                 # It matches the pattern of other keys.
