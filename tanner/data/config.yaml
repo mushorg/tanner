@@ -99,3 +99,4 @@ REMOTE_DOCKERFILE:
 
 SESSIONS: 
   delete_timeout: 300
+  analyze_timeout: 300

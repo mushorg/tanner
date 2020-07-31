@@ -8,7 +8,7 @@ import yarl
 from aiohttp import web
 
 from tanner import dorks_manager, redis_client, postgres_client, dbutils
-from tanner.sessions import session_manager
+from tanner.sessions import session_manager, session_analyzer
 from tanner.config import TannerConfig
 from tanner.emulators import base
 from tanner.reporting.log_local import Reporting as local_report
@@ -25,7 +25,9 @@ class TannerServer:
         db_name = TannerConfig.get("SQLI", "db_name")
 
         self.session_manager = session_manager.SessionManager()
+        self.session_analyzer = session_analyzer.SessionAnalyzer()
         self.delete_timeout = TannerConfig.get("SESSIONS", "delete_timeout")
+        self.analyze_timeout = TannerConfig.get("SESSIONS", "analyze_timeout")
 
         self.dorks = dorks_manager.DorksManager()
         self.base_handler = base.BaseHandler(base_dir, db_name)
@@ -66,7 +68,7 @@ class TannerServer:
             self.logger.info("Requested path %s", path)
             await self.dorks.extract_path(path, self.redis_client)
             detection = await self.base_handler.handle(data, session)
-            session.set_attack_type(data['path'], detection["name"])
+            session.set_attack_type(data["path"], detection["name"])
 
             response_msg = self._make_response(
                 msg=dict(detection=detection, sess_uuid=session.get_uuid())
@@ -103,7 +105,9 @@ class TannerServer:
         return web.json_response(response_msg)
 
     async def on_shutdown(self, app):
-        await self.session_manager.delete_sessions_on_shutdown(self.redis_client, self.pg_client)
+        await self.session_manager.delete_sessions_on_shutdown(
+            self.redis_client, self.pg_client
+        )
         self.redis_client.close()
         await self.redis_client.wait_closed()
         self.pg_client.close()
@@ -112,8 +116,18 @@ class TannerServer:
     async def delete_sessions(self):
         try:
             while True:
-                await self.session_manager.delete_old_sessions(self.redis_client, self.pg_client)
+                await self.session_manager.delete_old_sessions(
+                    self.redis_client, self.pg_client
+                )
                 await asyncio.sleep(self.delete_timeout)
+        except asyncio.CancelledError:
+            pass
+
+    async def analyze_sessions(self):
+        try:
+            while True:
+                await self.session_analyzer.analyze(self.redis_client, self.pg_client)
+                await asyncio.sleep(self.analyze_timeout)
         except asyncio.CancelledError:
             pass
 
@@ -129,12 +143,17 @@ class TannerServer:
         self.setup_routes(app)
         return app
 
+    async def start_background_analyze(self, app):
+        app["session_analyze"] = asyncio.ensure_future(self.analyze_sessions())
+
     async def start_background_delete(self, app):
         app["session_delete"] = asyncio.ensure_future(self.delete_sessions())
 
     async def cleanup_background_tasks(self, app):
         app["session_delete"].cancel()
         await app["session_delete"]
+        app["session_analyze"].cancel()
+        await app["session_analyze"]
 
     def start(self):
         loop = asyncio.get_event_loop()
@@ -144,11 +163,10 @@ class TannerServer:
         self.pg_client = loop.run_until_complete(
             postgres_client.PostgresClient().get_pg_client()
         )
-        loop.run_until_complete(
-            dbutils.DBUtils.create_data_tables(self.pg_client)
-        )
+        loop.run_until_complete(dbutils.DBUtils.create_data_tables(self.pg_client))
 
         app = self.create_app(loop)
+        app.on_startup.append(self.start_background_analyze)
         app.on_startup.append(self.start_background_delete)
         app.on_cleanup.append(self.cleanup_background_tasks)
 
