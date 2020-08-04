@@ -3,7 +3,7 @@ import logging
 
 from aiohttp import web
 from aiohttp.web import middleware
-
+from collections import defaultdict
 from tanner.api import api
 from tanner import postgres_client
 from tanner.config import TannerConfig
@@ -59,15 +59,13 @@ class ApiServer:
     async def handle_sessions(self, request):
         snare_uuid = request.match_info['snare_uuid']
         params = request.url.query
-        applied_filters = {'sensor_id': snare_uuid}
+        applied_filters = defaultdict(list)
+        applied_filters["sensor_id"].append(snare_uuid)
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
-                    applied_filters[filt.split(':', 1)[0]] = filt.split(':', 1)[1]
-                if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = applied_filters['start_time']
-                if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = applied_filters['end_time']
+                    key, value = filt.split(':', 1)
+                    applied_filters[key].append(value)
         except Exception as e:
             self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'

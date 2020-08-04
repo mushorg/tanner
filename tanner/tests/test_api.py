@@ -168,7 +168,7 @@ class TestApi(unittest.TestCase):
         self.assertIn("Invalid SESSION UUID", self.returned_content)
 
     def test_return_sessions(self):
-        self.filters = {"sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"}
+        self.filters = {"sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"]}
         self.expected_content = [SESSION_DATA["sess_uuid"]]
 
         async def test():
@@ -180,8 +180,8 @@ class TestApi(unittest.TestCase):
 
     def test_return_sessions_error(self):
         self.filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "attacktype": 6,
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "attacktype": [6],
         }
 
         async def test():
@@ -192,8 +192,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_user_agent(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "user_agent": "Mozilla/5.0",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "user_agent": ["Mozilla/5.0"],
         }
         self.expected_content = (
             "SELECT S.id FROM sessions S WHERE "
@@ -205,8 +205,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_possible_owner(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "owners": "crawler",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "owners": ["crawler"],
         }
 
         self.expected_content = (
@@ -219,8 +219,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_attack_types(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "attack_type": "index",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "attack_type": ["index"],
         }
 
         self.expected_content = (
@@ -234,8 +234,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_attack_type_invalid_value(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "attack_type": "random",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "attack_type": ["random"],
         }
 
         expected_error = "Invalid filter value"
@@ -244,8 +244,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_start_time(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "start_time": "11-05-2020",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "start_time": ["11-05-2020"],
         }
 
         self.expected_content = (
@@ -259,8 +259,8 @@ class TestApi(unittest.TestCase):
 
     def test_apply_filter_end_time(self):
         filters = {
-            "sensor_id": "9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e",
-            "end_time": "11-05-2020",
+            "sensor_id": ["9f7d7dd3-ac6b-468b-8cee-ce3e352eff6e"],
+            "end_time": ["11-05-2020"],
         }
 
         self.expected_content = (
