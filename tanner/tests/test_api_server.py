@@ -88,8 +88,8 @@ class TestAPIServer(AioHTTPTestCase):
     @unittest_run_loop
     async def test_api_sessions_request(self):
         async def mock_return_sessions(filters):
-            if type(filters) is dict and filters['peer_ip'] == "127.0.0.1" and \
-                    filters['start_time'] == "11-05-2020" and filters['user_agent'] == 'ngnix':
+            if filters['peer_ip'] == ["127.0.0.1"] and \
+                    filters['start_time'] == ["11-05-2020"] and filters['user_agent'] == ['ngnix']:
                 return ["f387d46eaeb1454cadf0713a4a55be49", "e85ae767b0bb4b1f91b421b3a28082ef"]
 
         assert_content = {"version": 1, "response": {

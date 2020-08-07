@@ -2,7 +2,7 @@ import asyncio
 import logging
 import aiohttp_jinja2
 import jinja2
-
+from collections import defaultdict
 from aiohttp import web
 from tanner.api import api
 from tanner import postgres_client
@@ -54,15 +54,14 @@ class TannerWebServer:
         snare_uuid = request.match_info['snare_uuid']
         page_id = int(request.match_info['page_id'])
         params = request.url.query
-        applied_filters = {'sensor_id': snare_uuid}
+        applied_filters = defaultdict(list)
+        applied_filters["sensor_id"].append(snare_uuid)
         try:
             if 'filters' in params:
                 for filt in params['filters'].split():
-                    applied_filters[filt.split(':', 1)[0]] = filt.split(':', 1)[1]
-                if 'start_time' in applied_filters:
-                    applied_filters['start_time'] = applied_filters['start_time']
-                if 'end_time' in applied_filters:
-                    applied_filters['end_time'] = applied_filters['end_time']
+                    key, value = filt.split(':', 1)
+                    applied_filters[key].append(value)
+            print(applied_filters)
         except Exception as e:
             self.logger.exception('Filter error : %s' % e)
             result = 'Invalid filter definition'

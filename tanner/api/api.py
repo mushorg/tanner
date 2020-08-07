@@ -205,7 +205,6 @@ class Api:
             "user_agent",
             "sensor_id",
         ]
-
         for fil in filters:
             if fil not in filter_list:
                 invalid_filters.append(fil)
@@ -271,33 +270,41 @@ class Api:
 
         tables = "sessions S"
         columns = "S.id"
-        where = "S.sensor_id='%s'" % (filters["sensor_id"])
+        where = "S.sensor_id='%s'" % (filters["sensor_id"][0])
 
-        if "attack_type" in filters:
-            tables += ", paths P"
-            columns += ", P.session_id"
-            try:
-                attack_type = AttackType[filters["attack_type"]].value
-            except KeyError:
-                return "Invalid filter value"
+        for parameter, values in filters.items():
+            if parameter == "attack_type":
+                tables += ", paths P"
+                columns += ", P.session_id"
+                for v in values:
+                    try:
+                        attack_type = AttackType[v].value
+                        print(attack_type)
+                        where += " AND P.attack_type=%s" % (attack_type)
+                    except KeyError:
+                        return "Invalid filter value"
 
-            where += " AND P.attack_type=%s AND S.id=P.session_id" % (attack_type)
-        if "owners" in filters:
-            tables += ", owners O"
-            columns += ", O.session_id"
-            where += " AND O.owner_type='%s' AND S.id=O.session_id" % (
-                filters["owners"]
-            )
-        if "start_time" in filters:
-            start_time = check_time(filters["start_time"])
-            where += " AND S.start_time>='%s'" % (start_time)
-        if "end_time" in filters:
-            end_time = check_time(filters["end_time"])
-            where += " AND S.end_time<='%s'" % (end_time)
-        if "peer_ip" in filters:
-            where += " AND S.ip='%s'" % (filters["peer_ip"])
-        if "user_agent" in filters:
-            where += " AND S.user_agent='%s'" % (filters["user_agent"])
+                where += " AND S.id=P.session_id"
+            if parameter == "owners":
+                tables += ", owners O"
+                columns += ", O.session_id"
+                for v in values:
+                    where += " AND O.owner_type='%s'" % (v)
+                where += " AND S.id=O.session_id"
+            if parameter == "start_time":
+                for v in values:
+                    start_time = check_time(v)
+                    where += " AND S.start_time>='%s'" % (start_time)
+            if parameter == "end_time":
+                for v in values:
+                    end_time = check_time(v)
+                    where += " AND S.end_time<='%s'" % (end_time)
+            if parameter == "peer_ip":
+                for v in values:
+                    where += " AND S.ip='%s'" % (v)
+            if parameter == "user_agent":
+                for v in values:
+                    where += " AND S.user_agent='%s'" % (v)
 
         stmt = "SELECT %s FROM %s WHERE %s" % (columns, tables, where)
         return stmt

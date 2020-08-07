@@ -86,9 +86,9 @@ class TestWebServer(AioHTTPTestCase):
     async def test_handle_sessions(self):
         async def mock_return_sessions(filters):
             if (
-                filters["peer_ip"] == "127.0.0.1"
-                and filters["start_time"] == "11-05-2020"
-                and filters["user_agent"] == "Mozilla/5.0"
+                filters["peer_ip"] == ["127.0.0.1"]
+                and filters["start_time"] == ["11-05-2020"]
+                and filters["user_agent"] == ["Mozilla/5.0"]
             ):
 
                 return [
