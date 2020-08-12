@@ -17,7 +17,7 @@ async def main():
         logger.exception("Can't get session for analyze: %s", error)
     else:
         print("[INFO] Moving to Postgres")
-        error = 0
+
         for key in keys:
             try:
                 session = await r_client.zrange(key, encoding="utf-8")
@@ -44,7 +44,6 @@ async def main():
                         key,
                     )
             except aioredis.errors.ReplyError:
-                error += 1
                 continue
 
     pg_client.close()
