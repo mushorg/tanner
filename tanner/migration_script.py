@@ -46,6 +46,8 @@ async def main():
             except aioredis.errors.ReplyError:
                 continue
 
+    self.redis_client.close()
+    await self.redis_client.wait_closed()
     pg_client.close()
     await pg_client.wait_closed()
 
