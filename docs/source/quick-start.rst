@@ -11,11 +11,11 @@ Basic concept
 * Serve dorks.
 * Adopt and change the responses.
 
-Setup Redis
-"""""""""""
+Setup Databases
+"""""""""""""""
 
-#. Install the Redis: ``sudo apt-get install redis-server``
-#. Start it on ``localhost`` with default ``port``: ``redis-server``
+See :doc:`storage` page to know how to setup the Databases.
+
 
 Setup PHP Sanbox
 """"""""""""""""

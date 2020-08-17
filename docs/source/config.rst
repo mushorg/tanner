@@ -33,6 +33,18 @@ There are 8 different sections :
     :port: The port at which which redis is running
     :poolsize: The poolsize of redis server
     :timeout: The duration of timeout for redis server
+  
+  * **POSTGRES**
+    # Configure postgres if it's running on some different port or network.
+    
+    :host: The host address at which postgres is running
+    :port: The port at which which postgres is running
+    :poolsize: The poolsize of postgres server
+    :timeout: The duration of timeout for postgres server
+    :db_name: The name of the DB to which the connection is to be made. 
+    :user: The name of the user which have read & write access to the above mentioned DB.
+    :password: The password of the user using which the connection would be made.
+
   * **EMULATORS**
     
     :root_dir: The root directory for emulators that need data storing such as SQLI and LFI. Data will be stored in this directory
@@ -78,7 +90,7 @@ There are 8 different sections :
 
 If no file is specified, following YAML will be used as default:
 
-.. code-block:: python
+.. code-block:: yaml
 
   DATA:
     db_config: /opt/tanner/db/db_config.json
@@ -112,6 +124,15 @@ If no file is specified, following YAML will be used as default:
     port: 6379
     poolsize: 80
     timeout: 1
+  
+  POSTGRES:
+    host: localhost
+    port: 5432
+    poolsize: 80
+    timeout: 1
+    db_name: tanner
+    user: honeypot
+    password: honeynet
 
   EMULATORS:
     root_dir: /opt/tanner

@@ -44,6 +44,7 @@ Data tokens
 ~~~~~~~~~~~
 
 Data tokens are used for filling the database with dummy data.
+
 There are 4 default tokens:
         * **I** -- integer id
         * **L** -- login/username
