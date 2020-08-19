@@ -1,5 +1,6 @@
 import asyncio
 from unittest.mock import Mock
+from aioftp.errors import AIOFTPException
 
 
 class AsyncMock(Mock):  # custom function defined to mock asyncio coroutines
@@ -13,3 +14,9 @@ class AsyncMock(Mock):  # custom function defined to mock asyncio coroutines
 
     def __await__(self):
         return self().__await__()
+
+
+class AysncFTPMock(Mock):
+
+    def __aenter__():
+        raise AIOFTPException
