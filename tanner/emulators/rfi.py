@@ -1,13 +1,12 @@
 import asyncio
-import ftplib
+import aioftp
 import hashlib
 import logging
 import os
 import re
 import ssl
 import time
-from concurrent.futures import ThreadPoolExecutor
-
+from aioftp.errors import AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort
 import aiohttp
 import yarl
 
@@ -26,7 +25,6 @@ class RfiEmulator:
     async def download_file(self, path):
         file_name = None
         url = re.match(patterns.REMOTE_FILE_URL, path)
-
         if url is None:
             return None
         url = url.group(1)
@@ -36,9 +34,7 @@ class RfiEmulator:
             os.makedirs(self.script_dir)
 
         if url.scheme == "ftp":
-            pool = ThreadPoolExecutor()
-            ftp_future = self._loop.run_in_executor(pool, self.download_file_ftp, url)
-            file_name = await ftp_future
+            file_name = await self.download_file_ftp(url)
 
         else:
             ssl_context = False if self.allow_insecure else ssl.create_default_context()
@@ -56,20 +52,17 @@ class RfiEmulator:
                     rfile.write(data.encode('utf-8'))
         return file_name
 
-    def download_file_ftp(self, url):
+    async def download_file_ftp(self, url):
         host = url.host
-        ftp_path = url.path.rsplit('/', 1)[0][1:]
+        ftp_path = url.path
         name = url.name
         try:
-            ftp = ftplib.FTP(host)
-            ftp.login()
-            ftp.cwd(ftp_path)
-            tmp_filename = name + str(time.time())
-            file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
-            with open(os.path.join(self.script_dir, file_name), 'wb') as ftp_script:
+            async with aioftp.ClientSession(host) as ftp:
+                tmp_filename = name + str(time.time())
+                file_name = hashlib.md5(tmp_filename.encode('utf-8')).hexdigest()
                 self.logger.debug('Saving the FTP file as %s', os.path.join(self.script_dir, file_name))
-                ftp.retrbinary('RETR %s' % name, ftp_script.write)
-        except ftplib.all_errors as ftp_errors:
+                await ftp.download(ftp_path, os.path.join(self.script_dir, file_name), write_into=True)
+        except (AIOFTPException, StatusCodeError, PathIsNotAbsolute, PathIOError, NoAvailablePort) as ftp_errors:
             self.logger.exception("Problem with ftp download %s", ftp_errors)
             return None
         else:
