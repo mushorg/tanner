@@ -5,6 +5,16 @@ import psycopg2
 from tanner import redis_client, postgres_client, dbutils
 
 
+async def check_session_data(result):
+    if result["location"] == "NA":
+        result["location"] = dict(
+            country=None, country_code=None, city=None, zip_code=0,
+        )
+
+    if "user_agent" not in result:
+        result["user_agent"] = ""
+
+
 async def main():
     r_client = await redis_client.RedisClient.get_redis_client()
     pg_client = await postgres_client.PostgresClient().get_pg_client()
@@ -22,11 +32,7 @@ async def main():
             try:
                 session = await r_client.zrange(key, encoding="utf-8")
                 result = json.loads(session[0])
-
-                if result["location"] == "NA":
-                    result["location"] = dict(
-                        country=None, country_code=None, city=None, zip_code=0,
-                    )
+                await check_session_data(result)
 
                 try:
                     await dbutils.DBUtils.add_analyzed_data(result, pg_client)
@@ -46,8 +52,8 @@ async def main():
             except aioredis.errors.ReplyError:
                 continue
 
-    self.redis_client.close()
-    await self.redis_client.wait_closed()
+    r_client.close()
+    await r_client.wait_closed()
     pg_client.close()
     await pg_client.wait_closed()
 
