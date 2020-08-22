@@ -40,7 +40,8 @@ EMULATOR_ENABLED:
   lfi: True 
   xss: True
   cmd_exec: True
-  php_code_injection: True 
+  php_code_injection: True
+  twig_template_injection: True
   php_object_injection: True
   crlf: True
   xxe_injection: True

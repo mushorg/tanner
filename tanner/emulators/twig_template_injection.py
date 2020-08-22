@@ -6,7 +6,7 @@ from tanner.utils.php_sandbox_helper import PHPSandboxHelper
 from tanner.utils import patterns
 
 
-class PHPObjectInjection:
+class TwigTemplateInjection:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
         self.logger = logging.getLogger("tanner.twig_template_injection")
