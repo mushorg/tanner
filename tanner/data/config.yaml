@@ -100,3 +100,7 @@ REMOTE_DOCKERFILE:
 SESSIONS: 
   delete_timeout: 300
   analyze_timeout: 300
+
+TWIG_PATH:
+  autoloader: "path/of/Autoloader.php"
+  stringloader: "path/of/StringLoader.php"
