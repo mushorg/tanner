@@ -46,9 +46,9 @@ class BaseHandler:
         }
 
         self.get_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'php_object_injection',
-                              'cmd_exec', 'crlf', 'xxe_injection', 'template_injection']
+                              'cmd_exec', 'crlf', 'xxe_injection', 'template_injection', 'twig_template_injection']
         self.post_emulators = ['sqli', 'rfi', 'lfi', 'xss', 'php_code_injection', 'php_object_injection',
-                               'cmd_exec', 'crlf', 'xxe_injection', 'template_injection']
+                               'cmd_exec', 'crlf', 'xxe_injection', 'template_injection', 'twig_template_injection']
         self.cookie_emulators = ['sqli', 'php_object_injection']
 
     def extract_get_data(self, path):
