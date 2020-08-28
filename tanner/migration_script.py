@@ -11,9 +11,9 @@ async def check_session_data(result):
             country=None, country_code=None, city=None, zip_code=0,
         )
 
-    if "user_agent" not in result:
-        result["user_agent"] = ""
-
+    for key, value in result.items():
+        if not value:
+            result[key] = "N/A"
 
 async def main():
     r_client = await redis_client.RedisClient.get_redis_client()
