@@ -1,12 +1,7 @@
-Old Method
-==========
-Until Tanner v0.7 we were using Redis_ for storing all the data i.e analyzed and unanalyzed sessions. But the issue with that Redis was that it's a ``in-memory`` database meaning it consume large amount of RAM if large amount of data has to be stored. This usually resulted in the unexpected crash of the tanner server.
-
-
-New Method
+Storage
 ==========
 
-To solve the problem described above we decided to use the combination of Postgres_ and Redis_ for storage purpose.
+Tanner uses a combination of Postgres_ and Redis_ for storage purpose.
 
 
 **Setup Both database**
@@ -26,7 +21,7 @@ Once both the server are installed and are running, make the required changes to
 Migrating from old setup to new setup
 =====================================
 
-If you are currently using the old setup for tanner then you'll have to migrate all your data to the postgresql and have a properly configured database setup. To make your work easy we have made a migration-script_
+Until v0.7 we were using only Redis for storing so if you are currently using the just Redis for storage then you'll have to migrate all your data to the postgresql and have a properly configured database setup. To make your work easy we have made a migration-script_
 
 
 .. _Redis: http://redis.io/
