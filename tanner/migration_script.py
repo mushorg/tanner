@@ -6,6 +6,7 @@ from tanner import redis_client, postgres_client, dbutils
 
 
 async def check_session_data(result):
+    Integers = ["zip_code", "errors", "accepted_paths", "port", "atbr", "rps", "hidden_links"]
     if result["location"] == "NA":
         result["location"] = dict(
             country=None, country_code=None, city=None, zip_code=0,
@@ -13,7 +14,11 @@ async def check_session_data(result):
 
     for key, value in result.items():
         if not value:
-            result[key] = "N/A"
+            if key in Integers:
+                result[key] = 0
+            else:
+                result[key] = "N/A"
+
 
 async def main():
     r_client = await redis_client.RedisClient.get_redis_client()
