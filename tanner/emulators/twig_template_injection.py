@@ -60,18 +60,7 @@ class TwigTemplateInjection:
             detection = dict(name="twig_template_injection", order=3)
         return detection
 
-    async def handle(self, attack_params):
-        """
-        Handler of emulator
-        :param attack_params (list): contains dicts as elements with id and value (payload from attacker) as keys
-        :return: (dict): value (result of emulator), page (if set to true the payload will be injected to index.html
-        itself) as keys.
-        """
-
-        result = await self.get_injection_result(attack_params[0]["value"])
-        if not result or "stdout" not in result:
-            self.logger.exception(
-                "Error while getting the injection results from php sandbox.."
-            )
-            return dict(status_code=504)
-        return dict(value=result["stdout"], page=False)
+    async def handle(self, attack_params, session=None):
+        attack_params[0]['value'] = unquote(attack_params[0]['value'])
+        result = await self.get_injection_result(attack_params[0]['value'])
+        return result
