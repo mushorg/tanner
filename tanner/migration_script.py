@@ -6,10 +6,22 @@ from tanner import redis_client, postgres_client, dbutils
 
 
 async def check_session_data(result):
-    Integers = ["zip_code", "errors", "accepted_paths", "port", "atbr", "rps", "hidden_links"]
+    Integers = [
+        "zip_code",
+        "errors",
+        "accepted_paths",
+        "port",
+        "approx_time_between_requests",
+        "requests_in_second",
+        "hidden_links",
+    ]
+
     if result["location"] == "NA":
         result["location"] = dict(
-            country=None, country_code=None, city=None, zip_code=0,
+            country=None,
+            country_code=None,
+            city=None,
+            zip_code="NA",
         )
 
     for key, value in result.items():

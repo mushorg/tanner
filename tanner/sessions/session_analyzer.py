@@ -27,7 +27,7 @@ class SessionAnalyzer:
 
     async def analyze(self, redis_client, pg_client):
         """Perform analysis on the sessions, store the analyzed
-           session in postgres and then delete that session from redis.
+        session in postgres and then delete that session from redis.
         """
         _loop = asyncio.get_running_loop()
         sessions = None
@@ -59,7 +59,7 @@ class SessionAnalyzer:
                         self.logger.exception(
                             "Error with redis: %s. Session with session-id %s will not be removed from redis.",
                             redis_error,
-                            key
+                            key,
                         )
                 # This is the key which stores all the dorks.
                 # It matches the pattern of other keys.
@@ -179,19 +179,24 @@ class SessionAnalyzer:
         try:
             location = reader.city(ip)
             if location.postal.code is None:
-                zcode = 0
+                zcode = "NA"
             else:
-                zcode = location.postal.code
+                zcode = str(location.postal.code)
 
             info = dict(
                 country=location.country.name,
                 country_code=location.country.iso_code,
                 city=location.city.name,
-                zip_code=int(zcode),
+                zip_code=zcode,
             )
         except geoip2.errors.AddressNotFoundError:
             # When IP doesn't exist in the db, set info as "NA - Not Available"
-            info = dict(country=None, country_code=None, city=None, zip_code=0,)
+            info = dict(
+                country=None,
+                country_code=None,
+                city=None,
+                zip_code="NA",
+            )
         return info
 
     async def detect_crawler(self, stats, bots_owner, crawler_hosts):

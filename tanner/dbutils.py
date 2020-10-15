@@ -31,7 +31,7 @@ SESSIONS = Table(
     Column("country", String, nullable=True),
     Column("country_code", String, nullable=True),
     Column("city", String, nullable=True),
-    Column("zip_code", Integer, nullable=True),
+    Column("zip_code", String, nullable=True),
     Column("user_agent", String, nullable=False),
     Column("start_time", TIMESTAMP, nullable=False),
     Column("end_time", TIMESTAMP, nullable=False),
@@ -164,5 +164,6 @@ class DBUtils:
 
         except psycopg2.ProgrammingError as pg_error:
             logger.exception(
-                "Error with Postgres. Session not added to postgres: %s", pg_error,
+                "Error with Postgres. Session not added to postgres: %s",
+                pg_error,
             )
