@@ -1,7 +1,6 @@
 import logging
 import hashlib
-import asyncio
-import time
+import uuid
 
 import aioredis
 
@@ -61,6 +60,9 @@ class SessionManager:
         ip = data['peer']['ip']
         user_agent = data['headers']['user-agent']
         sess_uuid = data['cookies']['sess_uuid']
+
+        if sess_uuid is None:
+            sess_uuid = uuid.uuid4()
 
         sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
 
