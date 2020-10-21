@@ -63,7 +63,9 @@ It emulates `SQL injection`_ vulnerability. This attack is detected by ``libinje
 The emulator copies the original database (see :doc:`db_setup` for more info about db) to a dummy database for every attacker.
 It uses UUID of the session for the attacker's db name. Every query is executed on the attacker's db.
 The emulator returns the result of the execution and the page where SNARE should show the result.
+
 It supports two types of DBs.
+
 * **SQLITE**
   To enable it, set SQLI type to SQLITE in config
 * **MySQL**

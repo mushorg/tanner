@@ -14,6 +14,7 @@ Contents:
    quick-start
    parameters
    emulators
+   db_setup
    sessions
    storage
    dorks
