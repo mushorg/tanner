@@ -140,9 +140,7 @@ class TestSessionAnalyzer(unittest.TestCase):
         pg_mock.get = sess_get
         res = None
         with self.assertLogs():
-            self.loop.run_until_complete(
-                self.handler.analyze(redis_mock, pg_mock)
-            )
+            self.loop.run_until_complete(self.handler.analyze(redis_mock, pg_mock))
 
     def test_create_stats(self):
         async def sess_get():
@@ -266,12 +264,20 @@ class TestSessionAnalyzer(unittest.TestCase):
     def test_find_location(self):
         location_stats = self.handler.find_location("74.217.37.84")
         expected_res = dict(
-            country="United States", country_code="US", city="Smyrna", zip_code=30080,
+            country="United States",
+            country_code="US",
+            city="Smyrna",
+            zip_code="30080",
         )
         self.assertEqual(location_stats, expected_res)
 
     def test_find_location_exception(self):
         geoip2.database.Reader.city = Mock(return_value=self.failValue)
         location_stats = self.handler.find_location("0.0.0.0")
-        expected_res = dict(country=None, country_code=None, city=None, zip_code=0,)
+        expected_res = dict(
+            country=None,
+            country_code=None,
+            city=None,
+            zip_code="NA",
+        )
         self.assertEqual(location_stats, expected_res)
