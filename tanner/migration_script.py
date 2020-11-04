@@ -1,11 +1,17 @@
 import asyncio
 import json
-import aioredis
 import psycopg2
+import aioredis
 from tanner import redis_client, postgres_client, dbutils
 
 
 async def check_session_data(result):
+    """Make sure that the data we received doesn't
+       have any Null values assigned to it.
+
+    Args:
+        result (dict): The session data we got from redis
+    """
     Integers = [
         "zip_code",
         "errors",
