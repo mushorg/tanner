@@ -13,18 +13,18 @@ from tanner.utils import patterns
 
 
 class DorksManager:
-    dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'dorks').hex
-    user_dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, 'user_dorks').hex
+    dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, "dorks").hex
+    user_dorks_key = uuid.uuid3(uuid.NAMESPACE_DNS, "user_dorks").hex
 
     def __init__(self):
-        self.logger = logging.getLogger('tanner.dorks_manager.DorksManager')
+        self.logger = logging.getLogger("tanner.dorks_manager.DorksManager")
         self.init_done = False
 
     @staticmethod
     async def push_init_dorks(file_name, redis_key, redis_client):
         dorks = None
         if os.path.exists(file_name):
-            with open(file_name, 'rb') as dorks_file:
+            with open(file_name, "rb") as dorks_file:
                 dorks = pickle.load(dorks_file)
         if dorks:
             if isinstance(dorks, str):
@@ -40,7 +40,7 @@ class DorksManager:
             try:
                 await redis_client.sadd(self.user_dorks_key, *[extracted])
             except aioredis.ProtocolError as connection_error:
-                self.logger.exception('Problem with redis connection: %s', connection_error)
+                self.logger.exception("Problem with redis connection: %s", connection_error)
 
     async def init_dorks(self, redis_client):
         try:
@@ -50,16 +50,17 @@ class DorksManager:
 
             await transaction.execute()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
-            self.logger.exception('Problem with transaction: %s', redis_error)
+            self.logger.exception("Problem with transaction: %s", redis_error)
         else:
             dorks_existed = await dorks_exist
             user_dorks_existed = await user_dorks_exist
 
             if not dorks_existed:
-                await self.push_init_dorks(config.TannerConfig.get('DATA', 'dorks'), self.dorks_key, redis_client)
+                await self.push_init_dorks(config.TannerConfig.get("DATA", "dorks"), self.dorks_key, redis_client)
             if not user_dorks_existed:
-                await self.push_init_dorks(config.TannerConfig.get('DATA', 'user_dorks'), self.user_dorks_key,
-                                           redis_client)
+                await self.push_init_dorks(
+                    config.TannerConfig.get("DATA", "user_dorks"), self.user_dorks_key, redis_client
+                )
 
             self.init_done = True
 
@@ -70,12 +71,12 @@ class DorksManager:
         max_dorks = 50
         try:
             transaction = redis_client.multi_exec()
-            dorks = transaction.smembers(self.dorks_key, encoding='utf-8')
-            user_dorks = transaction.smembers(self.user_dorks_key, encoding='utf-8')
+            dorks = transaction.smembers(self.dorks_key, encoding="utf-8")
+            user_dorks = transaction.smembers(self.user_dorks_key, encoding="utf-8")
 
             await transaction.execute()
         except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
-            self.logger.exception('Problem with transaction: %s', redis_error)
+            self.logger.exception("Problem with transaction: %s", redis_error)
         else:
             dorks = await dorks
             user_dorks = await user_dorks
@@ -83,8 +84,7 @@ class DorksManager:
             try:
                 if max_dorks > len(user_dorks):
                     max_dorks = len(user_dorks)
-                chosen_dorks.extend(random.sample(
-                    user_dorks, random.randint(math.floor(0.5 * max_dorks), max_dorks)))
+                chosen_dorks.extend(random.sample(user_dorks, random.randint(math.floor(0.5 * max_dorks), max_dorks)))
             except TypeError:
                 pass
             return chosen_dorks

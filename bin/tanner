@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.7
 import argparse
 
 from tanner.config import TannerConfig
@@ -7,14 +7,16 @@ from tanner.utils import logger
 
 
 def main():
-    print("""
+    print(
+        """
       _________    _   ___   ____________
      /_  __/   |  / | / / | / / ____/ __ \\
       / / / /| | /  |/ /  |/ / __/ / /_/ /
      / / / ___ |/ /|  / /|  / /___/ _, _/
     /_/ /_/  |_/_/ |_/_/ |_/_____/_/ |_|
 
-    """)
+    """
+    )
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", help="tanner config")
     args = parser.parse_args()
@@ -25,8 +27,8 @@ def main():
     logger.Logger.create_logger(debug_log_file_name, error_log_file_name, __package__)
     print("Debug logs will be stored in", debug_log_file_name)
     print("Error logs will be stored in", error_log_file_name)
-    if TannerConfig.get('LOCALLOG', 'enabled') is True:
-        print("Data logs will be stored in", TannerConfig.get('LOCALLOG', 'PATH'))
+    if TannerConfig.get("LOCALLOG", "enabled") is True:
+        print("Data logs will be stored in", TannerConfig.get("LOCALLOG", "PATH"))
     tanner = server.TannerServer()
     tanner.start()
 

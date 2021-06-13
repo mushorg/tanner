@@ -17,7 +17,7 @@ class TestPHPCodeInjection(unittest.TestCase):
     def test_scan(self):
         payload = 'O:15:"ObjectInjection":1:{s:6:"insert";s:2:"id";}'
 
-        self.expected_result = dict(name='php_object_injection', order=3)
+        self.expected_result = dict(name="php_object_injection", order=3)
         self.returned_result = self.handler.scan(payload)
         self.assertEqual(self.returned_result, self.expected_result)
 
@@ -31,7 +31,7 @@ class TestPHPCodeInjection(unittest.TestCase):
     def test_handle_status_code(self):
         self.handler.get_injection_result = AsyncMock(return_value=None)
 
-        attack_params = [dict(id='foo', value="O:15:'ObjectInjection':1:{s:6:'insert';}")]
+        attack_params = [dict(id="foo", value="O:15:'ObjectInjection':1:{s:6:'insert';}")]
         self.expected_result = dict(status_code=504)
 
         async def test():
@@ -42,9 +42,13 @@ class TestPHPCodeInjection(unittest.TestCase):
         self.assertEqual(self.returned_result, self.expected_result)
 
     def test_handle(self):
-        attack_params = [dict(id='foo', value='O:15:"ObjectInjection":1:{s:6:"insert";s:2:"id";}')]
-        self.handler.helper.get_result = AsyncMock(return_value={'file_md5': 'a43deb0f2d7904cbb6c27c02ed7c2593',
-                                                                 'stdout': 'id=0(root) gid=0(root) groups=0(root)'})
+        attack_params = [dict(id="foo", value='O:15:"ObjectInjection":1:{s:6:"insert";s:2:"id";}')]
+        self.handler.helper.get_result = AsyncMock(
+            return_value={
+                "file_md5": "a43deb0f2d7904cbb6c27c02ed7c2593",
+                "stdout": "id=0(root) gid=0(root) groups=0(root)",
+            }
+        )
 
         self.expected_result = "id=0(root) gid=0(root) groups=0(root)"
 
@@ -53,4 +57,4 @@ class TestPHPCodeInjection(unittest.TestCase):
             self.returned_result = await self.handler.handle(attack_params)
 
         self.loop.run_until_complete(test())
-        self.assertIn(self.expected_result, self.returned_result['value'])
+        self.assertIn(self.expected_result, self.returned_result["value"])

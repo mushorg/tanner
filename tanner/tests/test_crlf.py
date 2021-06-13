@@ -10,13 +10,13 @@ class TestCRLF(unittest.TestCase):
         self.handler = crlf.CRLFEmulator()
 
     def test_scan(self):
-        attack = 'foo \r\n Set-Cookie : id=0'
-        assert_result = dict(name='crlf', order=2)
+        attack = "foo \r\n Set-Cookie : id=0"
+        assert_result = dict(name="crlf", order=2)
         result = self.handler.scan(attack)
         self.assertEqual(result, assert_result)
 
     def test_handle(self):
-        attack_params = [dict(id='foo', value='bar \r\n Set-Cookie : id=0')]
-        assert_result = {'foo': 'bar \r\n Set-Cookie : id=0'}
+        attack_params = [dict(id="foo", value="bar \r\n Set-Cookie : id=0")]
+        assert_result = {"foo": "bar \r\n Set-Cookie : id=0"}
         result = self.loop.run_until_complete(self.handler.handle(attack_params, None))
-        self.assertEqual(result['headers'], assert_result)
+        self.assertEqual(result["headers"], assert_result)
