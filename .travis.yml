@@ -1,13 +1,3 @@
-sudo: required
-services:
-  - mysql
-  - docker
-  - redis
-before_install:
-  - docker pull busybox:latest
-  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('user_pass') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
-  - sudo mysql_upgrade -u root -puser_pass
-  - sudo service mysql restart
 language: python
 python:
   - "3.7"
@@ -15,12 +5,10 @@ python:
 # command to install dependencies
 install:
   - pip install -r requirements.txt
-  - pip install coveralls black
-  - docker-compose -f ./docker/docker-compose.yml up -d
+  - pip install black nose coveralls
 # command to run tests
 script:
     - python setup.py install
-    - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
     - black --line-length 120 .
-    - test $(docker ps -f name=tanner -q | wc --lines) -eq 5
+    - nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
 after_success: coveralls

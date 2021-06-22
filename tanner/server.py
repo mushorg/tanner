@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
-
 import uvloop
 import yarl
+
 from aiohttp import web
 
 from tanner import dorks_manager, redis_client
