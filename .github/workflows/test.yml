@@ -26,6 +26,7 @@ jobs:
           black --line-length 120 .
       - name: Test with nose
         run: |
+          python setup.py install
           nosetests -vv --with-coverage --cover-inclusive --cover-package=tanner
       - name: Coveralls
         env:
