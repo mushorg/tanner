@@ -21,7 +21,6 @@ class TestAioDockerHelper(unittest.TestCase):
             self.returned_result = await self.handler.docker_client.images.list(filter=self.image)
 
         self.loop.run_until_complete(test())
-        self.expected_result = 1
         self.assertTrue(len(self.returned_result) > 0)
 
     def test_get_container(self):
@@ -41,9 +40,10 @@ class TestAioDockerHelper(unittest.TestCase):
         async def test():
             container = await self.handler.create_container(container_name=container_name)
             await container.start()
-            logs = await container.log(stdout=True)
+            logs = await container.log(stdout=True, stderr=True)
             print(''.join(logs))
             self.returned_result = await container.show()
+            print(self.returned_result["State"])
             await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
