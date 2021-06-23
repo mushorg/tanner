@@ -19,7 +19,7 @@ class MySQLDBHelper(BaseDBHelper):
         Creates a aiomysql connection
         :return: connection object
         """
-        print(TannerConfig.get("SQLI", "host"), TannerConfig.get("SQLI", "user"), TannerConfig.get("SQLI", "password"))
+
         conn = await aiomysql.connect(
             host=TannerConfig.get("SQLI", "host"),
             user=TannerConfig.get("SQLI", "user"),
