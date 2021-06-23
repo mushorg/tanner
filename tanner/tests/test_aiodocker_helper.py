@@ -39,10 +39,11 @@ class TestAioDockerHelper(unittest.TestCase):
         container_name = "attacker"
 
         async def test():
-            container = await self.handler.create_container(container_name=container_name, cmd="/bin/sh")
+            container = await self.handler.create_container(container_name=container_name)
             await container.start()
+            logs = await container.log(stdout=True)
+            print(''.join(logs))
             self.returned_result = await container.show()
-            print(self.returned_result)
             await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
