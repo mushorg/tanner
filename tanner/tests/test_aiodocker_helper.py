@@ -40,6 +40,7 @@ class TestAioDockerHelper(unittest.TestCase):
         async def test():
             container = await self.handler.create_container(container_name=container_name)
             await container.start()
+            print(self.handler.host_image)
             logs = await container.log(stdout=True, stderr=True)
             print(''.join(logs))
             self.returned_result = await container.show()
