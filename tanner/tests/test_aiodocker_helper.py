@@ -38,7 +38,7 @@ class TestAioDockerHelper(unittest.TestCase):
         container_name = "test_create_container"
 
         async def test():
-            container = await self.handler.create_container(container_name=container_name, cmd="/bin/sh sleep 300")
+            container = await self.handler.create_container(container_name=container_name)
             await container.start()
             self.returned_result = await container.show()
             await self.handler.delete_container(container_name)
