@@ -25,7 +25,7 @@ class TestAioDockerHelper(unittest.TestCase):
         self.assertTrue(len(self.returned_result) > 0)
 
     def test_get_container(self):
-        container_name = "attacker_container"
+        container_name = "test_get_container"
 
         async def test():
             await self.handler.create_container(container_name)
@@ -36,7 +36,7 @@ class TestAioDockerHelper(unittest.TestCase):
         self.assertTrue(self.returned_result._id)
 
     def test_create_container(self):
-        container_name = "attacker"
+        container_name = "test_create_container"
 
         async def test():
             container = await self.handler.create_container(container_name=container_name)
@@ -60,7 +60,7 @@ class TestAioDockerHelper(unittest.TestCase):
         self.assertIn(self.expected_result, self.returned_result)
 
     def test_delete_container(self):
-        container_name = "attacker_z"
+        container_name = "test_delete_container"
 
         async def test():
             await self.handler.create_container(container_name)

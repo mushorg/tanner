@@ -83,7 +83,7 @@ class TannerWebServer:
         return {"session": session}
 
     async def on_shutdown(self, app):
-        self.redis_client.close()
+        await self.redis_client.close()
 
     def setup_routes(self, app):
         app.router.add_get("/", self.handle_index)
