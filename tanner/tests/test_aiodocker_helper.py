@@ -44,7 +44,7 @@ class TestAioDockerHelper(unittest.TestCase):
             await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
-        self.assertTrue(self.returned_result["State"]["Running"])
+        self.assertFalse(self.returned_result["State"]["Running"])
 
     def test_execute_cmd(self):
         cmd = ["sh", "-c", "echo 'Hello!'"]
