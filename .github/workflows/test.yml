@@ -11,9 +11,9 @@ jobs:
 
     services:
       mysql:
-          image: mysql:5.7
+          image: mysql:8.0
           env:
-              MYSQL_ALLOW_EMPTY_PASSWORD: yes
+              MYSQL_ROOT_PASSWORD: user_pass
               MYSQL_DATABASE: tanner
           ports:
               - 3306
