@@ -39,13 +39,13 @@ class TestAioDockerHelper(unittest.TestCase):
         container_name = "attacker"
 
         async def test():
-            container = await self.handler.create_container(container_name=container_name)
+            container = await self.handler.create_container(container_name=container_name, cmd="/bin/bash")
             await container.start()
             self.returned_result = await container.show()
+            print(self.returned_result)
             await self.handler.delete_container(container_name)
 
         self.loop.run_until_complete(test())
-        print(self.returned_result)
         self.assertTrue(self.returned_result["State"]["Running"])
 
     def test_execute_cmd(self):

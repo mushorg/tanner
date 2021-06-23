@@ -25,24 +25,22 @@ class TestMySQLi(unittest.TestCase):
         self.expected_result = None
         self.returned_result = None
 
-        with mock.patch("tanner.config.TannerConfig.get", side_effect=mock_config) as m:
+        async def connect():
+            self.conn = await self.handler.helper.connect_to_db()
+            self.cursor = await self.conn.cursor()
 
-            async def connect():
-                self.conn = await self.handler.helper.connect_to_db()
-                self.cursor = await self.conn.cursor()
+            self.returned_result = await self.handler.helper.check_db_exists(self.db_name)
 
-                self.returned_result = await self.handler.helper.check_db_exists(self.db_name)
+            if self.returned_result == 1:
+                await self.handler.helper.delete_db(self.db_name)
 
-                if self.returned_result == 1:
-                    await self.handler.helper.delete_db(self.db_name)
+            await self.cursor.execute("CREATE DATABASE test_db")
+            await self.cursor.execute("USE {db_name}".format(db_name="test_db"))
+            await self.cursor.execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, username TEXT)")
+            await self.cursor.execute('INSERT INTO test VALUES(0, "test0")')
+            await self.conn.commit()
 
-                await self.cursor.execute("CREATE DATABASE test_db")
-                await self.cursor.execute("USE {db_name}".format(db_name="test_db"))
-                await self.cursor.execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, username TEXT)")
-                await self.cursor.execute('INSERT INTO test VALUES(0, "test0")')
-                await self.conn.commit()
-
-            self.loop.run_until_complete(connect())
+        self.loop.run_until_complete(connect())
 
     @mock.patch("tanner.config.TannerConfig.get", side_effect=mock_config)
     def test_setup_db(self, m):
