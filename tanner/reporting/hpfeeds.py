@@ -22,7 +22,6 @@
 # https://github.com/DinoTools/dionaea/blob/master/modules/python/dionaea/hpfeeds.py
 #
 
-
 import logging
 import struct
 import hashlib
@@ -30,7 +29,7 @@ import sys
 import socket
 import time
 
-logger = logging.getLogger('pyhpfeeds')
+logger = logging.getLogger("pyhpfeeds")
 
 BUFSIZ = 16384
 
@@ -40,7 +39,7 @@ OP_AUTH = 2
 OP_PUBLISH = 3
 OP_SUBSCRIBE = 4
 
-MAXBUF = 1024**2
+MAXBUF = 1024 ** 2
 SIZES = {
     OP_ERROR: 5 + MAXBUF,
     OP_INFO: 5 + 256 + 20,
@@ -67,32 +66,32 @@ class Disconnect(Exception):
 # packs a string with 1 byte length field
 def strpack8(x):
     if isinstance(x, str):
-        x = x.encode('latin1')
-    return struct.pack('!B', len(x) % 0xff) + x
+        x = x.encode("latin1")
+    return struct.pack("!B", len(x) % 0xFF) + x
 
 
 # unpacks a string with 1 byte length field
 def strunpack8(x):
     lenght = x[0]
-    return x[1:1 + lenght], x[1 + lenght:]
+    return x[1 : 1 + lenght], x[1 + lenght :]
 
 
 def msghdr(op, data):
-    return struct.pack('!iB', 5 + len(data), op) + data
+    return struct.pack("!iB", 5 + len(data), op) + data
 
 
 def msgpublish(ident, chan, data):
-    return msghdr(OP_PUBLISH, strpack8(ident) + strpack8(chan) + data.encode('latin1'))
+    return msghdr(OP_PUBLISH, strpack8(ident) + strpack8(chan) + data.encode("latin1"))
 
 
 def msgsubscribe(ident, chan):
     if isinstance(chan, str):
-        chan = chan.encode('latin1')
+        chan = chan.encode("latin1")
     return msghdr(OP_SUBSCRIBE, strpack8(ident) + chan)
 
 
 def msgauth(rand, ident, secret):
-    auth_hash = hashlib.sha1(rand + secret.encode('latin1')).digest()
+    auth_hash = hashlib.sha1(rand + secret.encode("latin1")).digest()
     return msghdr(OP_AUTH, strpack8(ident) + auth_hash)
 
 
@@ -111,14 +110,14 @@ class FeedUnpack(object):
 
     def unpack(self):
         if len(self.buf) < 5:
-            raise StopIteration('No message.')
+            raise StopIteration("No message.")
 
-        ml, opcode = struct.unpack('!iB', self.buf[:5])
+        ml, opcode = struct.unpack("!iB", self.buf[:5])
         if ml > SIZES.get(opcode, MAXBUF):
-            raise BadClient('Not respecting MAXBUF.')
+            raise BadClient("Not respecting MAXBUF.")
 
         if len(self.buf) < ml:
-            raise StopIteration('No message.')
+            raise StopIteration("No message.")
 
         data = self.buf[5:ml]
         del self.buf[:ml]
@@ -133,7 +132,7 @@ class HPC(object):
         self.reconnect = reconnect
         self.reconnect_attempts = reconnect_attempts
         self.sleepwait = sleepwait
-        self.brokername = 'unknown'
+        self.brokername = "unknown"
         self.connected = False
         self.stopped = False
         self.s = None
@@ -163,13 +162,13 @@ class HPC(object):
                     self.connect()
                     break
                 except socket.error as e:
-                    logger.warn('Socket error while connecting: {0}'.format(e))
+                    logger.warn("Socket error while connecting: {0}".format(e))
                     time.sleep(self.sleepwait)
                 except FeedException as e:
-                    logger.warn('FeedException while connecting: {0}'.format(e))
+                    logger.warn("FeedException while connecting: {0}".format(e))
                     time.sleep(self.sleepwait)
                 except Disconnect as e:
-                    logger.warn('Disconnect while connecting.')
+                    logger.warn("Disconnect while connecting.")
                     time.sleep(self.sleepwait)
 
             if not self.connected:
@@ -186,19 +185,19 @@ class HPC(object):
     def connect(self):
         self.close_old()
 
-        logger.info('connecting to %s:%s', self.host, self.port)
+        logger.info("connecting to %s:%s", self.host, self.port)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(self.timeout)
         try:
             self.s.connect((self.host, self.port))
         except Exception:
-            raise FeedException('Could not connect to broker.')
+            raise FeedException("Could not connect to broker.")
         self.connected = True
 
         try:
             d = self.s.recv(BUFSIZ)
         except socket.timeout:
-            raise FeedException('Connection receive timeout.')
+            raise FeedException("Connection receive timeout.")
 
         self.unpacker.feed(d)
         for opcode, data in self.unpacker:
@@ -206,18 +205,18 @@ class HPC(object):
                 name, rest = strunpack8(data)
                 rand = bytes(rest)
 
-                logger.debug('info message name: %s, rand: %s', name, repr(rand))
+                logger.debug("info message name: %s, rand: %s", name, repr(rand))
                 self.brokername = name
 
                 self.s.send(msgauth(rand, self.ident, self.secret))
                 break
             else:
-                raise FeedException('Expected info message at this point.')
+                raise FeedException("Expected info message at this point.")
 
         self.s.settimeout(None)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-        if sys.platform in ('linux2', ):
+        if sys.platform in ("linux2",):
             self.s.setsockopt(socket.SOL_TCP, socket.TCP_KEEPIDLE, 60)
 
     def publish(self, chaninfo, data):
@@ -227,7 +226,7 @@ class HPC(object):
             try:
                 self.send(msgpublish(self.ident, c, data))
             except Disconnect:
-                logger.info('Disconnected from broker (in publish).')
+                logger.info("Disconnected from broker (in publish).")
                 if self.reconnect:
                     self.tryconnect()
                 else:
@@ -237,7 +236,7 @@ class HPC(object):
         try:
             self.s.close()
         except Exception:
-            logger.warn('Socket exception when closing.')
+            logger.warn("Socket exception when closing.")
 
 
 def new(host=None, port=10000, ident=None, secret=None, reconnect=True):

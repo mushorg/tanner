@@ -16,10 +16,10 @@ class CmdExecEmulator:
     def scan(self, value):
         detection = None
         if patterns.CMD_ATTACK.match(value):
-            detection = dict(name='cmd_exec', order=3)
+            detection = dict(name="cmd_exec", order=3)
         return detection
 
     async def handle(self, attack_params, session=None):
 
-        result = await self.get_cmd_exec_results(attack_params[0]['value'])
+        result = await self.get_cmd_exec_results(attack_params[0]["value"])
         return result

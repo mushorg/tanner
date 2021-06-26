@@ -16,27 +16,27 @@ class LevelFilter(logging.Filter):
 
 
 class Logger:
-
     @staticmethod
     def create_logger(debug_filename, err_filename, logger_name):
-        if TannerConfig.get('CLEANLOG', 'enabled') == 'True':
-            with open(err_filename, 'w'):
+        if TannerConfig.get("CLEANLOG", "enabled") == "True":
+            with open(err_filename, "w"):
                 pass
 
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.DEBUG)
         logger.propagate = False
-        formatter = logging.Formatter(fmt='%(asctime)s %(levelname)s:%(name)s:%(funcName)s: %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter(
+            fmt="%(asctime)s %(levelname)s:%(name)s:%(funcName)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
 
         # ERROR log to 'tanner.err'
-        error_log_handler = logging.handlers.RotatingFileHandler(err_filename, encoding='utf-8')
+        error_log_handler = logging.handlers.RotatingFileHandler(err_filename, encoding="utf-8")
         error_log_handler.setLevel(logging.ERROR)
         error_log_handler.setFormatter(formatter)
         logger.addHandler(error_log_handler)
 
         # DEBUG log to 'tanner.log'
-        debug_log_handler = logging.handlers.RotatingFileHandler(debug_filename, encoding='utf-8')
+        debug_log_handler = logging.handlers.RotatingFileHandler(debug_filename, encoding="utf-8")
         debug_log_handler.setLevel(logging.DEBUG)
         debug_log_handler.setFormatter(formatter)
         max_level_filter = LevelFilter(logging.ERROR)

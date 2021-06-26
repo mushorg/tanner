@@ -16,92 +16,70 @@ class TestSessions(unittest.TestCase):
 
     def test_validate_missing_peer(self):
         data = {
-            'headers': {
-                'USER-AGENT':
-                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/41.0.2228.0 Safari/537.36'
+            "headers": {
+                "USER-AGENT": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/41.0.2228.0 Safari/537.36"
             },
-            'path': '/foo',
-            'uuid': None,
-            'cookies': {'sess_uuid': None}
+            "path": "/foo",
+            "uuid": None,
+            "cookies": {"sess_uuid": None},
         }
 
         assertion_data = {
-            'peer': {'ip': None, 'port': None},
-            'headers': {
-                'user-agent':
-                    'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/41.0.2228.0 Safari/537.36'
+            "peer": {"ip": None, "port": None},
+            "headers": {
+                "user-agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/41.0.2228.0 Safari/537.36"
             },
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_uuid": None},
         }
         data = self.handler.validate_data(data)
         self.assertDictEqual(data, assertion_data)
 
     def test_validate_missing_user_agent(self):
         data = {
-            'peer': {
-                'ip': '127.0.0.1',
-                'port': 80
-            },
-            'headers': {},
-            'path': '/foo',
-            'uuid': None,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": "127.0.0.1", "port": 80},
+            "headers": {},
+            "path": "/foo",
+            "uuid": None,
+            "cookies": {"sess_uuid": None},
         }
 
         assertion_data = {
-            'peer': {
-                'ip': '127.0.0.1',
-                'port': 80
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": "127.0.0.1", "port": 80},
+            "headers": {"user-agent": None},
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_uuid": None},
         }
         data = self.handler.validate_data(data)
         self.assertDictEqual(data, assertion_data)
 
     def test_validate_missing_cookies(self):
-        data = {
-            'peer': {
-                'ip': '127.0.0.1',
-                'port': 80
-            },
-            'headers': {},
-            'path': '/foo',
-            'uuid': None
-        }
+        data = {"peer": {"ip": "127.0.0.1", "port": 80}, "headers": {}, "path": "/foo", "uuid": None}
 
         assertion_data = {
-            'peer': {
-                'ip': '127.0.0.1',
-                'port': 80
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": "127.0.0.1", "port": 80},
+            "headers": {"user-agent": None},
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_uuid": None},
         }
         data = self.handler.validate_data(data)
         self.assertDictEqual(data, assertion_data)
 
     def test_adding_new_session(self):
         data = {
-            'peer': {
-                'ip': None,
-                'port': None
-            },
-            'headers': {},
-            'path': '/foo',
-            'uuid': None,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": None, "port": None},
+            "headers": {},
+            "path": "/foo",
+            "uuid": None,
+            "cookies": {"sess_uuid": None},
         }
 
         async def sess_sadd(key, value):
@@ -118,21 +96,18 @@ class TestSessions(unittest.TestCase):
             return None
 
         data = {
-            'peer': {
-                'ip': None,
-                'port': None
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": None, "port": None},
+            "headers": {"user-agent": None},
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_uuid": None},
         }
         sess = session.Session(data)
 
-        ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent']
-        sess_uuid = data['cookies']['sess_uuid']
+        ip = data["peer"]["ip"]
+        user_agent = data["headers"]["user-agent"]
+        sess_uuid = data["cookies"]["sess_uuid"]
 
         sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
 
@@ -153,18 +128,15 @@ class TestSessions(unittest.TestCase):
 
         self.handler.analyzer.analyze = analyze
         data = {
-            'peer': {
-                'ip': None,
-                'port': None
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_uuid': None}
+            "peer": {"ip": None, "port": None},
+            "headers": {"user-agent": None},
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_uuid": None},
         }
         sess = session.Session(data)
-        sess.is_expired = mock.MagicMock(name='expired')
+        sess.is_expired = mock.MagicMock(name="expired")
         sess.is_expired.__bool__.reurned_value = True
         self.handler.sessions[sess] = sess
         redis_mock = mock.Mock()
@@ -174,15 +146,12 @@ class TestSessions(unittest.TestCase):
 
     def test_get_uuid(self):
         data = {
-            'peer': {
-                'ip': None,
-                'port': None
-            },
-            'headers': {'user-agent': None},
-            'path': '/foo',
-            'uuid': None,
-            'status': 200,
-            'cookies': {'sess_id': None}
+            "peer": {"ip": None, "port": None},
+            "headers": {"user-agent": None},
+            "path": "/foo",
+            "uuid": None,
+            "status": 200,
+            "cookies": {"sess_id": None},
         }
         sess = session.Session(data)
         key = sess.get_uuid()

@@ -1,7 +1,5 @@
 import logging
 import hashlib
-import asyncio
-import time
 
 import aioredis
 
@@ -20,13 +18,13 @@ class SessionManager:
         # handle raw data
         valid_data = self.validate_data(raw_data)
         # push snare uuid into redis.
-        await redis_client.sadd('snare_ids', *[valid_data['uuid']])
+        await redis_client.sadd("snare_ids", *[valid_data["uuid"]])
         session_id = self.get_session_id(valid_data)
         if session_id not in self.sessions:
             try:
                 new_session = Session(valid_data)
             except KeyError as key_error:
-                self.logger.exception('Error during session creation: %s', key_error)
+                self.logger.exception("Error during session creation: %s", key_error)
                 return
             self.sessions[session_id] = new_session
             return new_session, session_id
@@ -37,30 +35,30 @@ class SessionManager:
 
     @staticmethod
     def validate_data(data):
-        if 'peer' not in data:
+        if "peer" not in data:
             peer = dict(ip=None, port=None)
-            data['peer'] = peer
+            data["peer"] = peer
 
-        data['headers'] = dict((k.lower(), v) for k, v in data['headers'].items())
-        if 'user-agent' not in data['headers']:
-            data['headers']['user-agent'] = None
-        if 'path' not in data:
-            data['path'] = None
-        if 'uuid' not in data:
-            data['uuid'] = None
-        if 'status' not in data:
-            data['status'] = 200 if 'error' not in data else 500
-        if 'cookies' not in data:
-            data['cookies'] = dict(sess_uuid=None)
-        if 'cookies' in data and 'sess_uuid' not in data['cookies']:
-            data['cookies']['sess_uuid'] = None
+        data["headers"] = dict((k.lower(), v) for k, v in data["headers"].items())
+        if "user-agent" not in data["headers"]:
+            data["headers"]["user-agent"] = None
+        if "path" not in data:
+            data["path"] = None
+        if "uuid" not in data:
+            data["uuid"] = None
+        if "status" not in data:
+            data["status"] = 200 if "error" not in data else 500
+        if "cookies" not in data:
+            data["cookies"] = dict(sess_uuid=None)
+        if "cookies" in data and "sess_uuid" not in data["cookies"]:
+            data["cookies"]["sess_uuid"] = None
 
         return data
 
     def get_session_id(self, data):
-        ip = data['peer']['ip']
-        user_agent = data['headers']['user-agent']
-        sess_uuid = data['cookies']['sess_uuid']
+        ip = data["peer"]["ip"]
+        user_agent = data["headers"]["user-agent"]
+        sess_uuid = data["cookies"]["sess_uuid"]
 
         sess_id_string = "{ip}{user_agent}{sess_uuid}".format(ip=ip, user_agent=user_agent, sess_uuid=sess_uuid)
 
@@ -97,7 +95,7 @@ class SessionManager:
             await redis_client.set(sess.get_uuid(), sess.to_json())
             await self.analyzer.analyze(sess.get_uuid(), redis_client)
         except aioredis.ProtocolError as redis_error:
-            self.logger.exception('Error connect to redis, session stay in memory. %s', redis_error)
+            self.logger.exception("Error connect to redis, session stay in memory. %s", redis_error)
             return False
         else:
             return True
