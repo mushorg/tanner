@@ -27,6 +27,7 @@ class Reporting:
         return self.connected_state
 
     def create_session(self, session_data):
+        session_data["timestamp"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
         event_data = json.dumps(session_data)
         try:
             self.hpc.publish(self.channel, event_data)
