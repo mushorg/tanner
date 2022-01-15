@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import uvloop
 import yarl
 
 from aiohttp import web
@@ -14,9 +13,6 @@ from tanner.reporting.log_local import Reporting as local_report
 from tanner.reporting.log_mongodb import Reporting as mongo_report
 from tanner.reporting.log_hpfeeds import Reporting as hpfeeds_report
 from tanner import __version__ as tanner_version
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 
 class TannerServer:
     def __init__(self):
