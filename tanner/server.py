@@ -117,6 +117,8 @@ class TannerServer:
         app = web.Application(loop=loop)
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
+        app.on_startup.append(self.start_background_delete)
+        app.on_cleanup.append(self.cleanup_background_tasks)
         return app
 
     async def start_background_delete(self, app):
@@ -129,10 +131,6 @@ class TannerServer:
     def start(self):
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
-
-        app = self.create_app(loop)
-        app.on_startup.append(self.start_background_delete)
-        app.on_cleanup.append(self.cleanup_background_tasks)
 
         host = TannerConfig.get("TANNER", "host")
         port = TannerConfig.get("TANNER", "port")
