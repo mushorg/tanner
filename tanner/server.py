@@ -113,8 +113,8 @@ class TannerServer:
         app.router.add_get("/dorks", self.handle_dorks)
         app.router.add_get("/version", self.handle_version)
 
-    async def make_app(self, loop=None):
-        app = web.Application(loop=loop)
+    async def make_app(self):
+        app = web.Application()
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         app.on_startup.append(self.start_background_delete)
@@ -129,10 +129,9 @@ class TannerServer:
         await app["session_delete"]
 
     def start(self):
-        loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
 
         host = TannerConfig.get("TANNER", "host")
         port = TannerConfig.get("TANNER", "port")
 
-        web.run_app(self.make_app(loop), host=host, port=port)
+        web.run_app(self.make_app(), host=host, port=port)
