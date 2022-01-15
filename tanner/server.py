@@ -125,6 +125,7 @@ class TannerServer:
         await app["session_delete"]
 
     def start(self):
+        loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
 
         host = TannerConfig.get("TANNER", "host")
