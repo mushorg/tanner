@@ -113,7 +113,7 @@ class TannerServer:
         app.router.add_get("/dorks", self.handle_dorks)
         app.router.add_get("/version", self.handle_version)
 
-    def create_app(self, loop):
+    async def make_app(self, loop=None):
         app = web.Application(loop=loop)
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
@@ -136,4 +136,5 @@ class TannerServer:
 
         host = TannerConfig.get("TANNER", "host")
         port = TannerConfig.get("TANNER", "port")
-        web.run_app(app, host=host, port=int(port))
+
+        web.run_app(self.make_app(loop), host=host, port=port)
