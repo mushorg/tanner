@@ -94,8 +94,8 @@ class TannerWebServer:
         app.router.add_resource("/{snare_uuid}/sessions/page/{page_id}").add_route("GET", self.handle_sessions)
         app.router.add_static("/static/", path="tanner/web/static")
 
-    def create_app(self, loop):
-        app = web.Application(loop=loop)
+    async def make_app(self):
+        app = web.Application()
         aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader("tanner/web/templates"))
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
@@ -105,7 +105,7 @@ class TannerWebServer:
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
-        app = self.create_app(loop)
+
         host = TannerConfig.get("WEB", "host")
         port = int(TannerConfig.get("WEB", "port"))
-        web.run_app(app, host=host, port=port)
+        web.run_app(self.make_app(), host=host, port=port)

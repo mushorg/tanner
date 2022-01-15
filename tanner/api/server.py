@@ -94,11 +94,11 @@ class ApiServer:
         app.router.add_resource("/{snare_uuid}/sessions").add_route("GET", self.handle_sessions)
         app.router.add_resource("/session/{sess_uuid}").add_route("GET", self.handle_session_info)
 
-    def create_app(self, loop, auth=False):
+    async def make_app(self, auth=False):
         if auth:
-            app = web.Application(loop=loop, middlewares=[self.auth])
+            app = web.Application(middlewares=[self.auth])
         else:
-            app = web.Application(loop=loop)
+            app = web.Application()
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
         return app
@@ -108,7 +108,7 @@ class ApiServer:
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client(poolsize=20))
         self.api = api.Api(self.redis_client)
         set_auth = TannerConfig.get("API", "auth")
-        app = self.create_app(loop, set_auth)
+
         host = TannerConfig.get("API", "host")
         port = int(TannerConfig.get("API", "port"))
 
@@ -116,4 +116,4 @@ class ApiServer:
             key = generate()
             print("API_KEY for full access:", key)
 
-        web.run_app(app, host=host, port=port)
+        web.run_app(self.make_app(auth=set_auth), host=host, port=port)
