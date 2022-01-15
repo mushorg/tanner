@@ -14,6 +14,7 @@ class RedisClient:
         redis_client = None
         try:
             host = TannerConfig.get("REDIS", "host")
+            port = TannerConfig.get("REDIS", "port")
             username=""
             password=""
 
