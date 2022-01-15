@@ -14,6 +14,9 @@ class RedisClient:
         redis_client = None
         try:
             host = TannerConfig.get("REDIS", "host")
+            username=""
+            password=""
+
             if poolsize is None:
                 poolsize = TannerConfig.get("REDIS", "poolsize")
             redis_client = aioredis.from_url(
