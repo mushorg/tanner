@@ -33,6 +33,8 @@ services:
 # Tanner API Service
   tanner_api:
     build: ./tanner
+    environment:
+      - PATH=/opt/tanner/tanner-env/bin/:$PATH
     container_name: tanner_api
     restart: always
     stop_signal: SIGKILL
@@ -44,13 +46,15 @@ services:
      - tanner_local
     image: "mushorg/tanner:latest"
     read_only: true
-    command: tannerapi 
+    command: tannerapi
     depends_on:
      - tanner_redis
 
 # Tanner WEB Service
   tanner_web:
     build: ./tanner
+    environment:
+      - PATH=/opt/tanner/tanner-env/bin/:$PATH
     container_name: tanner_web
     restart: always
     stop_signal: SIGKILL
@@ -71,6 +75,8 @@ services:
 # Tanner Service
   tanner:
     build: ./tanner
+    environment:
+      - PATH=/opt/tanner/tanner-env/bin/:$PATH
     container_name: tanner
     restart: always
     stop_signal: SIGKILL
