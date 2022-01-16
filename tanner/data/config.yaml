@@ -40,7 +40,8 @@ EMULATOR_ENABLED:
   lfi: True 
   xss: True
   cmd_exec: True
-  php_code_injection: True 
+  php_code_injection: True
+  twig_template_injection: True
   php_object_injection: True
   crlf: True
   xxe_injection: True
@@ -100,3 +101,7 @@ REMOTE_DOCKERFILE:
 SESSIONS: 
   delete_timeout: 300
   analyze_timeout: 300
+
+TWIG_PATH:
+  autoloader: "path/of/Autoloader.php"
+  stringloader: "path/of/StringLoader.php"
