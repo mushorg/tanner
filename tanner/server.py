@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import uvloop
 import yarl
 
 from aiohttp import web
@@ -14,9 +13,6 @@ from tanner.reporting.log_local import Reporting as local_report
 from tanner.reporting.log_mongodb import Reporting as mongo_report
 from tanner.reporting.log_hpfeeds import Reporting as hpfeeds_report
 from tanner import __version__ as tanner_version
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 
 class TannerServer:
     def __init__(self):
@@ -113,10 +109,12 @@ class TannerServer:
         app.router.add_get("/dorks", self.handle_dorks)
         app.router.add_get("/version", self.handle_version)
 
-    def create_app(self, loop):
-        app = web.Application(loop=loop)
+    async def make_app(self):
+        app = web.Application()
         app.on_shutdown.append(self.on_shutdown)
         self.setup_routes(app)
+        app.on_startup.append(self.start_background_delete)
+        app.on_cleanup.append(self.cleanup_background_tasks)
         return app
 
     async def start_background_delete(self, app):
@@ -130,10 +128,7 @@ class TannerServer:
         loop = asyncio.get_event_loop()
         self.redis_client = loop.run_until_complete(redis_client.RedisClient.get_redis_client())
 
-        app = self.create_app(loop)
-        app.on_startup.append(self.start_background_delete)
-        app.on_cleanup.append(self.cleanup_background_tasks)
-
         host = TannerConfig.get("TANNER", "host")
         port = TannerConfig.get("TANNER", "port")
-        web.run_app(app, host=host, port=int(port))
+
+        web.run_app(self.make_app(), host=host, port=port)
