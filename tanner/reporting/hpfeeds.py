@@ -246,6 +246,6 @@ class HPC(object):
 
 def new(host=None, port=10000, ident=None, secret=None, reconnect=True):
     try:
-        return HPC(host, port, ident, secret, reconnect)
+        return HPC(host, port, ident, secret, reconnect=reconnect)
     except Exception:
         raise
