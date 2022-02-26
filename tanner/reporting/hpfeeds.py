@@ -173,6 +173,8 @@ class HPC(object):
 
             if not self.connected:
                 raise Disconnect()
+        else:
+            logger.warning("Trying to connect, but already connected!")
 
     def close_old(self):
         if self.s:
@@ -227,9 +229,12 @@ class HPC(object):
                 self.send(msgpublish(self.ident, c, data))
             except Disconnect:
                 logger.info("Disconnected from broker (in publish).")
+                self.connected = False
                 if self.reconnect:
                     self.tryconnect()
                 else:
+                    logger.info("Do not reconnect, aborting.")
+                    self.close_old()
                     raise
 
     def close(self):
