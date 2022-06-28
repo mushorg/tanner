@@ -8,7 +8,7 @@ redis
 aioredis
 pymongo
 pylibinjection
-jinja2
+jinja2<3.0.0
 pycodestyle
 geoip2
 aiodocker
