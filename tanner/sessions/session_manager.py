@@ -10,7 +10,7 @@ from tanner.sessions.session_analyzer import SessionAnalyzer
 class SessionManager:
     def __init__(self, loop=None):
         self.sessions = {}
-        self.analyzer = SessionAnalyzer(loop=loop)
+        self.analyzer = SessionAnalyzer()
         self.logger = logging.getLogger(__name__)
 
     async def add_or_update_session(self, raw_data, redis_client):
