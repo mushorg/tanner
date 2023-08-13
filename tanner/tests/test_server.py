@@ -66,8 +66,8 @@ class TestServer(AioHTTPTestCase):
 
         return coroutine
 
-    def get_app(self):
-        app = self.serv.make_app()
+    async def get_app(self):
+        app = await self.serv.make_app()
         return app
 
     @unittest_run_loop

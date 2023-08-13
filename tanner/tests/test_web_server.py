@@ -19,8 +19,8 @@ class TestWebServer(AioHTTPTestCase):
 
         super(TestWebServer, self).setUp()
 
-    def get_app(self):
-        app = self.handler.make_app()
+    async def get_app(self):
+        app = await self.handler.make_app()
         return app
 
     @unittest_run_loop
