@@ -131,7 +131,6 @@ class TestDorksManager(unittest.TestCase):
             os.remove(self.dorks_pickle)
             os.remove(self.user_dorks_pickle)
             await self.redis_client.flushall()
-            self.redis_client.close()
-            await self.redis_client.wait_closed()
+            await self.redis_client.close()
 
         self.loop.run_until_complete(close())
