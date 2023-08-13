@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:3.18
 #
 # Install packages
 RUN apk -U --no-cache add \
@@ -6,36 +6,38 @@ RUN apk -U --no-cache add \
                file \
                git \
                make \
-               php7 \
-               php7-dev \
-               php7-tokenizer \
+               php \
+               php81-dev \
+               php-tokenizer \
                python3 \
+               py3-pip \
                python3-dev \
                re2c && \
 #
 # Install bfr sandbox from git
     git clone --depth=1 https://github.com/mushorg/BFR /opt/BFR && \
     cd /opt/BFR && \
-    phpize7 && \
+    php --version && \
+    phpize && \
     ./configure \
-      --with-php-config=/usr/bin/php-config7 \
       --enable-bfr && \
     make && \
     make install && \
     cd / && \
     rm -rf /opt/BFR /tmp/* /var/tmp/* && \
-    echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php7/php.ini && \
+    php --ini | grep Loaded && \
+    echo "zend_extension = "$(find /usr -name bfr.so) >> /etc/php81/php.ini && \
 #
 # Install PHP Sandbox
     git clone --depth=1 https://github.com/mushorg/phpox /opt/phpox && \
     cd /opt/phpox && \
-    pip3 install -r requirements.txt && \
+    pip install -r requirements.txt && \
     make && \
 #
 # Clean up
     apk del --purge build-base \
                     git \
-                    php7-dev \
+                    php-dev \
                     python3-dev && \
     rm -rf /root/* && \
     rm -rf /var/cache/apk/*
