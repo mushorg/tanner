@@ -12,7 +12,7 @@ from tanner.config import TannerConfig
 class SessionAnalyzer:
     def __init__(self, loop=None):
         self._loop = loop if loop is not None else asyncio.get_event_loop()
-        self.queue = asyncio.Queue(loop=self._loop)
+        self.queue = asyncio.Queue()
         self.logger = logging.getLogger("tanner.session_analyzer.SessionAnalyzer")
         self.attacks = ["sqli", "rfi", "lfi", "xss", "php_code_injection", "cmd_exec", "crlf"]
 
