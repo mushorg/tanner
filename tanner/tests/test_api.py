@@ -44,7 +44,7 @@ class TestApi(unittest.TestCase):
             assert id in self.expected_content
 
     def test_return_snares_error(self):
-        self.redis_client.smembers = mock.Mock(side_effect=aioredis.ProtocolError)
+        self.redis_client.smembers = mock.Mock(side_effect=aioredis.ConnectionError)
 
         async def test():
             self.returned_content = await self.handler.return_snares()
@@ -103,7 +103,7 @@ class TestApi(unittest.TestCase):
         self.assertEqual(self.expected_content, self.returned_content)
 
     def test_return_snare_info_error(self):
-        self.redis_client.zrevrangebyscore = mock.Mock(side_effect=aioredis.ProtocolError)
+        self.redis_client.zrevrangebyscore = mock.Mock(side_effect=aioredis.ConnectionError)
 
         async def test():
             self.returned_content = await self.handler.return_snare_info(self.uuid)

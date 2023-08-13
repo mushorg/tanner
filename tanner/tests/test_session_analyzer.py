@@ -118,7 +118,7 @@ class TestSessionAnalyzer(unittest.TestCase):
 
     def tests_load_session_fail(self):
         async def sess_get(key):
-            return aioredis.ProtocolError
+            return aioredis.ConnectionError
 
         redis_mock = Mock()
         redis_mock.get = sess_get

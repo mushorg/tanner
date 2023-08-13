@@ -39,7 +39,7 @@ class DorksManager:
             extracted = extracted.group(0)
             try:
                 await redis_client.sadd(self.user_dorks_key, *[extracted])
-            except aioredis.ProtocolError as connection_error:
+            except aioredis.ConnectionError as connection_error:
                 self.logger.exception("Problem with redis connection: %s", connection_error)
 
     async def init_dorks(self, redis_client):
@@ -49,7 +49,7 @@ class DorksManager:
             user_dorks_exist = transaction.exists(self.user_dorks_key)
 
             await transaction.execute()
-        except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
+        except (aioredis.RedisError, aioredis.ConnectionError) as redis_error:
             self.logger.exception("Problem with transaction: %s", redis_error)
         else:
             dorks_existed = await dorks_exist
@@ -75,7 +75,7 @@ class DorksManager:
             user_dorks = transaction.smembers(self.user_dorks_key, encoding="utf-8")
 
             await transaction.execute()
-        except (aioredis.MultiExecError, aioredis.ProtocolError) as redis_error:
+        except (aioredis.RedisError, aioredis.ConnectionError) as redis_error:
             self.logger.exception("Problem with transaction: %s", redis_error)
         else:
             dorks = await dorks

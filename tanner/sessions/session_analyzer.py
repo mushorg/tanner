@@ -18,11 +18,11 @@ class SessionAnalyzer:
 
     async def analyze(self, session_key, redis_client):
         session = None
-        await asyncio.sleep(1, loop=self._loop)
+        await asyncio.sleep(1)
         try:
             session = await redis_client.get(session_key, encoding="utf-8")
             session = json.loads(session)
-        except (aioredis.ProtocolError, TypeError, ValueError) as error:
+        except (aioredis.ConnectionError, TypeError, ValueError) as error:
             self.logger.exception("Can't get session for analyze: %s", error)
         else:
             result = await self.create_stats(session, redis_client)
@@ -37,7 +37,7 @@ class SessionAnalyzer:
             try:
                 await redis_client.zadd(s_key, session["start_time"], json.dumps(session))
                 await redis_client.delete(*[del_key])
-            except aioredis.ProtocolError as redis_error:
+            except aioredis.ConnectionError as redis_error:
                 self.logger.exception("Error with redis. Session will be returned to the queue: %s", redis_error)
                 self.queue.put(session)
 
