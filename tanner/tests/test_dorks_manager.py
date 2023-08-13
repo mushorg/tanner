@@ -59,7 +59,7 @@ class TestDorksManager(unittest.TestCase):
             self.returned_result = await self.redis_client.smembers(self.handler.user_dorks_key)
 
         self.loop.run_until_complete(test())
-        self.expected_result = "http://example.com/index.html?page="
+        self.expected_result = {"http://example.com/index.html?page="}
         self.assertEqual(self.returned_result, self.expected_result)
 
     def test_extract_path_error(self):

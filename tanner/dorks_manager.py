@@ -44,7 +44,7 @@ class DorksManager:
 
     async def init_dorks(self, redis_client):
         try:
-            transaction = redis_client.multi_exec()
+            transaction = redis_client.multi()
             dorks_exist = transaction.exists(self.dorks_key)
             user_dorks_exist = transaction.exists(self.user_dorks_key)
 
@@ -70,7 +70,7 @@ class DorksManager:
         chosen_dorks = []
         max_dorks = 50
         try:
-            transaction = redis_client.multi_exec()
+            transaction = redis_client.multi()
             dorks = transaction.smembers(self.dorks_key, encoding="utf-8")
             user_dorks = transaction.smembers(self.user_dorks_key, encoding="utf-8")
 
