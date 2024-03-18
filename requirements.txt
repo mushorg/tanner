@@ -8,7 +8,7 @@ redis
 aioredis
 pymongo
 pylibinjection
-jinja2<3.0.0
+jinja2
 MarkupSafe<2.1.0
 pycodestyle
 geoip2
